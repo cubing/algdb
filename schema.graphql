@@ -1,0 +1,67 @@
+Query {
+  getUser(id: ID!): User!
+  getUsers(): [User]!
+  getPuzzles(): [Puzzle]!
+}
+
+Mutation {
+  login(username: String!, password: String!): User!
+  addPuzzle(): Puzzle!
+  addAlgSet(puzzle_id: ID!): AlgSet!
+  addCase(algset_id: ID!): Case!
+  addAlg(case_id: ID!): Alg!
+  voteAlg(upvote: Boolean!): Alg!
+  updateUser(user_id: ID!, is_public: Boolean): User!
+  favoriteAlg(alg_id: ID!): Alg!
+}
+
+type User {
+  id: ID!
+  display_name: String!
+  cubic_color_scheme: ColorScheme
+  skewb_color_scheme: ColorScheme
+  square1_color_scheme: ColorScheme
+  megaminx_color_scheme: ColorScheme
+  pyraminx_color_scheme: ColorScheme
+  is_public: Boolean!
+  favorited_algorithms: [Alg]
+}
+
+type ColorScheme {
+  id: ID!
+  side1: String
+  side2: String
+  side3: String
+  side4: String
+  side5: String
+  side6: String
+}
+
+type Puzzle {
+  id: ID!
+  name: String!
+  algSets(): [AlgSet]!
+}
+
+type AlgSet {
+  id: ID!
+  name: String!
+  puzzle: Puzzle!
+  cases(): [Case]!
+}
+
+type Case {
+  id: ID!
+  name: String!
+  algset: AlgSet!
+  algs(): [Alg]!
+}
+
+type Alg {
+  id: ID!
+  sequence: String!
+  case: Case!
+  up_votes: Int!
+  total_votes: Int!
+  current_user_vote: Boolean
+}
