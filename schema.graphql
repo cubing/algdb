@@ -1,10 +1,10 @@
-Query {
+type Query {
   getUser(id: ID!): User!
   getUsers(): [User]!
   getPuzzles(): [Puzzle]!
 }
 
-Mutation {
+type Mutation {
   login(username: String!, password: String!): User!
   addPuzzle(): Puzzle!
   addAlgSet(puzzle_id: ID!): AlgSet!
@@ -55,6 +55,18 @@ type Case {
   name: String!
   algset: AlgSet!
   algs(): [Alg]!
+}
+
+type Tag {
+  id: ID!
+  name: String!
+}
+
+type userAlgTagLink {
+  id: ID!
+  user: User!
+  tag: Tag!
+  alg: Alg!
 }
 
 type Alg {
