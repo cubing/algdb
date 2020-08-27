@@ -2,6 +2,7 @@ Query {
   getUser(id: ID!): User!
   getUsers(): [User]!
   getPuzzles(): [Puzzle]!
+  getTags(): [Tags]!
 }
 
 Mutation {
@@ -10,6 +11,7 @@ Mutation {
   addAlgSet(puzzle_id: ID!): AlgSet!
   addCase(algset_id: ID!): Case!
   addAlg(case_id: ID!): Alg!
+  addTags(): Tag!
   voteAlg(upvote: Boolean!): Alg!
   updateUser(user_id: ID!, is_public: Boolean): User!
   favoriteAlg(alg_id: ID!): Alg!
@@ -64,4 +66,16 @@ type Alg {
   up_votes: Int!
   total_votes: Int!
   current_user_vote: Boolean
+}
+
+type Tag {
+  id: ID!
+  name: String!
+}
+
+type userAlgTagLink {
+  id: ID!
+  user: User!
+  tag: Tag!
+  alg: Alg!
 }
