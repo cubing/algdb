@@ -7,19 +7,30 @@ type Query {
 }
 
 type Mutation {
-  login(username: String!, password: String!): User!
+  loginUser(username: String!, password: String!): Auth!
+  socialLogin(provider: String!, code: String!): Auth!
   createPuzzle(): Puzzle!
   createAlgSet(puzzle_id: ID!): AlgSet!
   createCase(algset_id: ID!): Case!
   createAlg(case_id: ID!): Alg!
   createTag(name: String!): Tag!
-  voteAlg(upvote: Boolean!): Alg!
+  voteAlg(alg_id: ID!, upvote: Boolean!): Alg!
   updateUser(user_id: ID!, is_public: Boolean): User!
   createUserAlgTagLink(tag_id: ID!, alg_id: ID!): UserAlgTagLink!
 }
 
+type Auth {
+  type: String!
+  token: String!
+  user: User!
+}
+
 type User {
   id: ID!
+  wca_id: String!
+  provider: String!
+  provider_id: String!
+  email: String! 
   display_name: String!
   cubic_color_scheme: ColorScheme
   skewb_color_scheme: ColorScheme
@@ -27,7 +38,16 @@ type User {
   megaminx_color_scheme: ColorScheme
   pyraminx_color_scheme: ColorScheme
   is_public: Boolean!
-  favorited_algorithms: [Alg]
+  created_at: DateTime!
+  updated_at: DateTime
+  created_by: User!
+  role: UserRole
+}
+
+enum UserRole {
+  ADMIN
+  MODERATOR
+  NORMAL
 }
 
 type ColorScheme {
@@ -43,12 +63,18 @@ type ColorScheme {
 type Puzzle {
   id: ID!
   name: String!
+  created_at: DateTime!
+  updated_at: DateTime
+  created_by: User!
   algSets(): [AlgSet]!
 }
 
 type AlgSet {
   id: ID!
   name: String!
+  created_at: DateTime!
+  updated_at: DateTime
+  created_by: User!
   puzzle: Puzzle!
   cases(): [Case]!
 }
@@ -56,6 +82,9 @@ type AlgSet {
 type Case {
   id: ID!
   name: String!
+  created_at: DateTime!
+  updated_at: DateTime
+  created_by: User!
   algset: AlgSet!
   algs(): [Alg]!
 }
@@ -67,11 +96,17 @@ type Alg {
   up_votes: Int!
   total_votes: Int!
   current_user_vote: Boolean
+  created_at: DateTime!
+  updated_at: DateTime
+  created_by: User!
 }
 
 type Tag {
   id: ID!
   name: String!
+  created_at: DateTime!
+  updated_at: DateTime
+  created_by: User!
 }
 
 type UserAlgTagLink {
