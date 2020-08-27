@@ -1,0 +1,12 @@
+{
+  "name": "jql-boilerplate",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "proxy": "start ./utils/cloud_sql_proxy -instances=tabularasa-145715:us-east1:thingase-sql-2=tcp:3306"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {}
+}
