@@ -1,20 +1,21 @@
-Query {
+type Query {
   getUser(id: ID!): User!
   getUsers(): [User]!
   getPuzzles(): [Puzzle]!
   getTags(): [Tags]!
+  getAlgs(tag_names: [String], user_id: ID!): [Alg]!
 }
 
-Mutation {
+type Mutation {
   login(username: String!, password: String!): User!
-  addPuzzle(): Puzzle!
-  addAlgSet(puzzle_id: ID!): AlgSet!
-  addCase(algset_id: ID!): Case!
-  addAlg(case_id: ID!): Alg!
-  addTags(): Tag!
+  createPuzzle(): Puzzle!
+  createAlgSet(puzzle_id: ID!): AlgSet!
+  createCase(algset_id: ID!): Case!
+  createAlg(case_id: ID!): Alg!
+  createTag(name: String!): Tag!
   voteAlg(upvote: Boolean!): Alg!
   updateUser(user_id: ID!, is_public: Boolean): User!
-  favoriteAlg(alg_id: ID!): Alg!
+  createUserAlgTagLink(tag_id: ID!, alg_id: ID!): UserAlgTagLink!
 }
 
 type User {
@@ -73,7 +74,7 @@ type Tag {
   name: String!
 }
 
-type userAlgTagLink {
+type UserAlgTagLink {
   id: ID!
   user: User!
   tag: Tag!
