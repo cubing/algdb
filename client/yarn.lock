@@ -9506,6 +9506,11 @@ react-clientside-effect@^1.2.2:
   dependencies:
     "@babel/runtime" "^7.0.0"
 
+react-cubing@0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/react-cubing/-/react-cubing-0.0.1.tgz#0bbc18c2b6944b9371a9b688cc9e0e7ff265d620"
+  integrity sha512-X5XpIhKd7ptzOlDWOisJ05cfi656S10MeT6wudIM3COJugeCj3zDxJ3R7A5h/QCaZni6bBbLV1qiFKi5equuuQ==
+
 react-dev-utils@^10.2.1:
   version "10.2.1"
   resolved "https://registry.yarnpkg.com/react-dev-utils/-/react-dev-utils-10.2.1.tgz#f6de325ae25fa4d546d09df4bb1befdc6dd19c19"
