@@ -72,10 +72,6 @@ export default {
     return sequelize;
   },
 
-  getSequelizeLiteral(rawStatement) {
-    return sequelize.literal(rawStatement);
-  },
-
   getMysqlRaw(rawStatement) {
     return mysql.raw(rawStatement);
   }

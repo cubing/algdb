@@ -1,11 +1,12 @@
 import Service from '../core/service';
 
+import { User } from '../services';
+
+import { env } from '../../helpers/tier0/config';
 import * as bcrypt from 'bcryptjs';
 import axios from 'axios';
 import errorHelper from '../../helpers/tier0/error';
 import mysqlHelper from '../../helpers/tier1/mysql';
-import resolverHelper from '../../helpers/tier2/resolver';
-import { handleJqlSubscriptionTriggerIterative } from '../../helpers/tier3/subscription'
 
 export class Auth extends Service {
   static __typename = 'auth';
@@ -74,46 +75,47 @@ export class Auth extends Service {
       throw errorHelper.generateError("Invalid social login provider");
     }
 
+    const wcaSite = axios.create({
+      baseURL: env.wca.base_url,
+    });
+
     //get the access token from the code
-    const { data } = await axios.post("https://www.worldcubeassociation.org/oauth/token", {
+    const { data } = await wcaSite.post("oauth/token", {
       grant_type: "authorization_code",
-      client_id: "application_id",
-      client_secret: "secret",
+      client_id: env.wca.client_id,
+      client_secret: env.wca.client_secret,
       code: args.code,
-      redirect_uri: "123"
+      redirect_uri: env.wca.redirect_uri
     });
 
     //hit the /me route to get the user info
-    const { data: wcaData } = await axios.get("https://www.worldcubeassociation.org/api/v0/me", {
+    const { data: wcaData } = await wcaSite.get("api/v0/me", {
       headers: {
         Authorization: "Bearer " + data.access_token
       }
     });
 
-    //lookup user by email
-    const userResults = await mysqlHelper.executeDBQuery("SELECT id, email FROM user where email = :email", {
-      email: wcaData.me.email
+    //lookup user by provider + provider_id
+    const userResults = await mysqlHelper.executeDBQuery("SELECT id, email FROM user WHERE provider = :provider AND provider_id = :provider_id", {
+      provider: args.provider,
+      provider_id: wcaData.me.id
     });
 
     //not found, create a new user (copied from user.service)
     if(userResults.length < 1) {
-      const addResults = await resolverHelper.addTableRow(this.__typename, {
+      const addUserResult = await User.createRecord(req, {
+        provider: args.provider,
+        provider_id: wcaData.me.id,
         email: wcaData.me.email,
-        created_by: 0
+        name: wcaData.me.name,
+        avatar: wcaData.me.avatar.url,
+        country: wcaData.me.country_iso2,
+      }, {
+        id: null,
+        email: null
       });
-  
-      //set created_by to id
-      await mysqlHelper.executeDBQuery("UPDATE user SET created_by = id WHERE id = :id", {
-        id: addResults.id
-      });
 
-      userResults.push({ id: addResults.id, email: wcaData.me.email })
-
-      const validatedArgs = {
-        created_by: addResults.id
-      };
-
-      handleJqlSubscriptionTriggerIterative(req, this, this.__typename + 'Created', validatedArgs, { id: addResults.id });
+      userResults.push(addUserResult);
     }
 
     //if OK, return auth payload
@@ -122,5 +124,4 @@ export class Auth extends Service {
       email: userResults[0].email
     }, query);
   }
-
 };

@@ -1,5 +1,6 @@
-import { DataTypes } from 'sequelize';
+import { DataTypes, Sequelize } from 'sequelize';
 import { dataTypes } from '../../jql/helpers/dataType';
+
 
 export function generateCreatedAtField() {
   return {
@@ -7,7 +8,7 @@ export function generateCreatedAtField() {
       type: dataTypes.DATETIME,
       mysqlOptions: {
         type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
         getter: (field) => "UNIX_TIMESTAMP(" + field + ")",
       },
       addable: true,

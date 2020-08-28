@@ -37,14 +37,17 @@ export default class {
           } else {
             //if it has a resolver, put it in the resolvedQueries, along with a copy of the nested query (if any)
             if(validQuery[field].type) {
-              //it has a classname, must do further resolving
+              //it has a classname, must do further resolving with the external query
               if(externalQuery[field] && typeof externalQuery[field] === "object") {
                 validatedResolvedQuery[field] = {
                   resolver: validQuery[field].resolver,
                   externalQuery: externalQuery[field]
                 }
               } else {
-                throw new Error("Invalid query");
+                //no external query
+                validatedResolvedQuery[field] = {
+                  resolver: validQuery[field].resolver,
+                }
               }
             } else {
               validatedResolvedQuery[field] = {

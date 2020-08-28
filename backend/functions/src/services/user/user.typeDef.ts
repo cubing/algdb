@@ -68,10 +68,27 @@ export default {
     addable: true,
     updateable: true,
   },
+  avatar: {
+    type: dataTypes.STRING,
+    mysqlOptions: {
+      type: DataTypes.STRING,
+    },
+    addable: true,
+    updateable: true,
+  },
+  country: {
+    type: dataTypes.STRING,
+    mysqlOptions: {
+      type: DataTypes.STRING,
+    },
+    addable: true,
+    updateable: true,
+  },
   is_public: {
     type: dataTypes.BOOLEAN,
     mysqlOptions: {
       type: DataTypes.BOOLEAN,
+      defaultValue: true,
     },
     addable: true,
     updateable: true,
