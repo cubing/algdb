@@ -32,17 +32,13 @@ type User {
   wca_id: String!
   email: String! 
   name: String!
-  cubic_color_scheme: ColorScheme
-  skewb_color_scheme: ColorScheme
-  square1_color_scheme: ColorScheme
-  megaminx_color_scheme: ColorScheme
-  pyraminx_color_scheme: ColorScheme
   is_public: Boolean!
   created_at: DateTime!
   updated_at: DateTime
   created_by: User!
   role: UserRole
   taggedAlgs(tag_names: [String]): [Alg]!
+  color_scheme(puzzle_id: ID!): UserPuzzleColorScheme
 }
 
 enum UserRole {
@@ -51,14 +47,11 @@ enum UserRole {
   NORMAL
 }
 
-type ColorScheme {
+type UserPuzzleColorScheme {
   id: ID!
-  side1: String
-  side2: String
-  side3: String
-  side4: String
-  side5: String
-  side6: String
+  user: User!
+  puzzle: Puzzle!
+  colors: String!
 }
 
 type Puzzle {
