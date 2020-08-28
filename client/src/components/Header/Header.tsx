@@ -38,6 +38,7 @@ const Header = (props: Props) => {
 			color={fill}
 			borderBottom='1px'
 			borderColor={border}
+			shadow='md'
 			{...props}>
 			<Flex align='center' mr={5}>
 				<Heading as='a' href='/' size='lg' letterSpacing={'-.1rem'}>

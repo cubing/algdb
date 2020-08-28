@@ -36,7 +36,7 @@ export default function Footer(): ReactElement {
 					icon={GitHubIcon}
 					title='Github'
 					onClick={() =>
-						(window.location.href = 'https://github.com/thecubicle/algdb')
+						(window.location.href = 'https://github.com/cubing/algdb')
 					}
 					aria-label='Github'
 				/>

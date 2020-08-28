@@ -7,7 +7,7 @@ export default function Landing(): ReactElement {
 		<Flex justify='center' alignContent='center' direction='column'>
 			<LandingCube />
 			<Box position='absolute' left='50vw' transform='translateX(-50%)'>
-				<Heading as='h1' textAlign='center' color={color}>
+				<Heading fontSize='4em' textAlign='center' color={color}>
 					AlgDB
 				</Heading>
 				<Text fontSize='md' textAlign='center' color={color}>
