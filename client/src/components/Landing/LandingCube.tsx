@@ -2,16 +2,7 @@ import React, { ReactElement } from 'react'
 import { TwistyPlayer } from 'react-cubing'
 import { TwistyPlayer as TP } from 'cubing/twisty'
 import { parse } from 'cubing/alg'
-// @ts-ignore
-import { css, cx } from 'emotion'
-import { useColorModeValue } from '@chakra-ui/core'
-const styles = (props: { opacity: string }) => css`
-	height: 50vh;
-	width: 100vw;
-	margin: auto;
-	opacity: ${props.opacity};
-	z-index: -1;
-`
+import { useColorModeValue, Box } from '@chakra-ui/core'
 
 export default function LandingCube(): ReactElement {
 	const [twisty, setTwisty] = React.useState<TP>()
@@ -42,8 +33,13 @@ export default function LandingCube(): ReactElement {
 	const onTwistyInit = (tp: TP) => setTwisty(tp)
 
 	return (
-		<TwistyPlayer
-			className={styles({ opacity })}
+		<Box
+			as={TwistyPlayer}
+			height='50vh'
+			width='100vw'
+			margin='auto'
+			opacity={opacity}
+			zIndex='-1'
 			background='none'
 			onTwistyInit={onTwistyInit}
 			controls='none'
