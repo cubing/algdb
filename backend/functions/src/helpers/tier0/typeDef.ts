@@ -1,9 +1,9 @@
 import { DataTypes } from 'sequelize';
 import { dataTypes } from '../../jql/helpers/dataType';
 
-export function generateDateModifiedField() {
+export function generateCreatedAtField() {
   return {
-    date_created: {
+    created_at: {
       type: dataTypes.DATETIME,
       mysqlOptions: {
         type: DataTypes.DATE,
@@ -16,9 +16,9 @@ export function generateDateModifiedField() {
   };
 }
 
-export function generateDateCreatedField() {
+export function generateUpdatedAtField() {
   return {
-    date_modified: {
+    updated_at: {
       type: dataTypes.DATETIME,
       mysqlOptions: {
         type: DataTypes.DATE,

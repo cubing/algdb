@@ -1,8 +1,8 @@
 import generateEnumService from './core/generator/enum.service'
 
-const StatusEnum = generateEnumService('status');
+const userRoleEnum = generateEnumService('userRole');
 
 export { User } from './user/user.service'
 export { Auth } from './auth/auth.service'
 
-export { StatusEnum }
+export { userRoleEnum as UserRoleEnum }

@@ -2,9 +2,9 @@ import * as bcrypt from 'bcryptjs';
 
 import firestoreHelper from '../../helpers/tier1/firestore';
 
-import { generateDateModifiedField, generateDateCreatedField } from '../../helpers/tier0/typeDef';
+import { generateUpdatedAtField, generateCreatedAtField } from '../../helpers/tier0/typeDef';
 
-import { User } from '../services'
+import { User, UserRoleEnum } from '../services'
 
 import { DataTypes } from "sequelize";
 import { dataTypes } from '../../jql/helpers/dataType';
@@ -17,14 +17,21 @@ export default {
     },
     filterable: true
   },
-  social_login_id: {
+  provider: {
     type: dataTypes.STRING,
     mysqlOptions: {
       type: DataTypes.STRING,
-      unique: true
+      unique: 'compositeIndex'
     },
     addable: true,
-    updateable: false
+  },
+  provider_id: {
+    type: dataTypes.STRING,
+    mysqlOptions: {
+      type: DataTypes.STRING,
+      unique: 'compositeIndex'
+    },
+    addable: true,
   },
   wca_id: {
     type: dataTypes.STRING,
@@ -32,7 +39,6 @@ export default {
       type: DataTypes.STRING
     },
     addable: true,
-    updateable: false
   },
   email: {
     type: dataTypes.STRING,
@@ -41,7 +47,6 @@ export default {
       unique: true
     },
     addable: true,
-    updateable: false
   },
   password: {
     type: dataTypes.STRING,
@@ -59,13 +64,20 @@ export default {
     type: dataTypes.STRING,
     mysqlOptions: {
       type: DataTypes.STRING,
-      defaultValue: "John Doe",
     },
     addable: true,
     updateable: true,
   },
-  ...generateDateCreatedField(),
-  ...generateDateModifiedField(),
+  is_public: {
+    type: dataTypes.BOOLEAN,
+    mysqlOptions: {
+      type: DataTypes.BOOLEAN,
+    },
+    addable: true,
+    updateable: true,
+  },
+  ...generateCreatedAtField(),
+  ...generateUpdatedAtField(),
   created_by: {
     type: User.__typename,
     mysqlOptions: {
@@ -76,5 +88,17 @@ export default {
     },
     addable: true,
     filterable: true,
+  },
+  role: {
+    type: UserRoleEnum.__typename,
+    mysqlOptions: {
+      type: DataTypes.INTEGER,
+    },
+    resolver: async (context, req, currentObject, query, args, parent) => {
+      return UserRoleEnum.getRecord(req, {
+        id: currentObject.role
+      }, query);
+    },
+    filterable: true
   },
 }
