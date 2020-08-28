@@ -4,6 +4,8 @@ type Query {
   getPuzzles(): [Puzzle]!
   getTags(): [Tags]!
   getAlgs(tag_names: [String], user_id: ID!): [Alg]!
+  getAlgSetSubsetTags(algset_id: ID!): [AlgSetTags]!
+  getCases(algsetsubsettag_name: String!): [Case]!
 }
 
 type Mutation {
@@ -17,6 +19,8 @@ type Mutation {
   voteAlg(alg_id: ID!, upvote: Boolean!): Alg!
   updateUser(user_id: ID!, is_public: Boolean): User!
   createUserAlgTagLink(tag_id: ID!, alg_id: ID!): UserAlgTagLink!
+  createAlgSetSubetTag(algset_id: ID!, name: String!): AlgSetSubsetTag!
+  createAlgSetSubsetTagLink(algsettag_id: ID!, case_id: ID!): AlgSetSubsetTagLink!
 }
 
 type Auth {
@@ -32,6 +36,8 @@ type User {
   wca_id: String!
   email: String! 
   name: String!
+  avatar: String!
+  country: String!
   is_public: Boolean!
   created_at: DateTime!
   updated_at: DateTime
@@ -70,6 +76,7 @@ type AlgSet {
   updated_at: DateTime
   created_by: User!
   puzzle: Puzzle!
+  subsets(): [AlgSetSubsetTagLink]!
   cases(): [Case]!
 }
 
@@ -96,11 +103,9 @@ type Alg {
   current_user_tags: [Tag]
 }
 
-
-
 type Tag {
   id: ID!
-  type: 
+  type: String!
   name: String!
   created_at: DateTime!
   updated_at: DateTime
@@ -112,4 +117,19 @@ type UserAlgTagLink {
   user: User!
   tag: Tag!
   alg: Alg!
+}
+
+type SubsetTag {
+  id: ID!
+  name: String!
+  algset: AlgSet!
+  created_at: DateTime!
+  updated_at: DateTime
+  created_by: User!
+}
+
+type AlgSetSubsetTagLink {
+  id: ID!
+  algset: AlgSet!
+  subsetTag: SubsetTag!
 }
