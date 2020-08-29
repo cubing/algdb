@@ -2,6 +2,9 @@
 
 Important Requests:
 
+(AUTH) = Authorization required in the header of each request
+(ADMIN) = Authenticated user must have ADMIN role
+
 **Login Using WCA Code**
 
 `POST https://us-central1-algdb-d312e.cloudfunctions.net/api/jql`
