@@ -2,8 +2,8 @@
 
 Important Requests:
 
-(AUTH) = Authorization required in the header of each request
-(ADMIN) = Authenticated user must have ADMIN role
+- **(AUTH)** = Authorization required in the header of each request
+- **(ADMIN)** = Authenticated user must have ADMIN role
 
 **Login Using WCA Code**
 
@@ -98,15 +98,15 @@ Important Requests:
 {
 	"action": "getMultiplePuzzle",
 	"query": {
-        "paginatorInfo": {
-            "count": null,
-            "total": null
-        },
-        "data": {
-            "id": null,
-            "name": null,
-            "created_at": null
-        }
+		"paginatorInfo": {
+			"count": null,
+			"total": null
+		},
+		"data": {
+			"id": null,
+			"name": null,
+			"created_at": null
+		}
 	}
 }
 ```
