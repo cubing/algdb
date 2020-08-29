@@ -1,6 +1,6 @@
 import Service from '../service';
 
-export default function(enumName: string) {
+export default function(enumName: string, currentEnum: object) {
   return class extends Service {
     static __typename = enumName + 'Enum';
     static presets = {
@@ -9,6 +9,8 @@ export default function(enumName: string) {
         name: null,
       }
     };
+
+    static enum = currentEnum;
 
     static getTypeDef = Service.getTypeDef;
 

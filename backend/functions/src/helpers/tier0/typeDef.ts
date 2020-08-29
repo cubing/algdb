@@ -1,7 +1,6 @@
 import { DataTypes, Sequelize } from 'sequelize';
 import { dataTypes } from '../../jql/helpers/dataType';
 
-
 export function generateCreatedAtField() {
   return {
     created_at: {
@@ -15,7 +14,7 @@ export function generateCreatedAtField() {
       updateable: true
     }
   };
-}
+};
 
 export function generateUpdatedAtField() {
   return {
@@ -28,4 +27,18 @@ export function generateUpdatedAtField() {
       updateable: true
     }
   };
-}
+};
+
+export function generateIdField() {
+  return {
+    id: {
+      type: dataTypes.ID,
+      mysqlOptions: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+      },
+      filterable: true
+    },
+  };
+};

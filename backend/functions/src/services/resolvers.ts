@@ -1,6 +1,6 @@
 import User from './user/user.resolver';
 import Auth from './auth/auth.resolver';
-
+import Puzzle from './puzzle/puzzle.resolver';
 
 const resolvers = {
   query: {},
@@ -18,7 +18,7 @@ function mergeResolvers(resolversArray: any) {
   }
 }
 
-mergeResolvers([User, Auth]);
+mergeResolvers([User, Auth, Puzzle]);
 
 export default resolvers;
 

@@ -1,6 +1,7 @@
 import mysqlHelper from '../tier1/mysql';
+import { UserRoleEnum } from '../../services/services';
 
-export function generateCreatedByUser(service: any) {
+export function generateItemCreatedByUserGuard(service: any) {
   return async function(req, args, query) {
     //check if logged in
     if(!req.user) return false;
@@ -40,6 +41,25 @@ export function generateCheckPermissionsLink(method: string, service: any) {
       if(!permissions) return false;
 
       return permissions[method] > 0;
+    } catch(err) {
+      return false;
+    }
+  }
+}
+
+export function generateUserAdminGuard() {
+  return async function(req, args, query) {
+    //check if logged in
+    if(!req.user) return false;
+
+    try {
+      const userRecords = await mysqlHelper.executeDBQuery("SELECT role FROM user WHERE id = :id", {
+        id: req.user.id
+      });
+
+      if(!userRecords[0]) return false;
+
+      return UserRoleEnum.enum[userRecords[0].role] === "ADMIN";
     } catch(err) {
       return false;
     }

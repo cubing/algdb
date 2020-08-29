@@ -58,7 +58,7 @@ export default class {
       if(field in validQuery) {
         if(validQuery[field].updateable) {
           //if there's a setter to transform the input, use that
-          mysqlFields[field] = validQuery[field].mysqlOptions.validator ? validQuery[field].mysqlOptions.validator(args[field]) : args[field];
+          mysqlFields[field] = validQuery[field].transform?.setter ? await validQuery[field].transform?.setter(args[field]) : args[field];
         } else if(validQuery[field].updater) {
           customResolvers[field] = validQuery[field].updater;
         }

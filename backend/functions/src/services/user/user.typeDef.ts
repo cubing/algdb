@@ -1,8 +1,6 @@
 import * as bcrypt from 'bcryptjs';
 
-import firestoreHelper from '../../helpers/tier1/firestore';
-
-import { generateUpdatedAtField, generateCreatedAtField } from '../../helpers/tier0/typeDef';
+import { generateIdField, generateUpdatedAtField, generateCreatedAtField } from '../../helpers/tier0/typeDef';
 
 import { User, UserRoleEnum } from '../services'
 
@@ -10,13 +8,7 @@ import { DataTypes } from "sequelize";
 import { dataTypes } from '../../jql/helpers/dataType';
 
 export default {
-  id: {
-    type: dataTypes.ID,
-    mysqlOptions: {
-      type: DataTypes.INTEGER,
-    },
-    filterable: true
-  },
+  ...generateIdField(),
   provider: {
     type: dataTypes.STRING,
     mysqlOptions: {
@@ -24,6 +16,7 @@ export default {
       unique: 'compositeIndex'
     },
     addable: true,
+    hidden: true,
   },
   provider_id: {
     type: dataTypes.STRING,
@@ -32,6 +25,7 @@ export default {
       unique: 'compositeIndex'
     },
     addable: true,
+    hidden: true,
   },
   wca_id: {
     type: dataTypes.STRING,
@@ -116,6 +110,12 @@ export default {
         id: currentObject.role
       }, query);
     },
-    filterable: true
+    transform: {
+      setter: (value) => {
+        return UserRoleEnum.enum[value];
+      }
+    },
+    filterable: true,
+    updateable: true,
   },
 }

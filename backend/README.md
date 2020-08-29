@@ -1,70 +1,109 @@
-# jql-boilerplate
+# algdb backend
 
-Sample Requests:
+Important Requests:
 
-**Get a user by ID**
+**Login Using WCA Code**
 
-`POST https://us-central1-jql-boilerplate.cloudfunctions.net/api/graphql`
+`POST https://us-central1-algdb-d312e.cloudfunctions.net/api/jql`
 
 ```
 {
-	"action": "getUser",
+	"action": "socialLogin",
+	"query": {
+		"token": null,
+		"type": null,
+		"__args": {
+			"provider": "wca",
+			"code": "<CODE FROM WCA RESPONSE HERE>"
+		}
+	}
+}
+```
+
+**Get Current User Info (AUTH)**
+
+`POST https://us-central1-algdb-d312e.cloudfunctions.net/api/jql (Authorization required)`
+
+```
+{
+	"action": "getCurrentUser",
+	"query": {
+		"id": null,
+		"wca_id": null,
+		"email": null,
+		"avatar": null,
+		"country": null,
+		"is_public": null,
+		"role": {
+			"id": null,
+			"name": null
+		}
+	}
+}
+```
+
+**Update User by ID (ADMIN) (AUTH)**
+
+`POST https://us-central1-algdb-d312e.cloudfunctions.net/api/jql`
+
+```
+{
+	"action": "updateUser",
+	"query": {
+		"id": null,
+		"wca_id": null,
+		"email": null,
+		"avatar": null,
+		"country": null,
+		"is_public": null,
+		"role": {
+			"id": null,
+			"name": null
+		},
+		"__args": {
+			"id": 1,
+			"name": "John Doe",
+			"role": "MODERATOR"
+		}
+	}
+}
+```
+
+**Add Puzzle (ADMIN) (AUTH)**
+
+`POST https://us-central1-algdb-d312e.cloudfunctions.net/api/jql`
+
+```
+{
+	"action": "createPuzzle",
 	"query": {
 		"id": null,
 		"name": null,
-		"reviews": {
-			"data": {
-				"id": null,
-				"name": null,
-				"created_by": {
-          "id": null,
-          "name": null,
+		"__args": {
+			"id": 1,
+			"name": "3x3x3"
+		}
+	}
+}
+```
+
+**List All Puzzles (showing totals/counts)**
+
+`POST https://us-central1-algdb-d312e.cloudfunctions.net/api/jql`
+
+```
+{
+	"action": "getMultiplePuzzle",
+	"query": {
+        "paginatorInfo": {
+            "count": null,
+            "total": null
         },
-        "jsonFields": null
-			}
-		},
-		"__args": {
-			"id": 1
-		}
-	}
-}
-```
-
-**Get reviews created by a user**
-
-`POST https://us-central1-jql-boilerplate.cloudfunctions.net/api/graphql`
-
-```
-{
-	"action": "getReviews",
-	"query": {
-		"data": {
-			"id": null,
-			"created_by": {
-				"id": null,
-				"name": null
-			}
-		},
-		"__args": {
-			"user_id": 2
-		}
-	}
-}
-```
-
-**Get company by ID**
-
-`POST https://us-central1-jql-boilerplate.cloudfunctions.net/api/graphql`
-
-```
-{
-	"action": "getCompany",
-	"query": {
-		"id": null,
-		"created_by": null,
-		"__args": {
-			"id": 2
-		}
+        "data": {
+            "id": null,
+            "name": null,
+            "created_at": null
+        }
 	}
 }
 ```

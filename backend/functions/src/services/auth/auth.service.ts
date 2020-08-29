@@ -106,6 +106,7 @@ export class Auth extends Service {
       const addUserResult = await User.createRecord(req, {
         provider: args.provider,
         provider_id: wcaData.me.id,
+        wca_id: wcaData.me.wca_id,
         email: wcaData.me.email,
         name: wcaData.me.name,
         avatar: wcaData.me.avatar.url,

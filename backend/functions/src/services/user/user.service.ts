@@ -7,7 +7,7 @@ import errorHelper from '../../helpers/tier0/error';
 import resolverHelper from '../../helpers/tier2/resolver';
 import { handleJqlSubscriptionTriggerIterative } from '../../helpers/tier3/subscription'
 
-import * as permissionsHelper from '../../helpers/tier2/permissions'
+import { generateItemCreatedByUserGuard, generateUserAdminGuard } from '../../helpers/tier2/permissions'
 
 export class User extends Service {
   static __typename = 'user';
@@ -48,7 +48,7 @@ export class User extends Service {
   static sortFields = ["id", "created_by"];
 
   static accessControl = {
-    get: permissionsHelper.generateCreatedByUser(User),
+    get: generateItemCreatedByUserGuard(User),
 
     getMultiple: (req, args, query) => {
       //check if logged in
@@ -62,13 +62,11 @@ export class User extends Service {
 
     create: (req, args, query) => {
       return true;
-  
-      //allow if permissionsLink (between user and this item) exists (can also check if some fields on there > some number)
     },
 
-    update: permissionsHelper.generateCreatedByUser(User),
+    update: generateUserAdminGuard(),
 
-    delete: permissionsHelper.generateCreatedByUser(User),
+    delete: generateItemCreatedByUserGuard(User),
   }
 
   static async createRecord(req, args = <any> {}, query?: object) {
