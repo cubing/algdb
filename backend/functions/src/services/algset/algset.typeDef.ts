@@ -57,4 +57,11 @@ export default {
       }, query);
     }
   },
+  score: {
+    type: dataTypes.INTEGER,
+    mysqlOptions: {
+      type: DataTypes.INTEGER,
+    },
+    addable: true,
+  }
 }
