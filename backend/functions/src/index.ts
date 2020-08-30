@@ -61,7 +61,7 @@ app.post('/mysql/sync', function(req, res) {
     foreignKey: 'created_by'
   });
   */
-  sequelize.sync({ force: true }).then(() => {
+  sequelize.sync({ alter: true }).then(() => {
     console.log("Drop and re-sync db.");
     sequelize.close();
     res.send({});

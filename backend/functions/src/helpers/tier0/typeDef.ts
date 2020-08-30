@@ -42,3 +42,26 @@ export function generateIdField() {
     },
   };
 };
+
+export function generateEnumField(name: string, service: any) {
+  return {
+    [name]: {
+      type: service.__typename,
+      mysqlOptions: {
+        type: DataTypes.INTEGER,
+      },
+      resolver: async (context, req, currentObject, query, args, parent) => {
+        return service.getRecord(req, {
+          id: currentObject[name]
+        }, query);
+      },
+      transform: {
+        setter: (value) => {
+          return service.enum[value];
+        }
+      },
+      filterable: true,
+      updateable: true,
+    },
+  };
+};

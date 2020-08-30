@@ -1,6 +1,6 @@
 import * as bcrypt from 'bcryptjs';
 
-import { generateIdField, generateUpdatedAtField, generateCreatedAtField } from '../../helpers/tier0/typeDef';
+import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generateEnumField } from '../../helpers/tier0/typeDef';
 
 import { User, UserRoleEnum } from '../services'
 
@@ -100,22 +100,5 @@ export default {
     addable: true,
     filterable: true,
   },
-  role: {
-    type: UserRoleEnum.__typename,
-    mysqlOptions: {
-      type: DataTypes.INTEGER,
-    },
-    resolver: async (context, req, currentObject, query, args, parent) => {
-      return UserRoleEnum.getRecord(req, {
-        id: currentObject.role
-      }, query);
-    },
-    transform: {
-      setter: (value) => {
-        return UserRoleEnum.enum[value];
-      }
-    },
-    filterable: true,
-    updateable: true,
-  },
+  ...generateEnumField('role', UserRoleEnum),
 }

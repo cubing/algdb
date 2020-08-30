@@ -1,5 +1,6 @@
 import resolvers from './services/resolvers';
 import { typeDefs } from './services/typeDefs'
+import { enums } from './services/enums'
 export { typeDefs } from './services/typeDefs'
 
 export const rootResolvers = resolvers;
@@ -18,7 +19,8 @@ export function generateSchema() {
     query: {},
     mutation: {},
     subscription: {},
-    types: {}
+    types: {},
+    enums: {}
   };
 
   //add the rootResolvers
@@ -32,7 +34,21 @@ export function generateSchema() {
   for(const type in typeDefs) {
     output.types[type] = {};
     for(const prop in typeDefs[type]) {
-      output.types[type][prop] = typeDefs[type][prop].type;
+      if(!typeDefs[type][prop].hidden) {
+        output.types[type][prop] = typeDefs[type][prop].type;
+      }
+    }
+  }
+
+  //add enums
+  for(const prop in enums) {
+    output.enums[prop] = {};
+    
+    for(const entry in enums[prop]) {
+      //only add property if key is not number
+      if(Number.isNaN(parseInt(entry))) {
+        output.enums[prop][entry] = enums[prop][entry];
+      }
     }
   }
   

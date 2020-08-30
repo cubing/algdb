@@ -84,6 +84,20 @@ type AlgSet {
   puzzle: Puzzle!
   subsets(): [AlgSetSubsetTagLink]!
   cases(): [Case]!
+  has_subsets: Boolean!
+}
+
+type Subset {
+  id: ID!
+  name: String!
+  created_at: DateTime!
+  updated_at: DateTime
+  created_by: User!
+  parent: Subset
+  algset: AlgSet!
+  puzzle: Puzzle!
+  subsets(): [AlgSetSubsetTagLink]!
+  cases(): [Case]!
 }
 
 type Case {

@@ -1,6 +1,11 @@
 import User from './user/user.resolver';
 import Auth from './auth/auth.resolver';
 import Puzzle from './puzzle/puzzle.resolver';
+import Algset from './algset/algset.resolver';
+import Subset from './subset/subset.resolver';
+import Algcase from './algcase/algcase.resolver';
+
+const rootResolvers = [User, Auth, Puzzle, Algset, Subset, Algcase];
 
 const resolvers = {
   query: {},
@@ -18,7 +23,7 @@ function mergeResolvers(resolversArray: any) {
   }
 }
 
-mergeResolvers([User, Auth, Puzzle]);
+mergeResolvers(rootResolvers);
 
 export default resolvers;
 

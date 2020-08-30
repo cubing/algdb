@@ -311,10 +311,15 @@ export default class Mysql {
 
           if(Array.isArray(fieldvalue.value)) {
             where_substatements.push((joinTableAlias || joinTableName || table) + "." + (fieldvalue.foreignField || fieldname) + " IN (:" + placeholder + ")");
+            params[placeholder] = fieldvalue.value;
+          } else if(fieldvalue.value === null) {
+            //if fieldvalue.value === null, change the format accordingly
+            where_substatements.push((joinTableAlias || joinTableName || table) + "." + (fieldvalue.foreignField ?? fieldname) + " IS NULL");
           } else {
             where_substatements.push((joinTableAlias || joinTableName || table) + "." + (fieldvalue.foreignField ?? fieldname) + " " + operator + " :" + placeholder);
+            params[placeholder] = fieldvalue.value;
           }
-          params[placeholder] = fieldvalue.value;
+          
         }
       }
       if(where_substatements.length > 0) {

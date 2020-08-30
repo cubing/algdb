@@ -11,7 +11,7 @@ export default function(currentEnum: object) {
     name: {
       type: dataTypes.STRING,
       resolver: async (context, req, currentObject, query, args) => {
-        return currentEnum[args.id]
+        return currentEnum[args.id];
       }
     }
   }

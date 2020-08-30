@@ -25,7 +25,7 @@ Important Requests:
 
 **Get Current User Info (AUTH)**
 
-`POST https://us-central1-algdb-d312e.cloudfunctions.net/api/jql (Authorization required)`
+`POST https://us-central1-algdb-d312e.cloudfunctions.net/api/jql`
 
 ```
 {
