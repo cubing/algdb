@@ -12,6 +12,8 @@ export { Subset } from './subset/subset.service'
 export { Algcase } from './algcase/algcase.service'
 export { Alg } from './alg/alg.service'
 export { AlgAlgcaseLink } from './link/algAlgCaseLink/algAlgCaseLink.service'
+export { UserAlgTagLink } from './link/userAlgTagLink/userAlgTagLink.service'
+export { Tag } from './tag/tag.service'
 
 
 export { userRoleEnum as UserRoleEnum }

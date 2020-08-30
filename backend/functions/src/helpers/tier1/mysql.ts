@@ -204,11 +204,11 @@ export default class Mysql {
       if(query[entry]?.mysqlOptions?.getter) {
         //process fields with bound functions
         returnObject.select_statement += query[entry].mysqlOptions.getter((tableObject.alias || tableObject.name) + '.' + entry) + ' AS "' + (parentEntriesCopy.length > 0 ? parentEntriesCopy.join('.') + '.' : '') + entry + '"';
-      } else if(query[entry]?.type && query[entry]?.mysqlOptions?.joinInfo) {
+      } else if(query[entry]?.mysqlOptions?.joinInfo?.type && query[entry]?.mysqlOptions?.joinInfo) {
         //process type fields
         //check if it is a joinable field and assemble the join statement
         const joinTableObject = {
-          name: query[entry].type,
+          name: query[entry].mysqlOptions?.joinInfo?.type,
           alias: null
         };
 
