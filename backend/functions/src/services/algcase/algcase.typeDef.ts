@@ -1,6 +1,6 @@
 import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generateEnumField } from '../../helpers/tier0/typeDef';
 
-import { User, Puzzle, Algset, Subset, CaseVisualizationEnum } from '../services'
+import { User, Puzzle, Algset, Subset, AlgAlgcaseLink, CaseVisualizationEnum } from '../services'
 
 import { DataTypes } from "sequelize";
 import { dataTypes } from '../../jql/helpers/dataType';
@@ -69,5 +69,14 @@ export default {
     },
     addable: true,
     filterable: true,
+  },
+  algs: {
+    type: AlgAlgcaseLink.__typename,
+    resolver: async (context, req, currentObject, query, args, parent) => {
+      return AlgAlgcaseLink.paginator.getRecord(req, {
+        ...query?.__args,
+        algcase: currentObject.id
+      }, query);
+    }
   }
 }

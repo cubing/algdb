@@ -127,6 +127,13 @@ type Alg {
   current_user_tags: [Tag]
 }
 
+type AlgAlgcaseLink {
+  id: ID!
+  alg: Alg!
+  algcase: AlgCase!
+  
+}
+
 type Tag {
   id: ID!
   type: String!

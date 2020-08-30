@@ -17,11 +17,15 @@ export default {
         {
           id: args.id,
           email: args.email,
+          exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60)
         },
         env.general.jwt_secret,
-        { expiresIn: '7d' },
       );
     }
+  },
+  expiration: {
+    type: dataTypes.INTEGER,
+    resolver: () => Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60)
   },
   user: {
     type: User.__typename,
