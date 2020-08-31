@@ -1,5 +1,7 @@
 export type Maybe<T> = T | null;
-export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+export type Exact<T extends { [key: string]: unknown }> = {
+  [K in keyof T]: T[K];
+};
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: string;
@@ -20,22 +22,18 @@ export type Query = {
   getCases: Array<Maybe<Case>>;
 };
 
-
 export type QueryGetUserArgs = {
   id: Scalars['ID'];
 };
-
 
 export type QueryGetAlgsArgs = {
   tag_names?: Maybe<Array<Maybe<Scalars['String']>>>;
   user_id: Scalars['ID'];
 };
 
-
 export type QueryGetAlgSetSubsetTagsArgs = {
   algset_id: Scalars['ID'];
 };
-
 
 export type QueryGetCasesArgs = {
   algsetsubsettag_name: Scalars['String'];
@@ -57,62 +55,51 @@ export type Mutation = {
   createAlgSetSubsetTagLink: AlgSetSubsetTagLink;
 };
 
-
 export type MutationLoginUserArgs = {
   username: Scalars['String'];
   password: Scalars['String'];
 };
-
 
 export type MutationSocialLoginArgs = {
   provider: Scalars['String'];
   code: Scalars['String'];
 };
 
-
 export type MutationCreateAlgSetArgs = {
   puzzle_id: Scalars['ID'];
 };
-
 
 export type MutationCreateCaseArgs = {
   algset_id: Scalars['ID'];
 };
 
-
 export type MutationCreateAlgArgs = {
   case_id: Scalars['ID'];
 };
 
-
 export type MutationCreateTagArgs = {
   name: Scalars['String'];
 };
-
 
 export type MutationVoteAlgArgs = {
   alg_id: Scalars['ID'];
   upvote: Scalars['Boolean'];
 };
 
-
 export type MutationUpdateUserArgs = {
   user_id: Scalars['ID'];
   is_public?: Maybe<Scalars['Boolean']>;
 };
-
 
 export type MutationCreateUserAlgTagLinkArgs = {
   tag_id: Scalars['ID'];
   alg_id: Scalars['ID'];
 };
 
-
 export type MutationCreateAlgSetSubetTagArgs = {
   algset_id: Scalars['ID'];
   name: Scalars['String'];
 };
-
 
 export type MutationCreateAlgSetSubsetTagLinkArgs = {
   algsettag_id: Scalars['ID'];
@@ -145,11 +132,9 @@ export type User = {
   color_scheme?: Maybe<UserPuzzleColorScheme>;
 };
 
-
 export type UserTaggedAlgsArgs = {
   tag_names?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
-
 
 export type UserColor_SchemeArgs = {
   puzzle_id: Scalars['ID'];
@@ -158,13 +143,13 @@ export type UserColor_SchemeArgs = {
 export enum UserRole {
   Admin = 'ADMIN',
   Moderator = 'MODERATOR',
-  Normal = 'NORMAL'
+  Normal = 'NORMAL',
 }
 
 export enum CaseVisualization {
   VPg3D = 'V_PG3D',
   V_2D = 'V_2D',
-  V_3D = 'V_3D'
+  V_3D = 'V_3D',
 }
 
 export type UserPuzzleColorScheme = {

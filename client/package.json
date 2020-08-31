@@ -32,6 +32,8 @@
 		"build": "react-scripts build",
 		"test": "react-scripts test",
 		"eject": "react-scripts eject",
+		"format": "prettier --write src/**/*.ts{,x}",
+		"lint": "tsc --noEmit && eslint src/**/*.ts{,x}",
 		"gen-types": "yarn graphql-codegen",
 		"watch-gen-types": "npm-watch gen-types"
 	},
@@ -41,9 +43,6 @@
 				"../schema.graphql"
 			]
 		}
-	},
-	"eslintConfig": {
-		"extends": "react-app"
 	},
 	"browserslist": {
 		"production": [
@@ -60,7 +59,25 @@
 	"devDependencies": {
 		"@graphql-codegen/cli": "^1.17.8",
 		"@graphql-codegen/typescript": "^1.17.9",
+		"@typescript-eslint/eslint-plugin": "^4.0.1",
+		"@typescript-eslint/parser": "^4.0.1",
+		"babel-eslint": "^10.1.0",
+		"eslint": "^7.7.0",
+		"eslint-config-airbnb": "18.2.0",
+		"eslint-config-airbnb-typescript": "^9.0.0",
+		"eslint-config-prettier": "^6.11.0",
+		"eslint-config-react-app": "^5.2.1",
+		"eslint-import-resolver-typescript": "^2.2.1",
+		"eslint-loader": "^4.0.2",
+		"eslint-plugin-flowtype": "^5.2.0",
+		"eslint-plugin-import": "^2.22.0",
+		"eslint-plugin-jest": "^23.20.0",
+		"eslint-plugin-jsx-a11y": "^6.3.1",
+		"eslint-plugin-prettier": "^3.1.4",
+		"eslint-plugin-react": "^7.20.6",
+		"eslint-plugin-react-hooks": "^4.1.0",
 		"graphql": "^15.3.0",
-		"npm-watch": "^0.7.0"
+		"npm-watch": "^0.7.0",
+		"prettier": "^2.1.1"
 	}
 }
