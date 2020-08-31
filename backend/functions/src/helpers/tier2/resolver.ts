@@ -7,7 +7,7 @@ import mysqlHelper from '../tier1/mysql';
 
 export default class {
   //validates the add fields, and then does the add operation
-  static async addTableRow(classname, args) {
+  static async addTableRow(classname, args, ignore = false) {
     //resolve the setters
     const validQuery = typeDefs[classname];
 
@@ -29,7 +29,7 @@ export default class {
     }
 
     //do the mysql first
-    const addResults = await mysqlHelper.insertTableRow(classname, mysqlFields);
+    const addResults = await mysqlHelper.insertTableRow(classname, mysqlFields, ignore);
 
     const resultObject = {
       id: addResults.insertId

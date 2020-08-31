@@ -4,8 +4,12 @@ import Puzzle from './puzzle/puzzle.resolver';
 import Algset from './algset/algset.resolver';
 import Subset from './subset/subset.resolver';
 import Algcase from './algcase/algcase.resolver';
+import Alg from './alg/alg.resolver';
+import AlgAlgCaseLink from './link/algAlgCaseLink/algAlgCaseLink.resolver';
+import UserAlgTagLink from './link/userAlgTagLink/userAlgTagLink.resolver';
+import Tag from './tag/tag.resolver';
 
-const rootResolvers = [User, Auth, Puzzle, Algset, Subset, Algcase];
+const rootResolvers = [User, Auth, Puzzle, Algset, Subset, Algcase, Alg, AlgAlgCaseLink, UserAlgTagLink, Tag];
 
 const resolvers = {
   query: {},

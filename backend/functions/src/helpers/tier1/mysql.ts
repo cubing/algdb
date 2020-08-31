@@ -204,11 +204,11 @@ export default class Mysql {
       if(query[entry]?.mysqlOptions?.getter) {
         //process fields with bound functions
         returnObject.select_statement += query[entry].mysqlOptions.getter((tableObject.alias || tableObject.name) + '.' + entry) + ' AS "' + (parentEntriesCopy.length > 0 ? parentEntriesCopy.join('.') + '.' : '') + entry + '"';
-      } else if(query[entry]?.type && query[entry]?.mysqlOptions?.joinInfo) {
+      } else if(query[entry]?.mysqlOptions?.joinInfo?.type && query[entry]?.mysqlOptions?.joinInfo) {
         //process type fields
         //check if it is a joinable field and assemble the join statement
         const joinTableObject = {
-          name: query[entry].type,
+          name: query[entry].mysqlOptions?.joinInfo?.type,
           alias: null
         };
 
@@ -307,16 +307,17 @@ export default class Mysql {
           params[fieldname + "0"] = fieldvalue.value[0];
           params[fieldname + "1"] = fieldvalue.value[1];
         } else {
-          const placeholder = (fieldname in params) ? fieldname + whereIndex : fieldname;
+          const realFieldname = fieldvalue.foreignField ?? fieldname;
+          const placeholder = (realFieldname in params) ? realFieldname + whereIndex : realFieldname;
 
           if(Array.isArray(fieldvalue.value)) {
-            where_substatements.push((joinTableAlias || joinTableName || table) + "." + (fieldvalue.foreignField || fieldname) + " IN (:" + placeholder + ")");
+            where_substatements.push((joinTableAlias || joinTableName || table) + "." + realFieldname + " IN (:" + placeholder + ")");
             params[placeholder] = fieldvalue.value;
           } else if(fieldvalue.value === null) {
             //if fieldvalue.value === null, change the format accordingly
-            where_substatements.push((joinTableAlias || joinTableName || table) + "." + (fieldvalue.foreignField ?? fieldname) + " IS NULL");
+            where_substatements.push((joinTableAlias || joinTableName || table) + "." + realFieldname + " IS NULL");
           } else {
-            where_substatements.push((joinTableAlias || joinTableName || table) + "." + (fieldvalue.foreignField ?? fieldname) + " " + operator + " :" + placeholder);
+            where_substatements.push((joinTableAlias || joinTableName || table) + "." + realFieldname + " " + operator + " :" + placeholder);
             params[placeholder] = fieldvalue.value;
           }
           
