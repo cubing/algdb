@@ -1,159 +1,164 @@
 type Query {
-  getUser(id: ID!): User!
-  getUsers(): [User]!
-  getPuzzles(): [Puzzle]!
-  getTags(): [Tags]!
-  getAlgs(tag_names: [String], user_id: ID!): [Alg]!
-  getAlgSetSubsetTags(algset_id: ID!): [AlgSetTags]!
-  getCases(algsetsubsettag_name: String!): [Case]!
+	getUser(id: ID!): User!
+	getUsers: [User]!
+	getPuzzles: [Puzzle]!
+	getTags: [Tag]!
+	getAlgs(tag_names: [String], user_id: ID!): [Alg]!
+	getAlgSetSubsetTags(algset_id: ID!): [Tag]!
+	getCases(algsetsubsettag_name: String!): [Case]!
 }
 
 type Mutation {
-  loginUser(username: String!, password: String!): Auth!
-  socialLogin(provider: String!, code: String!): Auth!
-  createPuzzle(): Puzzle!
-  createAlgSet(puzzle_id: ID!): AlgSet!
-  createCase(algset_id: ID!): Case!
-  createAlg(case_id: ID!): Alg!
-  createTag(name: String!): Tag!
-  voteAlg(alg_id: ID!, upvote: Boolean!): Alg!
-  updateUser(user_id: ID!, is_public: Boolean): User!
-  createUserAlgTagLink(tag_id: ID!, alg_id: ID!): UserAlgTagLink!
-  createAlgSetSubetTag(algset_id: ID!, name: String!): AlgSetSubsetTag!
-  createAlgSetSubsetTagLink(algsettag_id: ID!, case_id: ID!): AlgSetSubsetTagLink!
+	loginUser(username: String!, password: String!): Auth!
+	socialLogin(provider: String!, code: String!): Auth!
+	createPuzzle: Puzzle!
+	createAlgSet(puzzle_id: ID!): AlgSet!
+	createCase(algset_id: ID!): Case!
+	createAlg(case_id: ID!): Alg!
+	createTag(name: String!): Tag!
+	voteAlg(alg_id: ID!, upvote: Boolean!): Alg!
+	updateUser(user_id: ID!, is_public: Boolean): User!
+	createUserAlgTagLink(tag_id: ID!, alg_id: ID!): UserAlgTagLink!
+	createAlgSetSubetTag(algset_id: ID!, name: String!): AlgSetSubsetTag!
+	createAlgSetSubsetTagLink(
+		algsettag_id: ID!
+		case_id: ID!
+	): AlgSetSubsetTagLink!
 }
 
 type Auth {
-  type: String!
-  token: String!
-  user: User!
+	type: String!
+	token: String!
+	user: User!
 }
 
 type User {
-  id: ID!
-  provider: String!
-  provider_id: String!
-  wca_id: String!
-  email: String! 
-  name: String!
-  avatar: String!
-  country: String!
-  is_public: Boolean!
-  created_at: DateTime!
-  updated_at: DateTime
-  created_by: User!
-  role: UserRole
-  taggedAlgs(tag_names: [String]): [Alg]!
-  color_scheme(puzzle_id: ID!): UserPuzzleColorScheme
+	id: ID!
+	provider: String!
+	provider_id: String!
+	wca_id: String!
+	email: String!
+	name: String!
+	avatar: String!
+	country: String!
+	is_public: Boolean!
+	created_at: Int!
+	updated_at: Int
+	created_by: User!
+	role: UserRole
+	taggedAlgs(tag_names: [String]): [Alg]!
+	color_scheme(puzzle_id: ID!): UserPuzzleColorScheme
 }
 
 enum UserRole {
-  ADMIN
-  MODERATOR
-  NORMAL
+	ADMIN
+	MODERATOR
+	NORMAL
 }
 
 enum CaseVisualization {
-  2D
-  3D
-  PG3D
+	V_PG3D
+	V_2D
+	V_3D
 }
 
 type UserPuzzleColorScheme {
-  id: ID!
-  user: User!
-  puzzle: Puzzle!
-  colors: String!
+	id: ID!
+	user: User!
+	puzzle: Puzzle!
+	colors: String!
 }
 
 type Puzzle {
-  id: ID!
-  name: String!
-  created_at: DateTime!
-  updated_at: DateTime
-  created_by: User!
-  algSets(): [AlgSet]!
+	id: ID!
+	name: String!
+	created_at: Int!
+	updated_at: Int
+	created_by: User!
+	algSets: [AlgSet]!
 }
 
 type AlgSet {
-  id: ID!
-  name: String!
-  created_at: DateTime!
-  updated_at: DateTime
-  created_by: User!
-  puzzle: Puzzle!
-  subsets(): [AlgSetSubsetTagLink]!
-  cases(): [Case]!
-  has_subsets: Boolean!
+	id: ID!
+	name: String!
+	created_at: Int!
+	updated_at: Int
+	created_by: User!
+	puzzle: Puzzle!
+	subsets: [AlgSetSubsetTagLink]!
+	cases: [Case]!
+	has_subsets: Boolean!
 }
 
 type Subset {
-  id: ID!
-  name: String!
-  created_at: DateTime!
-  updated_at: DateTime
-  created_by: User!
-  parent: Subset
-  algset: AlgSet!
-  puzzle: Puzzle!
-  subsets(): [AlgSetSubsetTagLink]!
-  cases(): [Case]!
+	id: ID!
+	name: String!
+	created_at: Int!
+	updated_at: Int
+	created_by: User!
+	parent: Subset
+	algset: AlgSet!
+	puzzle: Puzzle!
+	subsets: [AlgSetSubsetTagLink]!
+	cases: [Case]!
 }
 
 type Case {
-  id: ID!
-  name: String!
-  mask: String!
-  visualization: CaseVisualization!
-  created_at: DateTime!
-  updated_at: DateTime
-  created_by: User!
-  algset: AlgSet!
-  algs(): [Alg]!
+	id: ID!
+	name: String!
+	mask: String!
+	visualization: CaseVisualization!
+	created_at: Int!
+	updated_at: Int
+	created_by: User!
+	algset: AlgSet!
+	algs: [Alg]!
 }
 
 type Alg {
-  id: ID!
-  sequence: String!
-  puzzle: Puzzle!
-  algset: AlgSet!
-  case: Case!
-  up_votes: Int!
-  total_votes: Int!
-  current_user_vote: Boolean
-  created_at: DateTime!
-  updated_at: DateTime
-  created_by: User!
-  current_user_tags: [Tag]
+	id: ID!
+	sequence: String!
+	puzzle: Puzzle!
+	algset: AlgSet!
+	case: Case!
+	up_votes: Int!
+	total_votes: Int!
+	current_user_vote: Boolean
+	created_at: Int!
+	updated_at: Int
+	created_by: User!
+	current_user_tags: [Tag]
 }
 
 type Tag {
-  id: ID!
-  type: String!
-  name: String!
-  created_at: DateTime!
-  updated_at: DateTime
-  created_by: User!
+	id: ID!
+	type: String!
+	name: String!
+	created_at: Int!
+	updated_at: Int
+	created_by: User!
 }
 
 type UserAlgTagLink {
-  id: ID!
-  user: User!
-  tag: Tag!
-  alg: Alg!
+	id: ID!
+	user: User!
+	tag: Tag!
+	alg: Alg!
 }
 
 type SubsetTag {
-  id: ID!
-  name: String!
-  algset: AlgSet!
-  created_at: DateTime!
-  updated_at: DateTime
-  created_by: User!
+	id: ID!
+	name: String!
+	algset: AlgSet!
+	created_at: Int!
+	updated_at: Int
+	created_by: User!
 }
 
 type AlgSetSubsetTagLink {
-  id: ID!
-  algset: AlgSet!
-  subsetTag: SubsetTag!
+	id: ID!
+	algset: AlgSet!
+	subsetTag: SubsetTag!
 }
+
+type AlgSetSubsetTag

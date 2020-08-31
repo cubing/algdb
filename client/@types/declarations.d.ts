@@ -1,6 +1,7 @@
-declare namespace JSX {
-	interface IntrinsicElements {
-		twisty: any
-		'twisty-player': any
-	}
+interface JqlRes<T> {
+	data: T
+	dataType: string
+	message: string
+	responseType: string
+	statusCode: number
 }

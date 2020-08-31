@@ -11,6 +11,8 @@ import {
 } from '@chakra-ui/core'
 import ColorModeSwitcher from '../common/ColorModeSwitcher'
 import { useHistory } from 'react-router-dom'
+import useUser from '../../hooks/useUser'
+
 const MenuItems = ({ children }: React.PropsWithChildren<{}>) => (
 	<Text mt={{ base: 4, md: 0 }} mr={6} display='block'>
 		{children}
@@ -19,7 +21,6 @@ const MenuItems = ({ children }: React.PropsWithChildren<{}>) => (
 
 interface Props extends FlexProps {}
 
-// Note: This code could be better, so I'd recommend you to understand how I solved and you could write yours better :)
 const Header = (props: Props) => {
 	const [show, setShow] = React.useState(false)
 	const handleToggle = () => setShow(!show)
@@ -27,6 +28,7 @@ const Header = (props: Props) => {
 	const header = useColorModeValue('gray.100', 'gray.900')
 	const border = useColorModeValue('gray.900', 'gray.100')
 	const history = useHistory()
+	const { signIn, isLoggedIn, signOut } = useUser()
 	return (
 		<Flex
 			as='nav'
@@ -83,8 +85,11 @@ const Header = (props: Props) => {
 				<Box
 					display={{ xs: show ? 'block' : 'none', md: 'block' }}
 					mt={{ base: 4, md: 0 }}>
-					<Button bg='transparent' border='1px'>
-						Log In
+					<Button
+						bg='transparent'
+						border='1px'
+						onClick={() => (isLoggedIn ? signOut() : signIn())}>
+						{isLoggedIn ? 'Sign Out' : 'Sign In'}
 					</Button>
 				</Box>
 				<ColorModeSwitcher

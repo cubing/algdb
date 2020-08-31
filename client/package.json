@@ -14,12 +14,14 @@
 		"@types/react": "^16.9.0",
 		"@types/react-dom": "^16.9.0",
 		"@types/react-router-dom": "^5.1.5",
+		"axios": "^0.20.0",
 		"cubing": "^0.12.7",
 		"emotion": "^10.0.27",
 		"react": "^16.13.1",
 		"react-cubing": "0.0.1",
 		"react-dom": "^16.13.1",
 		"react-icons": "^3.0.0",
+		"react-query": "^2.12.1",
 		"react-router-dom": "^5.2.0",
 		"react-scripts": "3.4.3",
 		"typescript": "^3.9.5",
@@ -29,7 +31,16 @@
 		"start": "react-scripts start",
 		"build": "react-scripts build",
 		"test": "react-scripts test",
-		"eject": "react-scripts eject"
+		"eject": "react-scripts eject",
+		"gen-types": "yarn graphql-codegen",
+		"watch-gen-types": "npm-watch gen-types"
+	},
+	"watch": {
+		"gen-types": {
+			"patterns": [
+				"../schema.graphql"
+			]
+		}
 	},
 	"eslintConfig": {
 		"extends": "react-app"
@@ -45,5 +56,11 @@
 			"last 1 firefox version",
 			"last 1 safari version"
 		]
+	},
+	"devDependencies": {
+		"@graphql-codegen/cli": "^1.17.8",
+		"@graphql-codegen/typescript": "^1.17.9",
+		"graphql": "^15.3.0",
+		"npm-watch": "^0.7.0"
 	}
 }
