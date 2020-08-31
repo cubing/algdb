@@ -5,5 +5,5 @@
  * @returns boolean
  */
 export function isBefore(t1: Date, t2: Date) {
-  return t1.valueOf() < t2.valueOf();
+  return t1.valueOf() < t2.valueOf()
 }

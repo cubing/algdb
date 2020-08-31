@@ -15,4 +15,4 @@ export const activityKey = {
   '333ft': '3x3x3 with Feet',
   '333mbf': '3x3x3 Multiple Blindfolded',
   '333fm': 'Fewest Moves',
-};
+}

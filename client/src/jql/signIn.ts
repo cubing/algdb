@@ -1,9 +1,9 @@
-import axios from 'axios';
-import { Auth } from '../generated/jql';
+import axios from 'axios'
+import { Auth } from '../generated/jql'
 
 export interface SignInType {
-  serverUrl: string;
-  authToken: string;
+  serverUrl: string
+  authToken: string
 }
 
 const body = (code: string) =>
@@ -17,20 +17,20 @@ const body = (code: string) =>
         code,
       },
     },
-  });
+  })
 
 export default async function signIn({
   serverUrl,
   authToken,
 }: SignInType): Promise<JqlRes<Auth>> {
   try {
-    const postBody = body(authToken);
+    const postBody = body(authToken)
     const res = await axios.post<JqlRes<Auth>>(serverUrl, postBody, {
       headers: { 'Content-Type': 'application/json' },
-    });
-    return res.data;
+    })
+    return res.data
   } catch (err) {
-    console.error(err.message);
-    throw new Error('Unable to login');
+    console.error(err.message)
+    throw new Error('Unable to login')
   }
 }

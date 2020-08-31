@@ -27,13 +27,8 @@
     "SharedArrayBuffer": "readonly"
   },
   "rules": {
-    "prettier/prettier": [
-      "error",
-      {
-        "endOfLine": "auto"
-      }
-    ],
     "semi": 0,
-    "import/prefer-default-export": 0
+    "import/prefer-default-export": 0,
+    "react/jsx-props-no-spreading": 0
   }
 }

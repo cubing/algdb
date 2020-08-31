@@ -1,6 +1,6 @@
-import * as React from "react"
-import { chakra, keyframes, ImageProps } from "@chakra-ui/core"
-import logo from "./logo.svg"
+import * as React from 'react'
+import { chakra, keyframes, ImageProps } from '@chakra-ui/core'
+import logo from './logo.svg'
 
 const spin = keyframes`
   from { transform: rotate(0deg); }
@@ -11,7 +11,7 @@ export const Logo = (props: ImageProps) => (
   // @ts-ignore
   <chakra.img
     css={{
-      "@media (prefers-reduced-motion: no-preference)": {
+      '@media (prefers-reduced-motion: no-preference)': {
         animation: `${spin} infinite 20s linear`,
       },
     }}

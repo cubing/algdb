@@ -33,7 +33,7 @@
 		"test": "react-scripts test",
 		"eject": "react-scripts eject",
 		"format": "prettier --write src/**/*.ts{,x}",
-		"lint": "tsc --noEmit && eslint src/**/*.ts{,x}",
+		"lint": "tsc --noEmit && eslint src/**/* --ext js,ts,tsx",
 		"gen-types": "yarn graphql-codegen",
 		"watch-gen-types": "npm-watch gen-types"
 	},

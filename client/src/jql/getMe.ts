@@ -1,5 +1,5 @@
-import axios from 'axios';
-import { User } from '../generated/jql';
+import axios from 'axios'
+import { User } from '../generated/jql'
 
 const body = JSON.stringify({
   action: 'getCurrentUser',
@@ -15,11 +15,11 @@ const body = JSON.stringify({
       name: null,
     },
   },
-});
+})
 
 export interface GetMeType {
-  serverUrl: string;
-  authToken: string;
+  serverUrl: string
+  authToken: string
 }
 
 export default async function getMe({
@@ -31,6 +31,6 @@ export default async function getMe({
       'Content-Type': 'application/json',
       Authorization: `Bearer ${authToken}`,
     },
-  });
-  return res.data;
+  })
+  return res.data
 }

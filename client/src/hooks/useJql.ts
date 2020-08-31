@@ -1,6 +1,6 @@
-import { useContext } from 'react';
-import { JqlContext } from '../providers/JqlProvider';
+import { useContext } from 'react'
+import { JqlContext } from '../providers/JqlProvider'
 
 export default function useJql() {
-  return useContext(JqlContext);
+  return useContext(JqlContext)
 }
