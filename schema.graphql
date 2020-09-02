@@ -2,23 +2,23 @@ type Query {
   getCurrentUser(): User!,
   getMyUsers(): UserPaginator!,
   getUser(id: ID!): User!,
-  getMultipleUser(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, created_by.name: String): UserPaginator!,
+  getMultipleUser(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String): UserPaginator!,
   getPuzzle(id: ID!): Puzzle!,
-  getMultiplePuzzle(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, created_by.name: String): PuzzlePaginator!,
+  getMultiplePuzzle(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String): PuzzlePaginator!,
   getAlgset(id: ID!): Algset!,
-  getMultipleAlgset(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, puzzle: String, created_by.name: String): AlgsetPaginator!,
+  getMultipleAlgset(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, puzzle: String): AlgsetPaginator!,
   getSubset(id: ID!): Subset!,
-  getMultipleSubset(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, puzzle: String, algset: String, parent: String, created_by.name: String): SubsetPaginator!,
+  getMultipleSubset(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, puzzle: String, algset: String, parent: String): SubsetPaginator!,
   getAlgcase(id: ID!): Algcase!,
-  getMultipleAlgcase(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, created_by.name: String, algset: String, subset: String): AlgcasePaginator!,
+  getMultipleAlgcase(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, algset: String, subset: String): AlgcasePaginator!,
   getAlg(id: ID!): Alg!,
-  getMultipleAlg(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, created_by.name: String, algset: String, subset: String): AlgPaginator!,
+  getMultipleAlg(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, algset: String, subset: String): AlgPaginator!,
   getAlgAlgcaseLink(id: ID!): AlgAlgcaseLink!,
-  getMultipleAlgAlgcaseLink(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, created_by.name: String, alg: String, algcase: String, subset: String, algset: String, puzzle: String): AlgAlgcaseLinkPaginator!,
+  getMultipleAlgAlgcaseLink(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, alg: String, algcase: String, subset: String, algset: String, puzzle: String): AlgAlgcaseLinkPaginator!,
   getUserAlgTagLink(id: ID!): UserAlgTagLink!,
-  getMultipleUserAlgTagLink(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, created_by.name: String, alg: String, user: String, tag: String): UserAlgTagLinkPaginator!,
+  getMultipleUserAlgTagLink(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, alg: String, user: String, tag: String): UserAlgTagLinkPaginator!,
   getTag(id: ID!): Tag!,
-  getMultipleTag(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, created_by.name: String): TagPaginator!
+  getMultipleTag(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String): TagPaginator!
 }
 type Mutation {
   deleteUser(id: ID!): User!,
@@ -87,8 +87,8 @@ type Algset {
   updated_at: DateTime,
   created_by: User!,
   puzzle: Puzzle!,
-  algcases(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, created_by.name: String, algset: String, subset: String): Algcase!,
-  subsets(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, puzzle: String, algset: String, parent: String, created_by.name: String): Subset!,
+  algcases(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, algset: String, subset: String): Algcase!,
+  subsets(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, puzzle: String, algset: String, parent: String): Subset!,
   score: Int!
 }
 type AlgsetPaginator {
@@ -104,8 +104,8 @@ type Subset {
   puzzle: Puzzle!,
   algset: Algset!,
   parent: Subset,
-  algcases(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, created_by.name: String, algset: String, subset: String): Algcase!,
-  subsets(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, puzzle: String, algset: String, parent: String, created_by.name: String): Subset!
+  algcases(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, algset: String, subset: String): Algcase!,
+  subsets(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, puzzle: String, algset: String, parent: String): Subset!
 }
 type SubsetPaginator {
   paginatorInfo: PaginatorInfo!,
@@ -122,7 +122,7 @@ type Algcase {
   puzzle: Puzzle!,
   algset: Algset!,
   subset: Subset!,
-  algs(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, created_by.name: String, alg: String, algcase: String, subset: String, algset: String, puzzle: String): AlgAlgcaseLinkPaginator!
+  algs(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, alg: String, algcase: String, subset: String, algset: String, puzzle: String): AlgAlgcaseLinkPaginator!
 }
 type AlgcasePaginator {
   paginatorInfo: PaginatorInfo!,
