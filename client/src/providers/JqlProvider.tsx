@@ -43,6 +43,11 @@ const JqlProvider = ({
     }
   }
 
+  const value = React.useMemo(
+    () => ({ authToken, expiresAt, serverUrl, resetAuth, setAuth }),
+    [authToken, expiresAt, serverUrl],
+  )
+
   return (
     <JqlContext.Provider
       value={{

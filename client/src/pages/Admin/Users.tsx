@@ -1,12 +1,27 @@
 import React, { ReactElement } from 'react'
-import { useQuery } from 'react-query'
 import { Flex, Heading, Spinner } from '@chakra-ui/core'
-import getMultipleUser from '../../jql/getUsers'
+import useJqlQuery from '../../hooks/useJqlQuery'
+import { UserPaginator } from '../../generated/jql'
 
 export default function GetUsers(): ReactElement {
-  const { isLoading, data, error } = useQuery('getMultipleUser', getMultipleUser)
-
-  console.log(isLoading, error, data);
+  const query = {
+    paginatorInfo: {
+      count: null,
+      total: null,
+    },
+    data: {
+      id: null,
+      name: null,
+      role: null,
+      country: null,
+      created_at: null,
+    },
+  }
+  const { isLoading, data, error } = useJqlQuery<UserPaginator, Error>(
+    'getMultipleUser',
+    'getMultipleUser',
+    query,
+  )
 
   if (isLoading) {
     return <Spinner />
@@ -17,17 +32,14 @@ export default function GetUsers(): ReactElement {
     return <>error</>
   }
 
-  const userPaginator = data?.data;
-  const users = userPaginator?.data; // ugh
+  const users = data?.data
 
-	return (
-  <Flex justify='center' alignContent='center' direction='column'>
-    <Heading fontSize='4em' textAlign='center'>
-      Users
-    </Heading>
-    {users?.map((user) => user ? (
-      <p key={user.id}>{user.name}</p>
-    ) : false)}
-  </Flex>
-	)
+  return (
+    <Flex justify="center" alignContent="center" direction="column">
+      <Heading fontSize="4em" textAlign="center">
+        Users
+      </Heading>
+      {users?.map((user) => (user ? <p key={user.id}>{user.name}</p> : false))}
+    </Flex>
+  )
 }

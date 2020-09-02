@@ -1,12 +1,13 @@
 {
-  "devDependencies": {
-    "husky": "^4.2.5"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": [
-        "cd client/ && yarn run lint"
-      ]
-    }
-  }
+	"devDependencies": {
+		"husky": "^4.2.5"
+	},
+	"husky": {
+		"hooks": {
+			"pre-commit": [
+				"cd client/ && yarn run lint"
+			]
+		}
+	},
+	"license": "ISC"
 }
