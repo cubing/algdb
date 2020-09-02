@@ -40,7 +40,7 @@ export default {
     filterable: true,
   },
   algcases: {
-    type: Algcase.__typename,
+    type: Algcase.paginator.__typename,
     args: generatePaginatorArgs(Algcase),
     resolver: async (context, req, currentObject, query, args, parent) => {
       return Algcase.paginator.getRecord(req, {
@@ -50,7 +50,7 @@ export default {
     }
   },
   subsets: {
-    type: Subset.__typename,
+    type: Subset.paginator.__typename,
     args: generatePaginatorArgs(Subset),
     resolver: async (context, req, currentObject, query, args, parent) => {
       return Subset.paginator.getRecord(req, {
