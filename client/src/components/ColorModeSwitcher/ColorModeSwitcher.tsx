@@ -15,17 +15,17 @@ const ColorModeSwitcher = (props: ColorModeSwitcherProps) => {
 	const SwitchIcon = useColorModeValue(FaMoon, FaSun)
 
 	return (
-		<IconButton
-			size='md'
-			fontSize='lg'
-			variant='ghost'
-			color='current'
-			marginLeft='2'
-			onClick={toggleColorMode}
-			icon={<SwitchIcon />}
-			title={`Switch to ${text} mode`}
-			aria-label={`Switch to ${text} mode`}
-			{...props}
+  <IconButton
+    size='md'
+    fontSize='lg'
+    variant='ghost'
+    color='current'
+    marginLeft='2'
+    onClick={toggleColorMode}
+    icon={<SwitchIcon />}
+    title={`Switch to ${text} mode`}
+    aria-label={`Switch to ${text} mode`}
+    {...props}
 		/>
 	)
 }

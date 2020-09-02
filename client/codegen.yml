@@ -1,0 +1,8 @@
+overwrite: true
+schema: '../schema.graphql'
+generates:
+  ./src/generated/jql.ts:
+    plugins:
+      - typescript
+    config:
+      preResolveTypes: true

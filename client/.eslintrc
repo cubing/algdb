@@ -1,0 +1,34 @@
+{
+  "plugins": ["prettier", "@typescript-eslint", "react"],
+  "extends": ["airbnb-typescript", "react-app", "prettier", "prettier/@typescript-eslint"],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json",
+    "ecmaVersion": 2018,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "settings": {
+    "import/resolver": {
+      "typescript": {
+        "alwaysTryTypes": true
+      }
+    }
+  },
+  "env": {
+    "browser": true,
+    "es6": true,
+    "jest": true
+  },
+  "globals": {
+    "Atomics": "readonly",
+    "SharedArrayBuffer": "readonly"
+  },
+  "rules": {
+    "semi": 0,
+    "import/prefer-default-export": 0,
+    "react/jsx-props-no-spreading": 0
+  }
+}

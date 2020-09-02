@@ -33,17 +33,17 @@ export default function LandingCube(): ReactElement {
 	const onTwistyInit = (tp: TP) => setTwisty(tp)
 
 	return (
-		<Box
-			as={TwistyPlayer}
-			height='50vh'
-			width='100vw'
-			margin='auto'
-			opacity={opacity}
-			zIndex='-1'
-			background='none'
-			onTwistyInit={onTwistyInit}
-			controls='none'
-			visualization='PG3D'
+  <Box
+    as={TwistyPlayer}
+    height='50vh'
+    width='100vw'
+    margin='auto'
+    opacity={opacity}
+    zIndex='-1'
+    background='none'
+    onTwistyInit={onTwistyInit}
+    controls='none'
+    visualization='PG3D'
 		/>
 	)
 }

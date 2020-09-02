@@ -1,4 +1,5 @@
-type Query: {
+<<<<<<< HEAD
+type Query {
   getCurrentUser(): User!,
   getMyUsers(): UserPaginator!,
   getUser(id: ID!): User!,
@@ -20,9 +21,9 @@ type Query: {
   getTag(id: ID!): Tag!,
   getMultipleTag(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, created_by.name: String): TagPaginator!
 }
-type Mutation: {
+type Mutation {
   deleteUser(id: ID!): User!,
-  updateUser(id: ID!, name: String, avatar: String, country: String, is_public: Boolean, updated_at: DateTime, role: UserRoleEnum): User!,
+  updateUser(id: ID!, name: String, avatar: String, country: String, is_public: Boolean, updated_at: DateTime, role: UserRole): User!,
   createUser(provider: String, provider_id: String, wca_id: String, email: String, password: String, name: String, avatar: String, country: String, is_public: Boolean, created_at: DateTime, created_by: User): User!,
   loginUser(): Auth!,
   socialLogin(): Auth!,
@@ -36,7 +37,7 @@ type Mutation: {
   updateSubset(id: ID!, name: String, updated_at: DateTime): Subset!,
   createSubset(name: String, created_at: DateTime, created_by: User, puzzle: Puzzle, algset: Algset, parent: Subset): Subset!,
   deleteAlgcase(id: ID!): Algcase!,
-  updateAlgcase(id: ID!, name: String, mask: String, visualization: CaseVisualizationEnum, updated_at: DateTime): Algcase!,
+  updateAlgcase(id: ID!, name: String, mask: String, visualization: CaseVisualization, updated_at: DateTime): Algcase!,
   createAlgcase(name: String, mask: String, created_at: DateTime, created_by: User, puzzle: Puzzle, algset: Algset, subset: Subset): Algcase!,
   deleteAlg(id: ID!): Alg!,
   updateAlg(id: ID!, updated_at: DateTime): Alg!,
@@ -51,8 +52,8 @@ type Mutation: {
   updateTag(id: ID!, updated_at: DateTime): Tag!,
   createTag(name: String, created_at: DateTime, created_by: User): Tag!
 }
-type Subscription: {}
-type User: {
+type Subscription {}
+type User {
   id: ID!,
   wca_id: String,
   email: String!,
@@ -65,22 +66,22 @@ type User: {
   created_by: User!,
   role: UserRoleEnum
 }
-type UserPaginator: {
+type UserPaginator {
   paginatorInfo: PaginatorInfo!,
   data: [User]!
 }
-type Puzzle: {
+type Puzzle {
   id: ID!,
   name: String!,
   created_at: DateTime!,
   updated_at: DateTime,
   created_by: User!
 }
-type PuzzlePaginator: {
+type PuzzlePaginator {
   paginatorInfo: PaginatorInfo!,
   data: [Puzzle]!
 }
-type Algset: {
+type Algset {
   id: ID!,
   name: String!,
   created_at: DateTime!,
@@ -91,11 +92,11 @@ type Algset: {
   subsets(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, puzzle: String, algset: String, parent: String, created_by.name: String): Subset!,
   score: Int!
 }
-type AlgsetPaginator: {
+type AlgsetPaginator {
   paginatorInfo: PaginatorInfo!,
   data: [Algset]!
 }
-type Subset: {
+type Subset {
   id: ID!,
   name: String!,
   created_at: DateTime!,
@@ -107,11 +108,11 @@ type Subset: {
   algcases(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, created_by.name: String, algset: String, subset: String): Algcase!,
   subsets(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, puzzle: String, algset: String, parent: String, created_by.name: String): Subset!
 }
-type SubsetPaginator: {
+type SubsetPaginator {
   paginatorInfo: PaginatorInfo!,
   data: [Subset]!
 }
-type Algcase: {
+type Algcase {
   id: ID!,
   name: String!,
   mask: String,
@@ -124,22 +125,22 @@ type Algcase: {
   subset: Subset!,
   algs(id: String, first: Int, after: ID, limit: Int, search: String, sortBy: [String], sortDesc: [Boolean], created_by: String, created_by.name: String, alg: String, algcase: String, subset: String, algset: String, puzzle: String): AlgAlgcaseLinkPaginator!
 }
-type AlgcasePaginator: {
+type AlgcasePaginator {
   paginatorInfo: PaginatorInfo!,
   data: [Algcase]!
 }
-type Alg: {
+type Alg {
   id: ID!,
   sequence: String!,
   created_at: DateTime!,
   updated_at: DateTime,
   created_by: User!
 }
-type AlgPaginator: {
+type AlgPaginator {
   paginatorInfo: PaginatorInfo!,
   data: [Alg]!
 }
-type AlgAlgcaseLink: {
+type AlgAlgcaseLink {
   id: ID!,
   alg: Alg!,
   algcase: Algcase!,
@@ -147,11 +148,11 @@ type AlgAlgcaseLink: {
   updated_at: DateTime,
   created_by: User!
 }
-type AlgAlgcaseLinkPaginator: {
+type AlgAlgcaseLinkPaginator {
   paginatorInfo: PaginatorInfo!,
   data: [AlgAlgcaseLink]!
 }
-type UserAlgTagLink: {
+type UserAlgTagLink {
   id: ID!,
   user: User!,
   alg: Alg!,
@@ -160,45 +161,45 @@ type UserAlgTagLink: {
   updated_at: DateTime,
   created_by: User!
 }
-type UserAlgTagLinkPaginator: {
+type UserAlgTagLinkPaginator {
   paginatorInfo: PaginatorInfo!,
   data: [UserAlgTagLink]!
 }
-type Tag: {
+type Tag {
   id: ID!,
   name: String!,
   created_at: DateTime!,
   updated_at: DateTime,
   created_by: User!
 }
-type TagPaginator: {
+type TagPaginator {
   paginatorInfo: PaginatorInfo!,
   data: [Tag]!
 }
-type Auth: {
+type Auth {
   type: String!,
   token: String!,
   expiration: Int!,
   user: User!
 }
-type PaginatorInfo: {
+type PaginatorInfo {
   total: Int!,
   count: Int!
 }
-type UserRoleEnum: {
+type UserRoleEnum {
   id: ID!,
-  name: String!
+  name: UserRole!
 }
-type CaseVisualizationEnum: {
+type CaseVisualizationEnum {
   id: ID!,
-  name: String!
+  name: CaseVisualization!
 }
-enum UserRole: {
+enum UserRole {
   NORMAL: 1,
   MODERATOR: 2,
   ADMIN: 3
 }
-enum CaseVisualization: {
+enum CaseVisualization {
   2D: 1,
   3D: 2,
   PG3D: 3
