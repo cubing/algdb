@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 type Query {
   getCurrentUser(): User!,
   getMyUsers(): UserPaginator!,
