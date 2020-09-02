@@ -254,7 +254,7 @@ type Algset {
 		created_by: String
 		algset: String
 		subset: String
-	): Algcase!
+	): AlgcasePaginator!
 	subsets(
 		id: String
 		first: Int
@@ -267,7 +267,7 @@ type Algset {
 		puzzle: String
 		algset: String
 		parent: String
-	): Subset!
+	): SubsetPaginator!
 	score: Int!
 }
 type AlgsetPaginator {
