@@ -194,12 +194,12 @@ type CaseVisualizationEnum {
   name: CaseVisualization!
 }
 enum UserRole {
-  NORMAL: 1,
-  MODERATOR: 2,
-  ADMIN: 3
+  NORMAL
+  MODERATOR
+  ADMIN
 }
 enum CaseVisualization {
-  2D: 1,
-  3D: 2,
-  PG3D: 3
+  2D
+  3D
+  PG3D
 }
