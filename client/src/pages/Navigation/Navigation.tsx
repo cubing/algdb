@@ -1,6 +1,7 @@
 import React, { ReactElement } from 'react'
 import { Switch, Route } from 'react-router-dom'
 import Landing from '../Landing/Landing'
+import AdminUsers from '../Admin/Users'
 import WcaRedirect from '../../components/WcaRedirect/WcaRedirect'
 
 export default function Navigation(): ReactElement {
@@ -15,6 +16,9 @@ export default function Navigation(): ReactElement {
     <Route exact path='/puzzle/:puzzleId' />
     <Route exact path='/users' />
     <Route exact path='/user' />
+    <Route exact path='/admin/users'>
+      <AdminUsers />
+    </Route>
   </Switch>
 	)
 }
