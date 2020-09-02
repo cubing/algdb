@@ -1,4 +1,5 @@
 import { User } from '../services';
+import { typeDefs } from '../typeDefs';
 import { generateRootResolvers } from '../../helpers/tier2/rootResolver'
 
 const resolvers = {
@@ -28,7 +29,7 @@ const resolvers = {
   subscription: {}
 };
 
-generateRootResolvers(resolvers, User, {
+generateRootResolvers(resolvers, User, typeDefs, {
   methods: ["get", "getMultiple", "delete", "update", "create"]
 });
 

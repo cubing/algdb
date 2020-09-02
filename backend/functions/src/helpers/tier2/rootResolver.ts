@@ -1,4 +1,7 @@
-export function generateRootResolvers(rootResolvers: any, service: any, params: any) {
+import { dataTypes } from '../../jql/helpers/dataType';
+import { generatePaginatorArgs } from '../tier0/typeDef';
+
+export function generateRootResolvers(rootResolvers: any, service: any, typeDefs: any, params: any) {
   const capitalizedClass = service.__typename.charAt(0).toUpperCase() + service.__typename.slice(1);
 
   params.methods.forEach((method) => {
@@ -9,6 +12,9 @@ export function generateRootResolvers(rootResolvers: any, service: any, params: 
           method: "get",
           route: "/" + service.__typename + "/:id",
           type: service.__typename,
+          args: {
+            id: { type: dataTypes.ID, required: true }
+          },
           resolver: (req) => service.getRecord(req, {
             ...req.query,
             ...req.params,
@@ -21,6 +27,7 @@ export function generateRootResolvers(rootResolvers: any, service: any, params: 
           method: "get",
           route: "/" + service.__typename,
           type: service.paginator.__typename,
+          args: generatePaginatorArgs(service),
           resolver: (req) => service.paginator.getRecord(req, {
             ...req.query,
             ...req.params,
@@ -33,6 +40,9 @@ export function generateRootResolvers(rootResolvers: any, service: any, params: 
           method: "delete",
           route: "/" + service.__typename + "/:id",
           type: service.__typename,
+          args: {
+            id: { type: dataTypes.ID, required: true }
+          },
           resolver: (req) => service.deleteRecord(req, {
             ...req.params,
             ...req.jql?.__args
@@ -40,10 +50,20 @@ export function generateRootResolvers(rootResolvers: any, service: any, params: 
         }
         break;
       case "update":
+        const updateArgs = {};
+        for(const field in typeDefs[service.__typename]) {
+          if(typeDefs[service.__typename][field].updateable) {
+            updateArgs[field] = { type: typeDefs[service.__typename][field].type }
+          }
+        }
         rootResolvers.mutation[method + capitalizedClass] = {
           method: "put",
           route: "/" + service.__typename + "/:id",
           type: service.__typename,
+          args: {
+            id: { type: dataTypes.ID, required: true },
+            ...updateArgs
+          },
           resolver: (req) => service.updateRecord(req, {
             ...req.body,
             ...req.params,
@@ -52,10 +72,17 @@ export function generateRootResolvers(rootResolvers: any, service: any, params: 
         }
         break;
       case "create":
+        const createArgs = {};
+        for(const field in typeDefs[service.__typename]) {
+          if(typeDefs[service.__typename][field].addable) {
+            createArgs[field] = { type: typeDefs[service.__typename][field].type }
+          }
+        }
         rootResolvers.mutation[method + capitalizedClass] = {
           method: "post",
           route: "/" + service.__typename,
           type: service.__typename,
+          args: createArgs,
           resolver: (req) => service.createRecord(req, {
             ...req.body,
             ...req.params,

@@ -11,7 +11,6 @@ export function generateCreatedAtField() {
         getter: (field) => "UNIX_TIMESTAMP(" + field + ")",
       },
       addable: true,
-      updateable: true
     }
   };
 };
@@ -20,9 +19,11 @@ export function generateUpdatedAtField() {
   return {
     updated_at: {
       type: dataTypes.DATETIME,
+      allowNull: true,
       mysqlOptions: {
         type: DataTypes.DATE,
         getter: (field) => "UNIX_TIMESTAMP(" + field + ")",
+        setter: (field) => "CURRENT_TIMESTAMP"
       },
       updateable: true
     }
@@ -43,7 +44,7 @@ export function generateIdField() {
   };
 };
 
-export function generateEnumField(name: string, service: any) {
+export function generateEnumField(name: string, service: any, options?: object) {
   return {
     [name]: {
       type: service.__typename,
@@ -62,6 +63,26 @@ export function generateEnumField(name: string, service: any) {
       },
       filterable: true,
       updateable: true,
+      ...options
     },
   };
+};
+
+export function generatePaginatorArgs(service: any) {
+  const getArgs = {
+    id: { type: dataTypes.ID },
+    first: { type: dataTypes.INTEGER },
+    after: { type: dataTypes.ID },
+    limit: { type: dataTypes.INTEGER },
+    search: { type: dataTypes.STRING },
+    sortBy: { type: [dataTypes.STRING] },
+    sortDesc: { type: [dataTypes.BOOLEAN] },
+  };
+  if(service.filterFieldsMap) {
+    for(const field in service.filterFieldsMap) {
+      getArgs[field] = { type: dataTypes.STRING }
+    }
+  }
+
+  return getArgs;
 };

@@ -45,5 +45,9 @@ export function process(app: any, schema) {
 
   app.get("/schema", function(req, res) {
     res.send(schema.generateSchema());
+  });
+
+  app.get("/graphqlschema", function(req, res) {
+    res.send(schema.generateGraphqlSchema());
   })
 };

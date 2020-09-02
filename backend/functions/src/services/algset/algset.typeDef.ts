@@ -1,4 +1,4 @@
-import { generateIdField, generateUpdatedAtField, generateCreatedAtField } from '../../helpers/tier0/typeDef';
+import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generatePaginatorArgs } from '../../helpers/tier0/typeDef';
 
 import { User, Puzzle, Algcase, Subset } from '../services'
 
@@ -41,6 +41,7 @@ export default {
   },
   algcases: {
     type: Algcase.__typename,
+    args: generatePaginatorArgs(Algcase),
     resolver: async (context, req, currentObject, query, args, parent) => {
       return Algcase.paginator.getRecord(req, {
         ...query?.__args,
@@ -50,6 +51,7 @@ export default {
   },
   subsets: {
     type: Subset.__typename,
+    args: generatePaginatorArgs(Subset),
     resolver: async (context, req, currentObject, query, args, parent) => {
       return Subset.paginator.getRecord(req, {
         ...query?.__args,

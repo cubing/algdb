@@ -1,4 +1,4 @@
-import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generateEnumField } from '../../helpers/tier0/typeDef';
+import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generateEnumField, generatePaginatorArgs } from '../../helpers/tier0/typeDef';
 
 import { User, Puzzle, Algset, Subset, AlgAlgcaseLink, CaseVisualizationEnum } from '../services'
 
@@ -17,6 +17,7 @@ export default {
   },
   mask: {
     type: dataTypes.STRING,
+    allowNull: true,
     mysqlOptions: {
       type: DataTypes.STRING,
     },
@@ -71,7 +72,8 @@ export default {
     filterable: true,
   },
   algs: {
-    type: AlgAlgcaseLink.__typename,
+    type: AlgAlgcaseLink.paginator.__typename,
+    args: generatePaginatorArgs(AlgAlgcaseLink),
     resolver: async (context, req, currentObject, query, args, parent) => {
       return AlgAlgcaseLink.paginator.getRecord(req, {
         ...query?.__args,

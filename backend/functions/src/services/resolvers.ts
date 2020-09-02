@@ -5,7 +5,7 @@ import Algset from './algset/algset.resolver';
 import Subset from './subset/subset.resolver';
 import Algcase from './algcase/algcase.resolver';
 import Alg from './alg/alg.resolver';
-import AlgAlgCaseLink from './link/algAlgCaseLink/algAlgCaseLink.resolver';
+import AlgAlgCaseLink from './link/algAlgcaseLink/algAlgcaseLink.resolver';
 import UserAlgTagLink from './link/userAlgTagLink/userAlgTagLink.resolver';
 import Tag from './tag/tag.resolver';
 

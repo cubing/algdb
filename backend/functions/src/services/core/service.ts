@@ -293,7 +293,7 @@ export default abstract class Service {
     
     await resolverHelper.updateTableRow(this.__typename, {
       ...args,
-      date_modified: mysqlHelper.getMysqlRaw('CURRENT_TIMESTAMP'),        
+      date_modified: null,
     }, [{ fields: { id: { value: args.id } } }]);
     
 

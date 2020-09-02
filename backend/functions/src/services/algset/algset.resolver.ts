@@ -1,5 +1,6 @@
 import { Algset } from '../services';
 import { generateRootResolvers } from '../../helpers/tier2/rootResolver'
+import { typeDefs } from '../typeDefs';
 
 const resolvers = {
   query: {},
@@ -7,7 +8,7 @@ const resolvers = {
   subscription: {}
 };
 
-generateRootResolvers(resolvers, Algset, {
+generateRootResolvers(resolvers, Algset, typeDefs, {
   methods: ["get", "getMultiple", "delete", "update", "create"]
 });
 

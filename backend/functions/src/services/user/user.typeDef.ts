@@ -29,6 +29,7 @@ export default {
   },
   wca_id: {
     type: dataTypes.STRING,
+    allowNull: true,
     mysqlOptions: {
       type: DataTypes.STRING
     },
@@ -44,6 +45,7 @@ export default {
   },
   password: {
     type: dataTypes.STRING,
+    allowNull: true,
     mysqlOptions: {
       type: DataTypes.STRING,
     },
@@ -56,6 +58,7 @@ export default {
   },
   name: {
     type: dataTypes.STRING,
+    allowNull: true,
     mysqlOptions: {
       type: DataTypes.STRING,
     },
@@ -64,6 +67,7 @@ export default {
   },
   avatar: {
     type: dataTypes.STRING,
+    allowNull: true,
     mysqlOptions: {
       type: DataTypes.STRING,
     },
@@ -72,6 +76,7 @@ export default {
   },
   country: {
     type: dataTypes.STRING,
+    allowNull: true,
     mysqlOptions: {
       type: DataTypes.STRING,
     },
@@ -100,5 +105,5 @@ export default {
     addable: true,
     filterable: true,
   },
-  ...generateEnumField('role', UserRoleEnum),
+  ...generateEnumField('role', UserRoleEnum, { allowNull: true }),
 }
