@@ -1,29 +1,37 @@
 import React, { ReactElement } from 'react'
 import { useLocation, useHistory } from 'react-router-dom'
-import { useMutation } from 'react-query'
+import { Spinner } from '@chakra-ui/core'
 import useJql from '../../hooks/useJql'
-import signIn from '../../jql/signIn'
+import useJqlQuery from '../../hooks/useJqlQuery'
+import { Auth } from '../../generated/jql'
 
 export default function WcaRedirect(): ReactElement {
-	const {search} = useLocation()
-	const { setAuth, serverUrl } = useJql()
-	const history = useHistory()
-	const [mutate] = useMutation(signIn)
-	React.useEffect(() => {
-		const urlParam = new URLSearchParams(search)
-		const code = urlParam.get('code') ?? null
-		const expiresAt = parseInt(urlParam.get('expires_at') ?? '-1', 10)
-		if (code) {
-			mutate({ serverUrl, authToken: code }).then((res) => {
-				if (res) {
-					console.log(res)
-					setAuth(res.data.token, expiresAt)
-					history.replace('/')
-				}
-			})
-		} else history.replace('/')
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [])
+  const { search } = useLocation()
+  const { setAuth } = useJql()
+  const history = useHistory()
+  const urlParam = new URLSearchParams(search)
+  const code = urlParam.get('code')
+  const query = {
+    token: null,
+    type: null,
+    __args: {
+      provider: 'wca',
+      code,
+    },
+  }
+  const { error, data } = useJqlQuery<Auth, Error>(
+    'wca-redirect-login',
+    'socialLogin',
+    query,
+  )
+  if (error) {
+    console.error(error.message)
+    history.replace('/')
+  }
+  if (data) {
+    setAuth(data.token, data.expiration)
+    history.replace('/')
+  }
 
-	return <></>
+  return <Spinner />
 }

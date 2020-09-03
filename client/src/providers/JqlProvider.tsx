@@ -48,19 +48,7 @@ const JqlProvider = ({
     [authToken, expiresAt, serverUrl],
   )
 
-  return (
-    <JqlContext.Provider
-      value={{
-        authToken,
-        expiresAt,
-        serverUrl,
-        resetAuth,
-        setAuth,
-      }}
-    >
-      {children}
-    </JqlContext.Provider>
-  )
+  return <JqlContext.Provider value={value}>{children}</JqlContext.Provider>
 }
 
 export { JqlContext }

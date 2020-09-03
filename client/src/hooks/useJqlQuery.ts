@@ -2,6 +2,14 @@ import { useQuery, QueryKey, QueryConfig, QueryResult } from 'react-query'
 import axios from 'axios'
 import useJql from './useJql'
 
+export interface AlgDBFetchArgs {
+  serverUrl: string
+  authToken: string | null
+  action: string
+  query: {
+    [key: string]: any
+  }
+}
 export async function algDbFetch<T>(
   key: QueryKey,
   { serverUrl, authToken, action, query }: AlgDBFetchArgs,
@@ -15,7 +23,6 @@ export async function algDbFetch<T>(
   }
   try {
     const res = await axios.post<JqlRes<T>>(serverUrl, body, { headers })
-    console.log(res.data)
     return res.data.data
   } catch (err) {
     console.error(`Unable to perform query: ${action} with key ${key}`)
@@ -37,13 +44,4 @@ export default function useJqlQuery<TResult, TError>(
   )
 
   return queryInfo
-}
-
-interface AlgDBFetchArgs {
-  serverUrl: string
-  authToken: string | null
-  action: string
-  query: {
-    [key: string]: any
-  }
 }

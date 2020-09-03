@@ -1,9 +1,9 @@
 import React, { createContext } from 'react'
-import { useMutation } from 'react-query'
 import { User } from '../generated/jql'
 import useJql from '../hooks/useJql'
 import { WCA_LOGIN_REDIRECT } from '../config'
-import getMe, { GetMeType } from '../jql/getMe'
+import { GetMeType } from '../jql/getMe'
+import useJqlMutation from '../hooks/useJqlMutation'
 
 export interface IUserContext {
   isLoggedIn: boolean
@@ -23,12 +23,23 @@ UserContext.displayName = 'User Context'
 const UserProvider = ({ children }: React.PropsWithChildren<{}>) => {
   const { serverUrl, authToken, expiresAt, resetAuth } = useJql()
   const [user, setUser] = React.useState<User>()
-
-  const [mutate, { isLoading, data, error }] = useMutation<
+  const query = {
+    id: null,
+    wca_id: null,
+    email: null,
+    avatar: null,
+    country: null,
+    is_public: null,
+    role: {
+      id: null,
+      name: null,
+    },
+  }
+  const [mutate, { isLoading, data, error }] = useJqlMutation<
     JqlRes<User | null>,
     Error,
     GetMeType
-  >(getMe)
+  >('getCurrentUser', query)
 
   function signIn() {
     window.location.href = WCA_LOGIN_REDIRECT
