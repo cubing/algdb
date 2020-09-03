@@ -1,27 +1,32 @@
+/* eslint-disable no-nested-ternary */
 import React, { ReactElement } from 'react'
-import { Flex, Heading, Spinner } from '@chakra-ui/core'
+import { Flex, Heading, Spinner, Box } from '@chakra-ui/core'
 import useJqlQuery from '../../hooks/useJqlQuery'
 import { UserPaginator } from '../../generated/jql'
 
-export default function GetUsers(): ReactElement {
-  const query = {
-    paginatorInfo: {
-      count: null,
-      total: null,
-    },
-    data: {
-      id: null,
+const query = {
+  paginatorInfo: {
+    count: null,
+    total: null,
+  },
+  data: {
+    id: null,
+    name: null,
+    role: {
       name: null,
-      role: null,
-      country: null,
-      created_at: null,
     },
-  }
+    created_at: null,
+  },
+}
+
+export default function GetUsers(): ReactElement {
   const { isLoading, data, error } = useJqlQuery<UserPaginator, Error>(
     'getMultipleUser',
     'getMultipleUser',
     query,
   )
+
+  const users = data?.data || [];
 
   if (isLoading) {
     return <Spinner />
@@ -32,14 +37,24 @@ export default function GetUsers(): ReactElement {
     return <>error</>
   }
 
-  const users = data?.data
-
   return (
-    <Flex justify="center" alignContent="center" direction="column">
+    <Flex justify="center" align="center" direction="column">
       <Heading fontSize="4em" textAlign="center">
         Users
       </Heading>
-      {users?.map((user) => (user ? <p key={user.id}>{user.name}</p> : false))}
+      <Flex w="80%" align="center" direction="column">
+        <table width="100%">
+          <tbody>
+            {users.map((user) => user ? (
+              <tr key={user.id}>
+                <td>{user.id}</td>
+                <td>{user.name}</td>
+                <td>{user?.role?.name}</td>
+              </tr>
+            ) : false)}
+          </tbody>
+        </table>
+      </Flex>
     </Flex>
   )
 }
