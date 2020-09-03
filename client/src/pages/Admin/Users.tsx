@@ -44,12 +44,21 @@ export default function GetUsers(): ReactElement {
       </Heading>
       <Flex w="80%" align="center" direction="column">
         <table width="100%">
+          <thead>
+            <tr>
+              <th style={{textAlign: 'left'}}>ID</th>
+              <th style={{textAlign: 'left'}}>Name</th>
+              <th style={{textAlign: 'left'}}>Role</th>
+              <th style={{textAlign: 'left'}}>Joined</th>
+            </tr>
+          </thead>
           <tbody>
             {users.map((user) => user ? (
               <tr key={user.id}>
                 <td>{user.id}</td>
                 <td>{user.name}</td>
                 <td>{user?.role?.name}</td>
+                <td>{new Date(user.created_at * 1000).toLocaleString()}</td>
               </tr>
             ) : false)}
           </tbody>
