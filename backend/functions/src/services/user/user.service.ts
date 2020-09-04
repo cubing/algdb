@@ -52,7 +52,7 @@ export class User extends Service {
 
     getMultiple: () => true,
 
-    create: () => false,
+    create: () => true,
 
     update: generateUserAdminGuard(),
 
