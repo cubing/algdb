@@ -50,19 +50,9 @@ export class User extends Service {
   static accessControl = {
     get: generateItemCreatedByUserGuard(User),
 
-    getMultiple: (req, args, query) => {
-      //check if logged in
-      if(!req.user) return false;
+    getMultiple: () => true,
 
-      //anyone can, but they have to use certain filters, like created_by = current user
-      if(args.created_by !== req.user.id) return false;
-
-      return true;
-    },
-
-    create: (req, args, query) => {
-      return true;
-    },
+    create: () => false,
 
     update: generateUserAdminGuard(),
 

@@ -73,7 +73,6 @@ export function generatePaginatorArgs(service: any) {
     id: { type: dataTypes.ID },
     first: { type: dataTypes.INTEGER },
     after: { type: dataTypes.ID },
-    limit: { type: dataTypes.INTEGER },
     search: { type: dataTypes.STRING },
     sortBy: { type: [dataTypes.STRING] },
     sortDesc: { type: [dataTypes.BOOLEAN] },
