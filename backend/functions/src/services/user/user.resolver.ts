@@ -14,23 +14,13 @@ const resolvers = {
         id: req.user?.id
       }, req.jql)
     },
-    getMyUsers: {
-      method: "get",
-      route: "/myUsers",
-      type: User.paginator.__typename,
-      resolver: (req) => User.paginator.getRecord(req, {
-        ...req.params,
-        ...req.jql?.__args,
-        created_by: req.user.id,
-      }, req.jql)
-    },
   },
   mutation: {},
   subscription: {}
 };
 
 generateRootResolvers(resolvers, User, typeDefs, {
-  methods: ["get", "getMultiple", "delete", "update", "create"]
+  methods: ["get", "getMultiple", "delete", "update"]
 });
 
 export default resolvers;

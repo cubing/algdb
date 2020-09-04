@@ -10,7 +10,6 @@ export function generateCreatedAtField() {
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
         getter: (field) => "UNIX_TIMESTAMP(" + field + ")",
       },
-      addable: true,
     }
   };
 };
@@ -23,9 +22,8 @@ export function generateUpdatedAtField() {
       mysqlOptions: {
         type: DataTypes.DATE,
         getter: (field) => "UNIX_TIMESTAMP(" + field + ")",
-        setter: (field) => "CURRENT_TIMESTAMP"
+        setter: () => "CURRENT_TIMESTAMP"
       },
-      updateable: true
     }
   };
 };

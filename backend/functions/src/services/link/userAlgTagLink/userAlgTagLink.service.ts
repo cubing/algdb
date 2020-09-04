@@ -81,8 +81,7 @@ export class UserAlgTagLink extends Service {
     const addResults = await resolverHelper.addTableRow(this.__typename, {
       ...args,
       user: req.user.id,
-      created_by: req.user.id
-    }, true);
+    }, { created_by: req.user.id }, true);
 
     const validatedArgs = {
       created_by: req.user.id

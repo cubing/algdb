@@ -102,7 +102,6 @@ export default {
         type: User.__typename,
       },
     },
-    addable: true,
     filterable: true,
   },
   ...generateEnumField('role', UserRoleEnum, { allowNull: true }),

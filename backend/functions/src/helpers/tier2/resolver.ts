@@ -4,10 +4,11 @@ import jqlHelper from '../../jql/helpers/jsonql';
 import sharedHelper from '../tier0/shared';
 
 import mysqlHelper from '../tier1/mysql';
+import e = require('express');
 
 export default class {
   //validates the add fields, and then does the add operation
-  static async addTableRow(classname, args, ignore = false) {
+  static async addTableRow(classname, args, adminFields = {}, ignore = false) {
     //resolve the setters
     const validQuery = typeDefs[classname];
 
@@ -28,6 +29,17 @@ export default class {
       }
     }
 
+    //process adminFields
+    for(const field in adminFields) {
+      if(field in validQuery) {
+        if(validQuery[field].setter) {
+          customResolvers[field] = validQuery[field].setter;
+        } else {
+          mysqlFields[field] = validQuery[field].transform?.setter ? await validQuery[field].transform?.setter(adminFields[field]) : adminFields[field];
+        }
+      }
+    }
+
     //do the mysql first
     const addResults = await mysqlHelper.insertTableRow(classname, mysqlFields, ignore);
 
@@ -44,7 +56,7 @@ export default class {
   }
 
   //validates the add fields, and then does the add operation
-  static async updateTableRow(classname, args, whereArray) {
+  static async updateTableRow(classname, args, adminArgs = {}, whereArray) {
     //resolve the setters
     const validQuery = typeDefs[classname];
 
@@ -59,6 +71,18 @@ export default class {
         if(validQuery[field].updateable) {
           //if there's a setter to transform the input, use that
           mysqlFields[field] = validQuery[field].transform?.setter ? await validQuery[field].transform?.setter(args[field]) : args[field];
+        } else if(validQuery[field].updater) {
+          customResolvers[field] = validQuery[field].updater;
+        }
+      }
+    }
+
+    //process adminFields
+    for(const field in adminArgs) {
+      if(field in validQuery) {
+        if(validQuery[field].updateable) {
+          //if there's a setter to transform the input, use that
+          mysqlFields[field] = validQuery[field].transform?.setter ? await validQuery[field].transform?.setter(adminArgs[field]) : adminArgs[field];
         } else if(validQuery[field].updater) {
           customResolvers[field] = validQuery[field].updater;
         }

@@ -24,7 +24,6 @@ export default {
         type: User.__typename,
       },
     },
-    addable: true,
     filterable: true,
   },
 }

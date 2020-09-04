@@ -70,8 +70,7 @@ export class Algset extends Service {
 
     const addResults = await resolverHelper.addTableRow(this.__typename, {
       ...args,
-      created_by: req.user.id
-    });
+    }, { created_by: req.user.id });
 
     const validatedArgs = {
       created_by: req.user.id

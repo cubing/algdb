@@ -89,8 +89,7 @@ export class AlgAlgcaseLink extends Service {
 
     const addResults = await resolverHelper.addTableRow(this.__typename, {
       ...args,
-      created_by: req.user.id
-    }, true);
+    }, { created_by: req.user.id }, true);
 
     const validatedArgs = {
       created_by: req.user.id

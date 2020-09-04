@@ -79,8 +79,7 @@ export class Algcase extends Service {
         ...args,
         puzzle: subsetResults[0].puzzle,
         algset: subsetResults[0].algset,
-        created_by: req.user.id
-      });
+      }, { created_by: req.user.id });
       //else process the algset
     } else {
       //verify algset exists, and get the puzzle_id

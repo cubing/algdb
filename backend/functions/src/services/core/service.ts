@@ -258,6 +258,7 @@ export default abstract class Service {
 
     const addResults = await resolverHelper.addTableRow(this.__typename, {
       ...args,
+    }, {
       created_by: req.user.id
     });
 
@@ -293,7 +294,8 @@ export default abstract class Service {
     
     await resolverHelper.updateTableRow(this.__typename, {
       ...args,
-      date_modified: null,
+    }, {
+      date_modified: null
     }, [{ fields: { id: { value: args.id } } }]);
     
 

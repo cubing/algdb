@@ -81,9 +81,8 @@ export class Alg extends Service {
     //create algAlgcaseLink
     await resolverHelper.addTableRow(AlgAlgcaseLink.__typename, {
       alg: addResults.id,
-      algcase: args.algcase,
-      created_by: req.user.id
-    });
+      algcase: args.algcase
+    }, { created_by: req.user.id });
 
     const validatedArgs = {
       created_by: req.user.id

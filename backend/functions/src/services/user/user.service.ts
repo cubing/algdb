@@ -67,8 +67,7 @@ export class User extends Service {
 
     const addResults = await resolverHelper.addTableRow(this.__typename, {
       ...args,
-      created_by: 0
-    });
+    }, { created_by: 0 });
 
     //set created_by to id
     await mysqlHelper.executeDBQuery("UPDATE user SET created_by = id WHERE id = :id", {

@@ -1,6 +1,5 @@
 type Query {
 	getCurrentUser: User!
-	getMyUsers: UserPaginator!
 	getUser(id: ID!): User!
 	getMultipleUser(
 		id: String
@@ -129,39 +128,22 @@ type Mutation {
 		updated_at: Int
 		role: UserRole
 	): User!
-	createUser(
-		provider: String
-		provider_id: String
-		wca_id: String
-		email: String
-		password: String
-		name: String
-		avatar: String
-		country: String
-		is_public: Boolean
-		created_at: Int
-		created_by: User
-	): User!
 	loginUser(email: String!, password: String!): Auth!
 	socialLogin(provider: String!, code: String!): Auth!
 	deletePuzzle(id: ID!): Puzzle!
 	updatePuzzle(id: ID!, name: String, updated_at: Int): Puzzle!
-	createPuzzle(name: String, created_at: Int, created_by: User): Puzzle!
+	createPuzzle(name: String): Puzzle!
 	deleteAlgset(id: ID!): Algset!
 	updateAlgset(id: ID!, name: String, updated_at: Int): Algset!
 	createAlgset(
 		name: String
-		created_at: Int
-		created_by: User
 		puzzle: Puzzle
 		score: Int
 	): Algset!
 	deleteSubset(id: ID!): Subset!
-	updateSubset(id: ID!, name: String, updated_at: Int): Subset!
+	updateSubset(id: ID!, name: String): Subset!
 	createSubset(
 		name: String
-		created_at: Int
-		created_by: User
 		puzzle: Puzzle
 		algset: Algset
 		parent: Subset
@@ -172,40 +154,33 @@ type Mutation {
 		name: String
 		mask: String
 		visualization: CaseVisualization
-		updated_at: Int
 	): Algcase!
 	createAlgcase(
 		name: String
 		mask: String
-		created_at: Int
-		created_by: User
 		puzzle: Puzzle
 		algset: Algset
 		subset: Subset
 	): Algcase!
 	deleteAlg(id: ID!): Alg!
-	updateAlg(id: ID!, updated_at: Int): Alg!
-	createAlg(sequence: String, created_at: Int, created_by: User): Alg!
+	updateAlg(id: ID!): Alg!
+	createAlg(sequence: String): Alg!
 	deleteAlgAlgcaseLink(id: ID!): AlgAlgcaseLink!
-	updateAlgAlgcaseLink(id: ID!, updated_at: Int): AlgAlgcaseLink!
+	updateAlgAlgcaseLink(id: ID!): AlgAlgcaseLink!
 	createAlgAlgcaseLink(
 		alg: Alg
 		algcase: Algcase
-		created_at: Int
-		created_by: User
 	): AlgAlgcaseLink!
 	deleteUserAlgTagLink(id: ID!): UserAlgTagLink!
-	updateUserAlgTagLink(id: ID!, updated_at: Int): UserAlgTagLink!
+	updateUserAlgTagLink(id: ID!): UserAlgTagLink!
 	createUserAlgTagLink(
 		user: User
 		alg: Alg
 		tag: Tag
-		created_at: Int
-		created_by: User
 	): UserAlgTagLink!
 	deleteTag(id: ID!): Tag!
-	updateTag(id: ID!, updated_at: Int): Tag!
-	createTag(name: String, created_at: Int, created_by: User): Tag!
+	updateTag(id: ID!): Tag!
+	createTag(name: String): Tag!
 }
 
 type User {
