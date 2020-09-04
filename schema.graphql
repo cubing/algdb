@@ -125,16 +125,15 @@ type Mutation {
 		avatar: String
 		country: String
 		is_public: Boolean
-		updated_at: Int
 		role: UserRole
 	): User!
 	loginUser(email: String!, password: String!): Auth!
 	socialLogin(provider: String!, code: String!): Auth!
 	deletePuzzle(id: ID!): Puzzle!
-	updatePuzzle(id: ID!, name: String, updated_at: Int): Puzzle!
+	updatePuzzle(id: ID!, name: String): Puzzle!
 	createPuzzle(name: String): Puzzle!
 	deleteAlgset(id: ID!): Algset!
-	updateAlgset(id: ID!, name: String, updated_at: Int): Algset!
+	updateAlgset(id: ID!, name: String): Algset!
 	createAlgset(
 		name: String
 		puzzle: Puzzle

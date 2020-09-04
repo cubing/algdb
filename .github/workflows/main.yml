@@ -14,12 +14,12 @@ jobs:
     name: Deploy
     needs: build
     runs-on: ubuntu-latest
-    working-directory: backend
     steps:
       - name: Checkout Repo
         uses: actions/checkout@master
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
+        working-directory: backend
         with:
           args: deploy --only functions
         env:
