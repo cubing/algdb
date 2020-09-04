@@ -14,6 +14,7 @@ export default function WcaRedirect(): ReactElement {
   const query = {
     token: null,
     type: null,
+    expiration: null,
     __args: {
       provider: 'wca',
       code,
