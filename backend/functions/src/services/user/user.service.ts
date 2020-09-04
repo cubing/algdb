@@ -48,20 +48,20 @@ export class User extends Service {
   static sortFields = ["id", "created_by"];
 
   static accessControl = {
-    get: generateItemCreatedByUserGuard(User),
+    get: () => true,
 
     getMultiple: () => true,
 
-    create: () => false,
+    create: () => true,
 
     update: generateUserAdminGuard(),
 
     delete: generateItemCreatedByUserGuard(User),
   }
 
-  static async createRecord(req, args = <any> {}, query?: object) {
+  static async createRecord(req, args = <any> {}, query?: object, admin = false) {
     //if it does not pass the access control, throw an error
-    if(!await this.testPermissions('create', req, args, query)) {
+    if(!admin && !await this.testPermissions('create', req, args, query)) {
       throw errorHelper.badPermissionsError();
     }
 

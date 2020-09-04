@@ -114,7 +114,7 @@ export class Auth extends Service {
       }, {
         id: null,
         email: null
-      });
+      }, true);
 
       userResults.push(addUserResult);
     }

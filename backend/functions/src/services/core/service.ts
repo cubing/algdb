@@ -248,11 +248,11 @@ export default abstract class Service {
     }
   }
 
-  static async createRecord(req, args = <any> {}, query?: object) {
+  static async createRecord(req, args = <any> {}, query?: object, admin = false) {
     if(!req.user) throw errorHelper.loginRequiredError();
 
     //if it does not pass the access control, throw an error
-    if(!await this.testPermissions('create', req, args, query)) {
+    if(!admin && !await this.testPermissions('create', req, args, query)) {
       throw errorHelper.badPermissionsError();
     }
 
