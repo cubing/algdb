@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react'
+import React, { ReactElement, useEffect } from 'react'
 import { useLocation, useHistory } from 'react-router-dom'
 import { Spinner } from '@chakra-ui/core'
 import useJql from '../../hooks/useJql'
@@ -25,12 +25,15 @@ export default function WcaRedirect(): ReactElement {
     'socialLogin',
     query,
   )
+  useEffect(() => {
+    if (data) {
+      setAuth(data.token, data.expiration)
+      history.replace('/')
+    }
+  }, [data])
+
   if (error) {
     console.error(error.message)
-    history.replace('/')
-  }
-  if (data) {
-    setAuth(data.token, data.expiration)
     history.replace('/')
   }
 

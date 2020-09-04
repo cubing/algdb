@@ -56,7 +56,7 @@ const UserProvider = ({ children }: React.PropsWithChildren<{}>) => {
     if (authToken) {
       if (expiresWithinHour) signIn()
       else {
-        mutate({ serverUrl, authToken })
+        mutate()
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
