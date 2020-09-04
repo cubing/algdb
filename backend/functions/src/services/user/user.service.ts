@@ -48,7 +48,7 @@ export class User extends Service {
   static sortFields = ["id", "created_by"];
 
   static accessControl = {
-    get: generateItemCreatedByUserGuard(User),
+    get: () => true,
 
     getMultiple: () => true,
 

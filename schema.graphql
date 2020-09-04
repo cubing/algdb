@@ -1,5 +1,5 @@
 type Query {
-	getCurrentUser: User!
+	getCurrentUser: User
 	getUser(id: ID!): User!
 	getMultipleUser(
 		id: String
