@@ -21,7 +21,7 @@ export default class Mysql {
 
     //handle where statements
     if(jqlQuery.where) {
-      const where_results = this.processGraphqlWhereArray(table, jqlQuery.where, previous_joins, params);
+      const where_results = this.processJqlWhereArray(table, jqlQuery.where, previous_joins, params);
 
       where_statement += where_results.where_statement;
       join_statement += where_results.join_statement;
@@ -42,14 +42,10 @@ export default class Mysql {
     //handle orderBy statements
     //field MUST be pre-validated
     if(jqlQuery.orderBy) {
-      jqlQuery.orderBy.forEach((ele) => {
-        order_statement += ele.field + " " + (ele.desc ? "DESC" : "ASC") + ", ";
-      });
-    }
+      const orderResults = this.processJqlSortArray(table, jqlQuery.orderBy, previous_joins);
 
-    if(order_statement) {
-      //remove trailing AND
-      order_statement = order_statement.slice(0, -2);
+      order_statement += orderResults.order_statement;
+      join_statement += orderResults.join_statement;
     }
 
     //handle limit/offset statements
@@ -62,7 +58,6 @@ export default class Mysql {
       limit_statement += " OFFSET " + parseInt(jqlQuery.offset) || 0;
     }
     */
-
 
     const sqlQuery = "SELECT " + select_statement + " FROM " + table + join_statement + " WHERE " + where_statement + (order_statement ? " ORDER BY " + order_statement : "") + limit_statement;
 
@@ -79,7 +74,7 @@ export default class Mysql {
     
     //handle where statements
     if(whereArray) {
-      const where_results = this.processGraphqlWhereArray(table, whereArray, previous_joins, params);
+      const where_results = this.processJqlWhereArray(table, whereArray, previous_joins, params);
 
       where_statement += where_results.where_statement;
       join_statement += where_results.join_statement;
@@ -151,7 +146,7 @@ export default class Mysql {
 
     //handle where statements
     if(whereArray) {
-      const where_results = this.processGraphqlWhereArray(table, whereArray, previous_joins, params);
+      const where_results = this.processJqlWhereArray(table, whereArray, previous_joins, params);
 
       where_statement += where_results.where_statement;
       join_statement += where_results.join_statement;
@@ -176,7 +171,7 @@ export default class Mysql {
 
     //handle where statements
     if(whereArray) {
-      const where_results = this.processGraphqlWhereArray(table, whereArray, previous_joins, params);
+      const where_results = this.processJqlWhereArray(table, whereArray, previous_joins, params);
 
       where_statement += where_results.where_statement;
       join_statement += where_results.join_statement;
@@ -256,71 +251,83 @@ export default class Mysql {
     return returnObject;
   }
 
-  static processGraphqlWhereArray(table, whereArray, previous_joins, params) {
+  static processJqlWhereArray(table, whereArray, previous_joins, params) {
     const where_statements = <Array<string>> [];
     let join_statement = "";
 
     whereArray.forEach((whereObject, whereIndex) => {
       const where_substatements = <Array<string>> [];
       const connective = whereObject.connective || 'AND';
-
       for(const fieldname in whereObject.fields) {
-        const fieldvalue = whereObject.fields[fieldname];
-        const typeDef = typeDefs[table];
-  
-        //check if this requires a join
-        const joinTableName = (typeDef[fieldname]?.mysqlOptions?.joinInfo && fieldvalue.foreignField) ? typeDef[fieldname]?.mysqlOptions.joinInfo.type : null;
-        let joinTableAlias = null;
-  
-        //if it requires a join, check if it was joined previously
-        if(joinTableName) {
-          if(!(joinTableName in previous_joins)) {
-            previous_joins[joinTableName] = [];
+        const fieldPath = fieldname.split(".");
+        const fieldObject = whereObject.fields[fieldname];
+        let currentTypeDef = typeDefs[table];
+        let currentTable = table;
+
+        let joinTableAlias, finalFieldname;
+
+        fieldPath.forEach((field, fieldIndex) => {
+          //if there's no next field, no more joins
+          if(fieldPath[fieldIndex+1]) {
+            //join with this type
+            const joinTableName = currentTypeDef[field]?.mysqlOptions?.joinInfo.type;
+
+            //if it requires a join, check if it was joined previously
+            if(joinTableName) {
+              if(!(joinTableName in previous_joins)) {
+                previous_joins[joinTableName] = [];
+              }
+      
+              let newJoin = false;
+              let index = previous_joins[joinTableName].indexOf(field);
+      
+              //if index not exists, join the table and get the index.
+              if(index === -1) {
+                previous_joins[joinTableName].push(field);
+      
+                index = previous_joins[joinTableName].indexOf(field);
+                newJoin = true;
+              }
+      
+              //always set the alias.
+              joinTableAlias = joinTableName + index;
+      
+              if(newJoin) {
+                //assemble join statement, if required
+                join_statement += " LEFT JOIN " + joinTableName + " " + joinTableAlias + " ON " + currentTable + "." + field + " = " + joinTableAlias + "." + (currentTypeDef[field]?.mysqlOptions?.joinInfo?.foreignKey ?? "id");
+              }
+            }
+
+            //shift the typeDef
+            currentTypeDef = typeDefs[joinTableName];
+            currentTable = joinTableAlias;
+          } else {
+            //no more fields, set the finalFieldname
+            finalFieldname = field;
           }
-  
-          let newJoin = false;
-          let index = previous_joins[joinTableName].indexOf(fieldname);
-  
-          //if index not exists, join the table and get the index.
-          if(index === -1) {
-            previous_joins[joinTableName].push(fieldname);
-  
-            index = previous_joins[joinTableName].indexOf(fieldname);
-            newJoin = true;
-          }
-  
-          //always set the alias.
-          joinTableAlias = joinTableName + index;
-  
-          if(newJoin) {
-            //assemble join statement, if required
-            join_statement += " LEFT JOIN " + joinTableName + (joinTableAlias ? " " + joinTableAlias : "") + " ON " + table + "." + fieldname + " = " + (joinTableAlias ?? joinTableName) + "." + (typeDef[fieldname].mysqlOptions.joinInfo.foreignKey ?? "id");
-          }
-        }
-  
-        const operator = fieldvalue.operator || '=';
-  
+        });
+
+        const operator = fieldObject.operator ?? '=';
+        const tableName = joinTableAlias || table;
+        const placeholder = (finalFieldname in params) ? finalFieldname + whereIndex : finalFieldname;
+
         //value must be array with at least 2 elements
         if(operator === "BETWEEN") {
-          where_substatements.push((joinTableAlias || joinTableName || table) + "." + (fieldvalue.foreignField || fieldname) + " BETWEEN :" + fieldname + "0 AND :" + fieldname + "1");
+          where_substatements.push(tableName + "." + finalFieldname + " BETWEEN :" + fieldname + "0 AND :" + fieldname + "1");
           
-          params[fieldname + "0"] = fieldvalue.value[0];
-          params[fieldname + "1"] = fieldvalue.value[1];
+          params[fieldname + "0"] = fieldObject.value[0];
+          params[fieldname + "1"] = fieldObject.value[1];
         } else {
-          const realFieldname = fieldvalue.foreignField ?? fieldname;
-          const placeholder = (realFieldname in params) ? realFieldname + whereIndex : realFieldname;
-
-          if(Array.isArray(fieldvalue.value)) {
-            where_substatements.push((joinTableAlias || joinTableName || table) + "." + realFieldname + " IN (:" + placeholder + ")");
-            params[placeholder] = fieldvalue.value;
-          } else if(fieldvalue.value === null) {
+          if(Array.isArray(fieldObject.value)) {
+            where_substatements.push(tableName + "." + finalFieldname + " IN (:" + placeholder + ")");
+            params[placeholder] = fieldObject.value;
+          } else if(fieldObject.value === null) {
             //if fieldvalue.value === null, change the format accordingly
-            where_substatements.push((joinTableAlias || joinTableName || table) + "." + realFieldname + " IS NULL");
+            where_substatements.push(tableName + "." + finalFieldname + " IS NULL");
           } else {
-            where_substatements.push((joinTableAlias || joinTableName || table) + "." + realFieldname + " " + operator + " :" + placeholder);
-            params[placeholder] = fieldvalue.value;
+            where_substatements.push(tableName + "." + finalFieldname + " " + operator + " :" + placeholder);
+            params[placeholder] = fieldObject.value;
           }
-          
         }
       }
       if(where_substatements.length > 0) {
@@ -332,6 +339,68 @@ export default class Mysql {
 
     return {
       where_statement,
+      join_statement
+    };
+  }
+
+  static processJqlSortArray(table, sortArray, previous_joins) {
+    const sort_statements = <Array<string>> [];
+    let join_statement = "";
+
+    sortArray.forEach((sortObject) => {
+      const fieldPath = sortObject.field.split(".");
+      let currentTypeDef = typeDefs[table];
+      let currentTable = table;
+
+      let joinTableAlias, finalFieldname;
+
+      fieldPath.forEach((field, fieldIndex) => {
+        //if there's no next field, no more joins
+        if(fieldPath[fieldIndex+1]) {
+          //join with this type
+          const joinTableName = currentTypeDef[field]?.mysqlOptions?.joinInfo.type;
+
+          //if it requires a join, check if it was joined previously
+          if(joinTableName) {
+            if(!(joinTableName in previous_joins)) {
+              previous_joins[joinTableName] = [];
+            }
+    
+            let newJoin = false;
+            let index = previous_joins[joinTableName].indexOf(field);
+    
+            //if index not exists, join the table and get the index.
+            if(index === -1) {
+              previous_joins[joinTableName].push(field);
+    
+              index = previous_joins[joinTableName].indexOf(field);
+              newJoin = true;
+            }
+    
+            //always set the alias.
+            joinTableAlias = joinTableName + index;
+    
+            if(newJoin) {
+              //assemble join statement, if required
+              join_statement += " LEFT JOIN " + joinTableName + " " + joinTableAlias + " ON " + currentTable + "." + field + " = " + joinTableAlias + "." + (currentTypeDef[field]?.mysqlOptions?.joinInfo?.foreignKey ?? "id");
+            }
+          }
+
+          //shift the typeDef
+          currentTypeDef = typeDefs[joinTableName];
+          currentTable = joinTableAlias;
+        } else {
+          //no more fields, set the finalFieldname
+          finalFieldname = field;
+        }
+      });
+
+      const tableName = joinTableAlias || table;
+      sort_statements.push(tableName + "." + finalFieldname + " " + (sortObject.desc ? "DESC" : "ASC"));
+    });
+
+    return {
+      order_statement: sort_statements.join(", "),
       join_statement
     };
   }

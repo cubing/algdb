@@ -1,4 +1,4 @@
-import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generateEnumField, generatePaginatorArgs } from '../../helpers/tier0/typeDef';
+import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generateEnumField, generatePaginatorArgs, generateCreatedByField } from '../../helpers/tier0/typeDef';
 
 import { User, Puzzle, Algset, Subset, AlgAlgcaseLink, CaseVisualizationEnum } from '../services'
 
@@ -11,6 +11,7 @@ export default {
     type: dataTypes.STRING,
     mysqlOptions: {
       type: DataTypes.STRING,
+      allowNull: false,
     },
     addable: true,
     updateable: true,
@@ -24,23 +25,15 @@ export default {
     addable: true,
     updateable: true,
   },
-  ...generateEnumField('visualization', CaseVisualizationEnum),
+  ...generateEnumField('visualization', CaseVisualizationEnum, { defaultValue: CaseVisualizationEnum.enum["V_2D"] }),
   ...generateCreatedAtField(),
   ...generateUpdatedAtField(),
-  created_by: {
-    type: User.__typename,
-    mysqlOptions: {
-      type: DataTypes.INTEGER,
-      joinInfo: {
-        type: User.__typename,
-      },
-    },
-    filterable: true,
-  },
+  ...generateCreatedByField(User),
   puzzle: {
     type: Puzzle.__typename,
     mysqlOptions: {
       type: DataTypes.INTEGER,
+      allowNull: false,
       joinInfo: {
         type: Puzzle.__typename,
       },
@@ -52,6 +45,7 @@ export default {
     type: Algset.__typename,
     mysqlOptions: {
       type: DataTypes.INTEGER,
+      allowNull: false,
       joinInfo: {
         type: Algset.__typename,
       },

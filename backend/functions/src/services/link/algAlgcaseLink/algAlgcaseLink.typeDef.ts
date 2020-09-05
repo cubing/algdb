@@ -1,4 +1,4 @@
-import { generateIdField, generateUpdatedAtField, generateCreatedAtField } from '../../../helpers/tier0/typeDef';
+import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generateCreatedByField } from '../../../helpers/tier0/typeDef';
 
 import { User, Algcase, Alg } from '../../services'
 
@@ -10,9 +10,10 @@ export default {
     type: Alg.__typename,
     mysqlOptions: {
       type: DataTypes.INTEGER,
+      allowNull: false,
+      unique: "compositeIndex",
       joinInfo: {
         type: Alg.__typename,
-        unique: "compositeIndex"
       },
     },
     addable: true,
@@ -22,9 +23,10 @@ export default {
     type: Algcase.__typename,
     mysqlOptions: {
       type: DataTypes.INTEGER,
+      allowNull: false,
+      unique: "compositeIndex",
       joinInfo: {
         type: Algcase.__typename,
-        unique: "compositeIndex"
       },
     },
     addable: true,
@@ -32,14 +34,5 @@ export default {
   },
   ...generateCreatedAtField(),
   ...generateUpdatedAtField(),
-  created_by: {
-    type: User.__typename,
-    mysqlOptions: {
-      type: DataTypes.INTEGER,
-      joinInfo: {
-        type: User.__typename,
-      },
-    },
-    filterable: true,
-  },
+  ...generateCreatedByField(User),
 }

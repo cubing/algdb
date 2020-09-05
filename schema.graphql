@@ -5,7 +5,6 @@ type Query {
 		id: String
 		first: Int
 		after: ID
-		limit: Int
 		search: String
 		sortBy: [String]
 		sortDesc: [Boolean]
@@ -16,7 +15,6 @@ type Query {
 		id: String
 		first: Int
 		after: ID
-		limit: Int
 		search: String
 		sortBy: [String]
 		sortDesc: [Boolean]
@@ -27,7 +25,6 @@ type Query {
 		id: String
 		first: Int
 		after: ID
-		limit: Int
 		search: String
 		sortBy: [String]
 		sortDesc: [Boolean]
@@ -39,7 +36,6 @@ type Query {
 		id: String
 		first: Int
 		after: ID
-		limit: Int
 		search: String
 		sortBy: [String]
 		sortDesc: [Boolean]
@@ -53,7 +49,6 @@ type Query {
 		id: String
 		first: Int
 		after: ID
-		limit: Int
 		search: String
 		sortBy: [String]
 		sortDesc: [Boolean]
@@ -66,7 +61,6 @@ type Query {
 		id: String
 		first: Int
 		after: ID
-		limit: Int
 		search: String
 		sortBy: [String]
 		sortDesc: [Boolean]
@@ -79,7 +73,6 @@ type Query {
 		id: String
 		first: Int
 		after: ID
-		limit: Int
 		search: String
 		sortBy: [String]
 		sortDesc: [Boolean]
@@ -95,7 +88,6 @@ type Query {
 		id: String
 		first: Int
 		after: ID
-		limit: Int
 		search: String
 		sortBy: [String]
 		sortDesc: [Boolean]
@@ -109,7 +101,6 @@ type Query {
 		id: String
 		first: Int
 		after: ID
-		limit: Int
 		search: String
 		sortBy: [String]
 		sortDesc: [Boolean]
@@ -221,7 +212,6 @@ type Algset {
 		id: String
 		first: Int
 		after: ID
-		limit: Int
 		search: String
 		sortBy: [String]
 		sortDesc: [Boolean]
@@ -233,7 +223,6 @@ type Algset {
 		id: String
 		first: Int
 		after: ID
-		limit: Int
 		search: String
 		sortBy: [String]
 		sortDesc: [Boolean]
@@ -261,7 +250,6 @@ type Subset {
 		id: String
 		first: Int
 		after: ID
-		limit: Int
 		search: String
 		sortBy: [String]
 		sortDesc: [Boolean]
@@ -273,7 +261,6 @@ type Subset {
 		id: String
 		first: Int
 		after: ID
-		limit: Int
 		search: String
 		sortBy: [String]
 		sortDesc: [Boolean]
@@ -302,7 +289,6 @@ type Algcase {
 		id: String
 		first: Int
 		after: ID
-		limit: Int
 		search: String
 		sortBy: [String]
 		sortDesc: [Boolean]
@@ -345,7 +331,7 @@ type UserAlgTagLink {
 	id: ID!
 	user: User!
 	alg: Alg!
-	tag: Tag!
+	tag: String!
 	created_at: Int!
 	updated_at: Int
 	created_by: User!

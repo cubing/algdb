@@ -24,11 +24,11 @@ export class Auth extends Service {
 
   static filterFieldsMap = {};
 
+  static sortFieldsMap = {};
+
   static isFilterRequired = false;
 
   static searchableFields = [];
-
-  static sortFields = [];
   
   static accessControl = {};
 

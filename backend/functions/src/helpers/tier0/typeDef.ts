@@ -7,6 +7,7 @@ export function generateCreatedAtField() {
       type: dataTypes.DATETIME,
       mysqlOptions: {
         type: DataTypes.DATE,
+        allowNull: false,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
         getter: (field) => "UNIX_TIMESTAMP(" + field + ")",
       },
@@ -35,9 +36,26 @@ export function generateIdField() {
       mysqlOptions: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
-        primaryKey: true
+        primaryKey: true,
+        allowNull: false,
       },
       filterable: true
+    },
+  };
+};
+
+export function generateCreatedByField(service: any) {
+  return {
+    created_by: {
+      type: service.__typename,
+      mysqlOptions: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        joinInfo: {
+          type: service.__typename,
+        },
+      },
+      filterable: true,
     },
   };
 };
@@ -48,6 +66,7 @@ export function generateEnumField(name: string, service: any, options?: object) 
       type: service.__typename,
       mysqlOptions: {
         type: DataTypes.INTEGER,
+        allowNull: false,
       },
       resolver: async (context, req, currentObject, query, args, parent) => {
         return service.getRecord(req, {

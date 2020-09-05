@@ -34,23 +34,19 @@ export class User extends Service {
   };
   
   static filterFieldsMap = {
-    id: {
-      field: "id",
-    },
-    created_by: {
-      field: "created_by",
-    },
-    "created_by.name": {
-      field: "created_by",
-      foreignField: "name"
-    }
+    id: {},
+    "created_by": {},
+    "created_by.name": {},
+  };
+
+  static sortFieldsMap = {
+    id: {},
+    created_at: {},
   };
 
   static isFilterRequired = false;
 
   static searchableFields = ["name"];
-
-  static sortFields = ["id", "created_by"];
 
   static accessControl = {
     get: () => true,

@@ -23,34 +23,24 @@ export class UserAlgTagLink extends Service {
       date_modified: null
     }
   };
-  
+
   static filterFieldsMap = {
-    id: {
-      field: "id",
-    },
-    created_by: {
-      field: "created_by",
-    },
-    "created_by.name": {
-      field: "created_by",
-      foreignField: "name"
-    },
-    alg: {
-      field: "alg"
-    },
-    user: {
-      field: "user"
-    },
-    tag: {
-      field: "tag",
-    },
+    id: {},
+    "created_by": {},
+    "created_by.name": {},
+    "alg": {},
+    "user": {},
+    "tag": {},
+  };
+
+  static sortFieldsMap = {
+    id: {},
+    created_at: {},
   };
 
   static isFilterRequired = false;
 
   static searchableFields = ["name"];
-
-  static sortFields = ["id", "created_by"];
 
   static accessControl = {
     update: generateUserAdminGuard(),
@@ -74,10 +64,12 @@ export class UserAlgTagLink extends Service {
     if(algResults.length < 1) throw errorHelper.generateError("Invalid alg");
 
     //verify tag exists
+    /*
     const tagResults = await mysqlHelper.executeDBQuery("SELECT id FROM tag WHERE id = :id", { id: args.tag });
 
     if(tagResults.length < 1) throw errorHelper.generateError("Invalid tag");
-
+    */
+   
     const addResults = await resolverHelper.addTableRow(this.__typename, {
       ...args,
       user: req.user.id,

@@ -1,6 +1,6 @@
 import * as bcrypt from 'bcryptjs';
 
-import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generateEnumField } from '../../helpers/tier0/typeDef';
+import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generateEnumField, generateCreatedByField } from '../../helpers/tier0/typeDef';
 
 import { User, UserRoleEnum } from '../services'
 
@@ -39,7 +39,8 @@ export default {
     type: dataTypes.STRING,
     mysqlOptions: {
       type: DataTypes.STRING,
-      unique: true
+      unique: true,
+      allowNull: false,
     },
     addable: true,
   },
@@ -61,6 +62,7 @@ export default {
     allowNull: true,
     mysqlOptions: {
       type: DataTypes.STRING,
+      allowNull: false,
     },
     addable: true,
     updateable: true,
@@ -88,21 +90,13 @@ export default {
     mysqlOptions: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
+      allowNull: false,
     },
     addable: true,
     updateable: true,
   },
   ...generateCreatedAtField(),
   ...generateUpdatedAtField(),
-  created_by: {
-    type: User.__typename,
-    mysqlOptions: {
-      type: DataTypes.INTEGER,
-      joinInfo: {
-        type: User.__typename,
-      },
-    },
-    filterable: true,
-  },
+  ...generateCreatedByField(User),
   ...generateEnumField('role', UserRoleEnum, { defaultValue: UserRoleEnum.enum["NORMAL"] }),
 }

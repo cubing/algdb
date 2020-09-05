@@ -23,43 +23,29 @@ export class AlgAlgcaseLink extends Service {
       date_modified: null
     }
   };
-  
+
   static filterFieldsMap = {
-    id: {
-      field: "id",
-    },
-    created_by: {
-      field: "created_by",
-    },
-    "created_by.name": {
-      field: "created_by",
-      foreignField: "name"
-    },
-    alg: {
-      field: "alg"
-    },
-    algcase: {
-      field: "algcase"
-    },
-    subset: {
-      field: "algcase",
-      foreignField: "subset"
-    },
-    algset: {
-      field: "algcase",
-      foreignField: "algset"
-    },
-    puzzle: {
-      field: "algcase",
-      foreignField: "puzzle"
-    },
+    id: {},
+    "created_by": {},
+    "created_by.name": {},
+    "alg": {},
+    "algcase": {},
+    "algcase.subset": {},
+    "algcase.subset.name": {},
+    "algcase.algset": {},
+    "algcase.puzzle": {},
+    "algcase.puzzle.name": {}
+  };
+
+  static sortFieldsMap = {
+    id: {},
+    created_at: {},
+    "algcase.subset.name": {}
   };
 
   static isFilterRequired = false;
 
-  static searchableFields = ["name"];
-
-  static sortFields = ["id", "created_by"];
+  static searchableFields = ["algcase.subset.name"];
 
   static accessControl = {
     update: generateUserAdminGuard(),

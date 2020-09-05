@@ -1,5 +1,5 @@
 export enum caseVisualization {
-  "2D" = 1,
-  "3D" = 2,
-  "PG3D" = 3,
+  "V_2D" = 1,
+  "V_3D" = 2,
+  "V_PG3D" = 3,
 };

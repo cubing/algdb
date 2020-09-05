@@ -1,4 +1,4 @@
-import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generateEnumField } from '../../helpers/tier0/typeDef';
+import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generateEnumField, generateCreatedByField } from '../../helpers/tier0/typeDef';
 
 import { User } from '../services'
 
@@ -11,19 +11,11 @@ export default {
     type: dataTypes.STRING,
     mysqlOptions: {
       type: DataTypes.STRING,
+      allowNull: false,
     },
     addable: true,
   },
   ...generateCreatedAtField(),
   ...generateUpdatedAtField(),
-  created_by: {
-    type: User.__typename,
-    mysqlOptions: {
-      type: DataTypes.INTEGER,
-      joinInfo: {
-        type: User.__typename,
-      },
-    },
-    filterable: true,
-  },
+  ...generateCreatedByField(User),
 }

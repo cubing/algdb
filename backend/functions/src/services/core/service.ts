@@ -21,11 +21,11 @@ export default abstract class Service {
 
   static filterFieldsMap: Object = {};
 
+  static sortFieldsMap: Object = {};
+
   static isFilterRequired: Boolean = false;
 
   static searchableFields: Array<string> = [];
-
-  static sortFields: Array<string> = [];
   
   static permissionsLink?: any;
 
@@ -161,40 +161,22 @@ export default abstract class Service {
 
     const filterArray: Array<any> = [];
     
-    for(const externalField in args) {
+    //handle filter fields
+    for(const arg in args) {
       const filterObject = {
         connective: "AND",
         fields: {}
       };
 
-      let value;
-      if(externalField in this.filterFieldsMap) {
-        const { field, foreignField, operator } = this.filterFieldsMap[externalField];
-        if(this.filterFieldsMap[externalField].fn) {
-          value = this.filterFieldsMap[externalField].fn(args[externalField], req);
-        } else if(this.filterFieldsMap[externalField].onlyMeAllowed) {
-          if(!req.user) throw errorHelper.loginRequiredError();
-
-          //only allowed to lookup by "me"
-          if(args[externalField] !== "me") throw errorHelper.badPermissionsError();
-
-          value = req.user.id;
-        } else if(args[externalField] === "me" && this.filterFieldsMap[externalField].replaceMeWithId) {
-          //if query field is "me" and is allowed to use me, replace with user id if available
-          if(!req.user) throw errorHelper.loginRequiredError(); 
-
-          value = req.user.id;
-        } else {
-          value = args[externalField];
+      if(arg in this.filterFieldsMap) {
+        filterObject.fields[this.filterFieldsMap[arg].field ?? arg] = {
+          value: args[arg]
         }
-
-        filterObject.fields[field] = { value, foreignField, operator };
-
-        filterArray.push(filterObject);
-      }      
+      }
+      filterArray.push(filterObject);
     }
 
-    //searching
+    //handle search fields
     if(args.search) {
       const filterObject = {
         connective: "OR",
@@ -231,9 +213,9 @@ export default abstract class Service {
         select: selectQuery,
         where: filterArray,
         orderBy: Array.isArray(args.sortBy) ? args.sortBy.reduce((total, item, index) => {
-          if(this.sortFields.includes(item)) {
+          if(item in this.sortFieldsMap) {
             total.push({
-              field: item,
+              field: this.sortFieldsMap[item].field ?? item,
               desc: Array.isArray(args.sortDesc) ? (args.sortDesc[index] === "true" || args.sortDesc[index] === true) : true
             });
           }

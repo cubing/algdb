@@ -1,4 +1,4 @@
-import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generatePaginatorArgs } from '../../helpers/tier0/typeDef';
+import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generatePaginatorArgs, generateCreatedByField } from '../../helpers/tier0/typeDef';
 
 import { User, Puzzle, Algcase, Subset } from '../services'
 
@@ -11,26 +11,19 @@ export default {
     type: dataTypes.STRING,
     mysqlOptions: {
       type: DataTypes.STRING,
+      allowNull: false,
     },
     addable: true,
     updateable: true,
   },
   ...generateCreatedAtField(),
   ...generateUpdatedAtField(),
-  created_by: {
-    type: User.__typename,
-    mysqlOptions: {
-      type: DataTypes.INTEGER,
-      joinInfo: {
-        type: User.__typename,
-      },
-    },
-    filterable: true,
-  },
+  ...generateCreatedByField(User),
   puzzle: {
     type: Puzzle.__typename,
     mysqlOptions: {
       type: DataTypes.INTEGER,
+      allowNull: false,
       joinInfo: {
         type: Puzzle.__typename
       }
