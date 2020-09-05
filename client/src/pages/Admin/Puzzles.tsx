@@ -1,7 +1,63 @@
-import React, { ReactElement } from 'react'
-import { Flex, Heading, Spinner } from '@chakra-ui/core'
+import React, { ReactElement, useState, ChangeEvent } from 'react'
+import { Flex, Heading, Spinner, Input, Button } from '@chakra-ui/core'
 import useJqlQuery from '../../hooks/useJqlQuery'
-import { PuzzlePaginator } from '../../generated/jql'
+import useJqlMutation from '../../hooks/useJqlMutation'
+import { Maybe, Puzzle, PuzzlePaginator } from '../../generated/jql'
+
+type AddPuzzleProps = {
+  onAdd: () => void
+}
+
+type AddPuzzleMutationArgs = {
+  name: string
+}
+
+function AddPuzzle({ onAdd }: AddPuzzleProps): ReactElement {
+  const [puzzleName, setPuzzleName] = useState<string>('')
+
+  const [mutate, { isLoading, error }] = useJqlMutation<
+    Maybe<Puzzle>,
+    Error,
+    AddPuzzleMutationArgs
+  >('createPuzzle', {
+    id: null,
+    name: null,
+  })
+
+  const onClick = async () => {
+    if (puzzleName) {
+      try {
+        await mutate({
+          name: puzzleName
+        })
+        onAdd()
+        setPuzzleName('')
+      } catch (err) {
+        console.error(err)
+      }
+    }
+  }
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setPuzzleName(event.target.value)
+  }
+
+  if (error) {
+    console.error(error);
+  }
+
+  return (
+    <tr>
+      <td />
+      <td>
+        <Input placeholder="fto" value={puzzleName} onChange={handleChange} />
+      </td>
+      <td>
+        <Button isLoading={isLoading} isDisabled={!puzzleName} onClick={onClick}>Add</Button>
+      </td>
+    </tr>
+  )
+}
 
 const getPuzzlesQuery = {
   paginatorInfo: {
@@ -16,7 +72,7 @@ const getPuzzlesQuery = {
 }
 
 export default function Puzzles(): ReactElement {
-  const { isLoading, data, error } = useJqlQuery<PuzzlePaginator, Error>(
+  const { isLoading, data, refetch, error } = useJqlQuery<PuzzlePaginator, Error>(
     'getMultiplePuzzle',
     'getMultiplePuzzle',
     getPuzzlesQuery,
@@ -55,6 +111,7 @@ export default function Puzzles(): ReactElement {
                 <td>{new Date(puzzle.created_at * 1000).toLocaleString()}</td>
               </tr>
             ) : false)}
+            <AddPuzzle onAdd={refetch} />
           </tbody>
         </table>
       </Flex>
