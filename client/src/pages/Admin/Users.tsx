@@ -1,10 +1,65 @@
-/* eslint-disable no-nested-ternary */
-import React, { ReactElement } from 'react'
-import { Flex, Heading, Spinner, Box } from '@chakra-ui/core'
+import React, { ReactElement, ChangeEvent } from 'react'
+import { Flex, Heading, Spinner, Select, CircularProgress } from '@chakra-ui/core'
 import useJqlQuery from '../../hooks/useJqlQuery'
-import { UserPaginator } from '../../generated/jql'
+import useJqlMutation from '../../hooks/useJqlMutation'
+import { Maybe, User, UserPaginator, UserRole, UserRoleEnum } from '../../generated/jql'
 
-const query = {
+type RoleSelectorProps = {
+  user: string
+  role: Maybe<UserRoleEnum> | undefined
+}
+
+type UpdateUserVariables = {
+  id: string,
+  role: Maybe<UserRole>
+}
+
+const Roles = [UserRole.Normal, UserRole.Moderator, UserRole.Admin];
+
+const RoleSelector = ({ user, role }: RoleSelectorProps): ReactElement => {
+  const [mutate, { isLoading, data, error }] = useJqlMutation<
+    Maybe<User>,
+    Error,
+    UpdateUserVariables
+  >('updateUser', {
+    id: null,
+    name: null,
+    role: {
+      id: null,
+      name: null,
+    },
+  })
+  
+  const changeRole = async (event: ChangeEvent<HTMLSelectElement>) => {
+    try {
+      await mutate({
+        id: user,
+        role: Roles[parseInt(event.target.value, 10) - 1],
+      })
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  if (error) {
+    console.error(error);
+  }
+
+  const roleId = data ? data?.role?.id : role?.id;
+
+  return (
+    <Flex>
+      {isLoading && <CircularProgress size="1em" /> }
+      <Select variant="unstyled" value={roleId} onChange={changeRole}>
+        <option value="1">Normal</option>
+        <option value="2">Moderator</option>
+        <option value="3">Admin</option>
+      </Select>
+    </Flex>
+  )
+}
+
+const getUsersQuery = {
   paginatorInfo: {
     count: null,
     total: null,
@@ -23,7 +78,7 @@ export default function GetUsers(): ReactElement {
   const { isLoading, data, error } = useJqlQuery<UserPaginator, Error>(
     'getMultipleUser',
     'getMultipleUser',
-    query,
+    getUsersQuery,
   )
 
   const users = data?.data || [];
@@ -57,7 +112,7 @@ export default function GetUsers(): ReactElement {
               <tr key={user.id}>
                 <td>{user.id}</td>
                 <td>{user.name}</td>
-                <td>{user?.role?.name}</td>
+                <td><RoleSelector user={user.id} role={user?.role} /></td>
                 <td>{new Date(user.created_at * 1000).toLocaleString()}</td>
               </tr>
             ) : false)}

@@ -14,8 +14,14 @@ export default function useJqlMutation<
 ): MutationResultPair<TResult, TError, TVariables, TSnapshot> {
   const { serverUrl, authToken } = useJql()
 
-  async function algdbMutate<T>() {
-    const body = JSON.stringify({ action, query })
+  async function algdbMutate<T>(args: any) {
+    const body = JSON.stringify({
+      action,
+      query: {
+        ...query,
+        __args: args,
+      }
+    })
     const headers: { [key: string]: string } = {
       'Content-Type': 'application/json',
     }
