@@ -5,7 +5,12 @@ import generateAccessorService from '../core/generator/accessor.service'
 import mysqlHelper from '../../helpers/tier1/mysql';
 import errorHelper from '../../helpers/tier0/error';
 import resolverHelper from '../../helpers/tier2/resolver';
-import { handleJqlSubscriptionTriggerIterative } from '../../helpers/tier3/subscription'
+import {
+  handleJqlSubscriptionTriggerIterative,
+  handleJqlSubscriptionTrigger
+} from '../../helpers/tier3/subscription'
+
+import { userRole } from '../enums';
 
 import { generateItemCreatedByUserGuard, generateUserAdminGuard } from '../../helpers/tier2/permissions'
 
@@ -83,4 +88,46 @@ export class User extends Service {
     //always allowed to return the user you just created
     return this.getRecord(req, { id: addResults.id }, query, true);
   }
+
+  static async updateRecord(req, args = <any> {}, query?: object) {
+    if(!req.user) throw errorHelper.loginRequiredError();
+
+    //if it does not pass the access control, throw an error
+    if(!await this.testPermissions('update', req, args, query)) {
+      throw errorHelper.badPermissionsError();
+    }
+
+    //check if record exists
+    const results = await mysqlHelper.executeDBQuery("SELECT role FROM user WHERE id = :id", {
+      id: args.id
+    });
+
+    if(results.length < 1) {
+      throw errorHelper.generateError('Item not found', 404);
+    }
+
+    //check if target user is admin
+    if(userRole[results[0].role] === "ADMIN") {
+      throw errorHelper.generateError('Cannot update admin user', 401); 
+    }
+    
+    await resolverHelper.updateTableRow(this.__typename, {
+      ...args,
+    }, {
+      date_modified: null
+    }, [{ fields: { id: { value: args.id } } }]);
+    
+
+    const returnData = this.getRecord(req, { id: args.id }, query);
+
+    //check subscriptions table where companyUpdated and id = 1.
+    const validatedArgs = {
+      id: args.id
+    };
+
+    handleJqlSubscriptionTrigger(req, this, this.__typename + 'Updated', validatedArgs);
+
+    return returnData;
+  }
+
 };
