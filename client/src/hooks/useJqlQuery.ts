@@ -40,7 +40,7 @@ export default function useJqlQuery<TResult, TError>(
   const queryInfo = useQuery<TResult, TError>(
     [key, { serverUrl, authToken, action, query }],
     algDbFetch,
-    config,
+    { refetchOnWindowFocus: false, ...config },
   )
 
   return queryInfo
