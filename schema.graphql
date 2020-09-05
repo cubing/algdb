@@ -193,7 +193,7 @@ type User {
 	created_at: Int!
 	updated_at: Int
 	created_by: User!
-	role: UserRoleEnum
+	role: UserRoleEnum!
 }
 type UserPaginator {
 	paginatorInfo: PaginatorInfo!

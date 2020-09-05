@@ -104,5 +104,5 @@ export default {
     },
     filterable: true,
   },
-  ...generateEnumField('role', UserRoleEnum, { allowNull: true }),
+  ...generateEnumField('role', UserRoleEnum, { defaultValue: UserRoleEnum.enum["NORMAL"] }),
 }
