@@ -2,7 +2,7 @@ import React, { ReactElement } from 'react'
 import { Switch, Route } from 'react-router-dom'
 import Landing from '../Landing/Landing'
 import Admin from '../Admin'
-import WcaRedirect from '../../components/WcaRedirect/WcaRedirect'
+import WcaRedirect from "../WcaRedirect/WcaRedirect"
 import Puzzles from '../Puzzles/Puzzles'
 
 export default function Navigation(): ReactElement {
