@@ -120,7 +120,6 @@ const getAlgsetsQuery = {
 export default function Algsets(): ReactElement {
   const [ editingAlgsetId, setEditingAlgsetId ] = useState<string | undefined>();
   const [ editingAlgsetName, setEditingAlgsetName ] = useState<string | undefined>();
-  const [ editingAlgsetPuzzle, setEditingAlgsetPuzzle ] = useState<string | undefined>();
   const [ editingAlgsetVisualization, setEditingAlgsetVisualization ] = useState<string | undefined>();
 
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -154,7 +153,6 @@ export default function Algsets(): ReactElement {
     (event: MouseEvent) => {
       onOpen();
       setEditingAlgsetName(algset.name)
-      setEditingAlgsetPuzzle(algset.puzzle.id)
       setEditingAlgsetVisualization(algset.visualization.name)
       setEditingAlgsetId(algset.id)
     }
@@ -163,7 +161,6 @@ export default function Algsets(): ReactElement {
     await mutateAlgset({
       id: editingAlgsetId,
       name: editingAlgsetName,
-      puzzle: editingAlgsetPuzzle,
       visualization: editingAlgsetVisualization,
     })
     refetch()
@@ -236,21 +233,6 @@ export default function Algsets(): ReactElement {
                       id="editingAlgsetName"
                       placeholder={editingAlgsetName}
                     />
-                  </Box>
-
-                  <Box>
-                    <FormLabel htmlFor="editingAlgsetPuzzle">Puzzle</FormLabel>
-                    <Select
-                      value={editingAlgsetPuzzle}
-                      onChange={(event: ChangeEvent<HTMLSelectElement>) => {
-                        setEditingAlgsetPuzzle(event.target.value)
-                      }}
-                      id="editingAlgsetPuzzle"
-                    >
-                      {puzzles.map((puzzle) => (
-                        <option key={puzzle?.id} value={puzzle?.id}>{puzzle?.name}</option>
-                      ))}
-                    </Select>
                   </Box>
 
                   <Box>
