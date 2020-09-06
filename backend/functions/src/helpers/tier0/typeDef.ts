@@ -81,6 +81,7 @@ export function generateEnumField(name: string, service: any, options?: object, 
       },
       filterable: true,
       updateable: true,
+      addable: true,
       ...options
     },
   };

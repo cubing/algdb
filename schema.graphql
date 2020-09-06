@@ -121,19 +121,23 @@ type Mutation {
 	loginUser(email: String!, password: String!): Auth!
 	socialLogin(provider: String!, code: String!): Auth!
 	deletePuzzle(id: ID!): Puzzle!
-	updatePuzzle(id: ID!, name: String): Puzzle!
-	createPuzzle(name: String): Puzzle!
+	updatePuzzle(id: ID!, name: String, code: String): Puzzle!
+	createPuzzle(name: String!, code: String!): Puzzle!
 	deleteAlgset(id: ID!): Algset!
-	updateAlgset(id: ID!, name: String): Algset!
+	updateAlgset(id: ID!, name: String, mask: String, visualization: CaseVisualization): Algset!
 	createAlgset(
 		name: String
+		mask: String
+		visualization: CaseVisualization
 		puzzle: Puzzle
 		score: Int
 	): Algset!
 	deleteSubset(id: ID!): Subset!
-	updateSubset(id: ID!, name: String): Subset!
+	updateSubset(id: ID!, name: String, mask: String, visualization: CaseVisualization): Subset!
 	createSubset(
 		name: String
+		mask: String
+		visualization: CaseVisualization
 		puzzle: Puzzle
 		algset: Algset
 		parent: Subset
@@ -142,8 +146,6 @@ type Mutation {
 	updateAlgcase(
 		id: ID!
 		name: String
-		mask: String
-		visualization: CaseVisualization
 	): Algcase!
 	createAlgcase(
 		name: String
@@ -193,6 +195,7 @@ type UserPaginator {
 type Puzzle {
 	id: ID!
 	name: String!
+	code: String!
 	created_at: Int!
 	updated_at: Int
 	created_by: User!
@@ -213,6 +216,8 @@ type PuzzlePaginator {
 type Algset {
 	id: ID!
 	name: String!
+	mask: String
+	visualization: CaseVisualizationEnum!
 	created_at: Int!
 	updated_at: Int
 	created_by: User!
@@ -247,6 +252,8 @@ type AlgsetPaginator {
 type Subset {
 	id: ID!
 	name: String!
+	mask: String
+	visualization: CaseVisualizationEnum!
 	created_at: Int!
 	updated_at: Int
 	created_by: User!
@@ -282,8 +289,6 @@ type SubsetPaginator {
 type Algcase {
 	id: ID!
 	name: String!
-	mask: String
-	visualization: CaseVisualizationEnum!
 	created_at: Int!
 	updated_at: Int
 	created_by: User!
