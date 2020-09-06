@@ -55,6 +55,7 @@ const UserProvider = ({ children }: React.PropsWithChildren<{}>) => {
   React.useEffect(() => {
     const expiresWithinHour =
       new Date(expiresAt).getTime() > Date.now() - 100 * 60 * 60
+
     if (authToken) {
       if (expiresWithinHour) signIn()
       else {
@@ -77,7 +78,7 @@ const UserProvider = ({ children }: React.PropsWithChildren<{}>) => {
     [user],
   )
 
-  if (isLoading || user === null) return <Spinner />
+  if (isLoading || user !== null) return <Spinner />
   if (error) return <p>{error.message}</p>
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>
 }
