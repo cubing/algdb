@@ -94,7 +94,7 @@ export class User extends Service {
     }
 
     //check if record exists
-    const results = await mysqlHelper.executeDBQuery("SELECT role FROM user WHERE id = :id", {
+    const results = await mysqlHelper.executeDBQuery("SELECT id, role FROM user WHERE id = :id", {
       id: args.id
     });
 
@@ -102,9 +102,9 @@ export class User extends Service {
       throw errorHelper.generateError('Item not found', 404);
     }
 
-    //check if target user is admin
-    if(userRole[results[0].role] === "ADMIN") {
-      throw errorHelper.generateError('Cannot update admin user', 401); 
+    //check if target user is more senior admin
+    if(userRole[results[0].role] === "ADMIN" && (results[0].id < req.user.id)) {
+      throw errorHelper.generateError('Cannot update more senior admin user', 401); 
     }
     
     await resolverHelper.updateTableRow(this.__typename, {

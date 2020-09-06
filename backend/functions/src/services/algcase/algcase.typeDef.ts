@@ -25,7 +25,7 @@ export default {
     addable: true,
     updateable: true,
   },
-  ...generateEnumField('visualization', CaseVisualizationEnum, { defaultValue: CaseVisualizationEnum.enum["V_2D"] }),
+  ...generateEnumField('visualization', CaseVisualizationEnum, {}, { defaultValue: CaseVisualizationEnum.enum["V_2D"] }),
   ...generateCreatedAtField(),
   ...generateUpdatedAtField(),
   ...generateCreatedByField(User),

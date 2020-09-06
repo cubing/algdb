@@ -16,6 +16,15 @@ export default {
     addable: true,
     updateable: true,
   },
+  code: {
+    type: dataTypes.STRING,
+    mysqlOptions: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    addable: true,
+    updateable: true,
+  },
   ...generateCreatedAtField(),
   ...generateUpdatedAtField(),
   ...generateCreatedByField(User),

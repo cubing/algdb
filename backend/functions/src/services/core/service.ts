@@ -23,6 +23,8 @@ export default abstract class Service {
 
   static sortFieldsMap: Object = {};
 
+  static groupByFieldsMap: Object = {};
+
   static isFilterRequired: Boolean = false;
 
   static searchableFields: Array<string> = [];
@@ -223,6 +225,14 @@ export default abstract class Service {
         }, []) : null,
         limit: args.first,
         after: args.after,
+        groupBy: Array.isArray(args.groupBy) ? args.groupBy.reduce((total, item, index) => {
+          if(item in this.groupByFieldsMap) {
+            total.push({
+              field: this.groupByFieldsMap[item].field ?? item
+            });
+          }
+          return total;
+        }, []) : null,
         //offset: args.first*args.page || 0
       });
   

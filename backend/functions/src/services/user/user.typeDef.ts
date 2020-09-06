@@ -98,5 +98,5 @@ export default {
   ...generateCreatedAtField(),
   ...generateUpdatedAtField(),
   ...generateCreatedByField(User),
-  ...generateEnumField('role', UserRoleEnum, { defaultValue: UserRoleEnum.enum["NORMAL"] }),
+  ...generateEnumField('role', UserRoleEnum, {}, { defaultValue: UserRoleEnum.enum["NORMAL"] }),
 }

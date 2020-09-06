@@ -9,6 +9,7 @@ export default class Mysql {
     let where_statement = '';
     let order_statement = '';
     let limit_statement = '';
+    let groupby_statement = '';
 
     const tableObject = {
       name: table,
@@ -53,13 +54,21 @@ export default class Mysql {
       limit_statement += " LIMIT " + parseInt(jqlQuery.limit) || 0;
     }
 
+    //handle limit/offset statements
+    if(jqlQuery.groupBy) {
+      const groupResults = this.processJqlGroupArray(table, jqlQuery.groupBy, previous_joins);
+
+      groupby_statement += groupResults.group_statement;
+      join_statement += groupResults.join_statement;
+    }
+
     /*
     if(jqlQuery.offset) {
       limit_statement += " OFFSET " + parseInt(jqlQuery.offset) || 0;
     }
     */
 
-    const sqlQuery = "SELECT " + select_statement + " FROM " + table + join_statement + " WHERE " + where_statement + (order_statement ? " ORDER BY " + order_statement : "") + limit_statement;
+    const sqlQuery = "SELECT " + select_statement + " FROM " + table + join_statement + " WHERE " + where_statement + (groupby_statement ? " GROUP BY " + groupby_statement : "") + (order_statement ? " ORDER BY " + order_statement : "") + limit_statement;
 
     return mysql.executeDBQuery(sqlQuery, params);
   }
@@ -401,6 +410,68 @@ export default class Mysql {
 
     return {
       order_statement: sort_statements.join(", "),
+      join_statement
+    };
+  }
+
+  static processJqlGroupArray(table, groupArray, previous_joins) {
+    const statements = <Array<string>> [];
+    let join_statement = "";
+
+    groupArray.forEach((groupObject) => {
+      const fieldPath = groupObject.field.split(".");
+      let currentTypeDef = typeDefs[table];
+      let currentTable = table;
+
+      let joinTableAlias, finalFieldname;
+
+      fieldPath.forEach((field, fieldIndex) => {
+        //if there's no next field, no more joins
+        if(fieldPath[fieldIndex+1]) {
+          //join with this type
+          const joinTableName = currentTypeDef[field]?.mysqlOptions?.joinInfo.type;
+
+          //if it requires a join, check if it was joined previously
+          if(joinTableName) {
+            if(!(joinTableName in previous_joins)) {
+              previous_joins[joinTableName] = [];
+            }
+    
+            let newJoin = false;
+            let index = previous_joins[joinTableName].indexOf(field);
+    
+            //if index not exists, join the table and get the index.
+            if(index === -1) {
+              previous_joins[joinTableName].push(field);
+    
+              index = previous_joins[joinTableName].indexOf(field);
+              newJoin = true;
+            }
+    
+            //always set the alias.
+            joinTableAlias = joinTableName + index;
+    
+            if(newJoin) {
+              //assemble join statement, if required
+              join_statement += " LEFT JOIN " + joinTableName + " " + joinTableAlias + " ON " + currentTable + "." + field + " = " + joinTableAlias + "." + (currentTypeDef[field]?.mysqlOptions?.joinInfo?.foreignKey ?? "id");
+            }
+          }
+
+          //shift the typeDef
+          currentTypeDef = typeDefs[joinTableName];
+          currentTable = joinTableAlias;
+        } else {
+          //no more fields, set the finalFieldname
+          finalFieldname = field;
+        }
+      });
+
+      const tableName = joinTableAlias || table;
+      statements.push(tableName + "." + finalFieldname);
+    });
+
+    return {
+      group_statement: statements.join(", "),
       join_statement
     };
   }

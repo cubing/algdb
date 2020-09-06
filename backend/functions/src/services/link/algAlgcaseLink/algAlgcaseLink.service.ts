@@ -30,9 +30,11 @@ export class AlgAlgcaseLink extends Service {
     "created_by.name": {},
     "alg": {},
     "algcase": {},
+    "algcase.name": {},
     "algcase.subset": {},
     "algcase.subset.name": {},
     "algcase.algset": {},
+    "algcase.algset.name": {},
     "algcase.puzzle": {},
     "algcase.puzzle.name": {}
   };
@@ -41,6 +43,10 @@ export class AlgAlgcaseLink extends Service {
     id: {},
     created_at: {},
     "algcase.subset.name": {}
+  };
+
+  static groupByFieldsMap = {
+    "alg": {},
   };
 
   static isFilterRequired = false;
