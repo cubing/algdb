@@ -45,11 +45,11 @@ export default class Mysql {
     if(jqlQuery.orderBy) {
       const orderResults = this.processJqlSortArray(table, jqlQuery.orderBy, previous_joins);
 
-      order_statement += orderResults.order_statement;
+      order_statement += orderResults.statements.join(", ");
       join_statement += orderResults.join_statement;
     }
 
-    //handle limit/offset statements
+    //handle limit statement
     if(jqlQuery.limit) {
       limit_statement += " LIMIT " + parseInt(jqlQuery.limit) || 0;
     }
@@ -58,7 +58,7 @@ export default class Mysql {
     if(jqlQuery.groupBy) {
       const groupResults = this.processJqlGroupArray(table, jqlQuery.groupBy, previous_joins);
 
-      groupby_statement += groupResults.group_statement;
+      groupby_statement += groupResults.statements.join(", ");
       join_statement += groupResults.join_statement;
     }
 
@@ -316,6 +316,8 @@ export default class Mysql {
           }
         });
 
+
+
         const operator = fieldObject.operator ?? '=';
         const tableName = joinTableAlias || table;
         const placeholder = (finalFieldname in params) ? finalFieldname + whereIndex : finalFieldname;
@@ -353,73 +355,19 @@ export default class Mysql {
   }
 
   static processJqlSortArray(table, sortArray, previous_joins) {
-    const sort_statements = <Array<string>> [];
-    let join_statement = "";
-
-    sortArray.forEach((sortObject) => {
-      const fieldPath = sortObject.field.split(".");
-      let currentTypeDef = typeDefs[table];
-      let currentTable = table;
-
-      let joinTableAlias, finalFieldname;
-
-      fieldPath.forEach((field, fieldIndex) => {
-        //if there's no next field, no more joins
-        if(fieldPath[fieldIndex+1]) {
-          //join with this type
-          const joinTableName = currentTypeDef[field]?.mysqlOptions?.joinInfo.type;
-
-          //if it requires a join, check if it was joined previously
-          if(joinTableName) {
-            if(!(joinTableName in previous_joins)) {
-              previous_joins[joinTableName] = [];
-            }
-    
-            let newJoin = false;
-            let index = previous_joins[joinTableName].indexOf(field);
-    
-            //if index not exists, join the table and get the index.
-            if(index === -1) {
-              previous_joins[joinTableName].push(field);
-    
-              index = previous_joins[joinTableName].indexOf(field);
-              newJoin = true;
-            }
-    
-            //always set the alias.
-            joinTableAlias = joinTableName + index;
-    
-            if(newJoin) {
-              //assemble join statement, if required
-              join_statement += " LEFT JOIN " + joinTableName + " " + joinTableAlias + " ON " + currentTable + "." + field + " = " + joinTableAlias + "." + (currentTypeDef[field]?.mysqlOptions?.joinInfo?.foreignKey ?? "id");
-            }
-          }
-
-          //shift the typeDef
-          currentTypeDef = typeDefs[joinTableName];
-          currentTable = joinTableAlias;
-        } else {
-          //no more fields, set the finalFieldname
-          finalFieldname = field;
-        }
-      });
-
-      const tableName = joinTableAlias || table;
-      sort_statements.push(tableName + "." + finalFieldname + " " + (sortObject.desc ? "DESC" : "ASC"));
-    });
-
-    return {
-      order_statement: sort_statements.join(", "),
-      join_statement
-    };
+    return this.processJqlJoins(table, sortArray, previous_joins, (tableName, finalFieldname, joinObject, joinFieldIndex) => tableName + "." + finalFieldname + " " + (joinObject.desc ? "DESC" : "ASC"));
   }
 
   static processJqlGroupArray(table, groupArray, previous_joins) {
+    return this.processJqlJoins(table, groupArray, previous_joins, (tableName, finalFieldname, joinObject, joinFieldIndex) => tableName + "." + finalFieldname);
+  }
+
+  static processJqlJoins(table, joinFieldsArray, previous_joins, assemblyFn: Function) {
     const statements = <Array<string>> [];
     let join_statement = "";
 
-    groupArray.forEach((groupObject) => {
-      const fieldPath = groupObject.field.split(".");
+    joinFieldsArray.forEach((joinObject, joinFieldIndex) => {
+      const fieldPath = joinObject.field.split(".");
       let currentTypeDef = typeDefs[table];
       let currentTable = table;
 
@@ -467,11 +415,12 @@ export default class Mysql {
       });
 
       const tableName = joinTableAlias || table;
+      statements.push(assemblyFn(tableName, finalFieldname, joinObject, joinFieldIndex));
       statements.push(tableName + "." + finalFieldname);
     });
 
     return {
-      group_statement: statements.join(", "),
+      statements,
       join_statement
     };
   }

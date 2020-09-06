@@ -30,7 +30,7 @@ export default {
   ...generateCreatedByField(User),
   algsets: {
     type: Algset.__typename,
-    args: generatePaginatorArgs(Algset),
+    args: generatePaginatorArgs(Algset, ["puzzle"]),
     resolver: async (context, req, currentObject, query, args, parent) => {
       return Algset.paginator.getRecord(req, {
         ...query?.__args,

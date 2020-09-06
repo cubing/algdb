@@ -1,6 +1,6 @@
-import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generateEnumField, generatePaginatorArgs, generateCreatedByField } from '../../helpers/tier0/typeDef';
+import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generatePaginatorArgs, generateCreatedByField } from '../../helpers/tier0/typeDef';
 
-import { User, Puzzle, Algset, Subset, AlgAlgcaseLink, CaseVisualizationEnum } from '../services'
+import { User, Puzzle, Algset, Subset, AlgAlgcaseLink } from '../services'
 
 import { DataTypes } from "sequelize";
 import { dataTypes } from '../../jql/helpers/dataType';
@@ -16,16 +16,6 @@ export default {
     addable: true,
     updateable: true,
   },
-  mask: {
-    type: dataTypes.STRING,
-    allowNull: true,
-    mysqlOptions: {
-      type: DataTypes.STRING,
-    },
-    addable: true,
-    updateable: true,
-  },
-  ...generateEnumField('visualization', CaseVisualizationEnum, {}, { defaultValue: CaseVisualizationEnum.enum["V_2D"] }),
   ...generateCreatedAtField(),
   ...generateUpdatedAtField(),
   ...generateCreatedByField(User),
@@ -66,7 +56,7 @@ export default {
   },
   algs: {
     type: AlgAlgcaseLink.paginator.__typename,
-    args: generatePaginatorArgs(AlgAlgcaseLink),
+    args: generatePaginatorArgs(AlgAlgcaseLink, ["algcase"]),
     resolver: async (context, req, currentObject, query, args, parent) => {
       return AlgAlgcaseLink.paginator.getRecord(req, {
         ...query?.__args,

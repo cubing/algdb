@@ -1,6 +1,6 @@
-import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generatePaginatorArgs, generateCreatedByField } from '../../helpers/tier0/typeDef';
+import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generatePaginatorArgs, generateCreatedByField, generateEnumField } from '../../helpers/tier0/typeDef';
 
-import { User, Puzzle, Algset, Subset, Algcase } from '../services'
+import { User, Puzzle, Algset, Subset, Algcase, CaseVisualizationEnum } from '../services'
 
 import { DataTypes } from "sequelize";
 import { dataTypes } from '../../jql/helpers/dataType';
@@ -16,6 +16,16 @@ export default {
     addable: true,
     updateable: true,
   },
+  mask: {
+    type: dataTypes.STRING,
+    allowNull: true,
+    mysqlOptions: {
+      type: DataTypes.STRING,
+    },
+    addable: true,
+    updateable: true,
+  },
+  ...generateEnumField('visualization', CaseVisualizationEnum, {}, { defaultValue: CaseVisualizationEnum.enum["V_2D"] }),
   ...generateCreatedAtField(),
   ...generateUpdatedAtField(),
   ...generateCreatedByField(User),
@@ -57,7 +67,7 @@ export default {
   },
   algcases: {
     type: Algcase.__typename,
-    args: generatePaginatorArgs(Algcase),
+    args: generatePaginatorArgs(Algcase, ["subset"]),
     resolver: async (context, req, currentObject, query, args, parent) => {
       return Algcase.paginator.getRecord(req, {
         ...query?.__args,
@@ -67,7 +77,7 @@ export default {
   },
   subsets: {
     type: Subset.__typename,
-    args: generatePaginatorArgs(Subset),
+    args: generatePaginatorArgs(Subset, ["parent"]),
     resolver: async (context, req, currentObject, query, args, parent) => {
       return Subset.paginator.getRecord(req, {
         ...query?.__args,
