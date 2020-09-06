@@ -196,6 +196,15 @@ type Puzzle {
 	created_at: Int!
 	updated_at: Int
 	created_by: User!
+	algsets(
+		id: String
+		first: Int
+		after: ID
+		search: String
+		sortBy: [String]
+		sortDesc: [Boolean]
+		created_by: String
+	): AlgsetPaginator!
 }
 type PuzzlePaginator {
 	paginatorInfo: PaginatorInfo!
@@ -216,7 +225,6 @@ type Algset {
 		sortBy: [String]
 		sortDesc: [Boolean]
 		created_by: String
-		algset: String
 		subset: String
 	): AlgcasePaginator!
 	subsets(
@@ -228,7 +236,6 @@ type Algset {
 		sortDesc: [Boolean]
 		created_by: String
 		puzzle: String
-		algset: String
 		parent: String
 	): SubsetPaginator!
 	score: Int!
@@ -255,7 +262,6 @@ type Subset {
 		sortDesc: [Boolean]
 		created_by: String
 		algset: String
-		subset: String
 	): Algcase!
 	subsets(
 		id: String
@@ -267,7 +273,6 @@ type Subset {
 		created_by: String
 		puzzle: String
 		algset: String
-		parent: String
 	): Subset!
 }
 type SubsetPaginator {
@@ -294,7 +299,6 @@ type Algcase {
 		sortDesc: [Boolean]
 		created_by: String
 		alg: String
-		algcase: String
 		subset: String
 		algset: String
 		puzzle: String
