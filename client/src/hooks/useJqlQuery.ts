@@ -1,11 +1,12 @@
 import { useQuery, QueryKey, QueryConfig, QueryResult } from 'react-query'
 import axios from 'axios'
 import useJql from './useJql'
+import { Query, Mutation } from '../generated/jql'
 
 export interface AlgDBFetchArgs {
   serverUrl: string
   authToken: string | null
-  action: string
+  action: keyof Query | keyof Mutation
   query: {
     [key: string]: any
   }
@@ -30,9 +31,9 @@ export async function algDbFetch<T>(
   }
 }
 
-export default function useJqlQuery<TResult, TError>(
+export default function useJqlQuery<TResult, TError = Error>(
   key: QueryKey,
-  action: JqlQuery['action'],
+  action: keyof Query | keyof Mutation,
   query: JqlQuery['query'],
   config?: QueryConfig<TResult, TError>,
 ): QueryResult<TResult, TError> {

@@ -15,7 +15,7 @@ import New from './New'
 export default function Landing(): ReactElement {
   const color = useColorModeValue('pink.800', 'pink.100')
   return (
-    <Box m={2}>
+    <Box>
       <Flex
         justify="center"
         alignContent="center"

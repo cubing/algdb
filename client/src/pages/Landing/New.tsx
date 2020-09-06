@@ -24,7 +24,7 @@ export default function Trending(): ReactElement {
   const { isLoading, data: algs } = useJqlQuery<
     QueryGetMultipleUserAlgTagLinkArgs,
     Error
-  >('landing-trending', 'getMultpleUserAlgTagLink', query)
+  >('landing-trending', 'getMultipleUserAlgTagLink', query)
 
   return (
     <Flex direction="column" m={2}>

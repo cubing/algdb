@@ -1,11 +1,11 @@
 import React, { ReactElement } from 'react'
-import { TwistyPlayer } from 'react-cubing'
-import { TwistyPlayer as TP } from 'cubing/twisty'
+import { TwistyPlayer } from 'cubing/twisty'
 import { parse } from 'cubing/alg'
 import { useColorModeValue, Box } from '@chakra-ui/core'
+import TransparentTwisty from '../../components/TwistyPlayers/Transparent'
 
 export default function LandingCube(): ReactElement {
-  const [twisty, setTwisty] = React.useState<TP>()
+  const [twisty, setTwisty] = React.useState<TwistyPlayer>()
   const opacity = useColorModeValue('0.3', '0.1')
 
   React.useEffect(() => {
@@ -28,20 +28,20 @@ export default function LandingCube(): ReactElement {
       twisty && twisty.timeline.removeActionListener(timelineListener)
   }, [twisty])
 
-  const onTwistyInit = (tp: TP) => setTwisty(tp)
+  const onTwistyInit = (tp: TwistyPlayer) => setTwisty(tp)
 
   return (
     <Box
-      as={TwistyPlayer}
+      as={TransparentTwisty}
       height="25vh"
       width="100vw"
       margin="auto"
       opacity={opacity}
       zIndex="-1"
-      background="none"
       onTwistyInit={onTwistyInit}
       controls="none"
       visualization="PG3D"
+      background="none"
     />
   )
 }

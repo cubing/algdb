@@ -4,7 +4,7 @@ import classNames from 'classnames'
 import { activityKey } from '../../constants/events'
 
 interface Props extends BoxProps {
-  event: keyof typeof activityKey
+  event: string
 }
 
 export default function CubingIcon({ event, className, ...props }: Props) {

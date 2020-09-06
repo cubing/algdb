@@ -1,12 +1,12 @@
 import React, { createContext } from 'react'
+import { Spinner } from '@chakra-ui/core'
 import { User } from '../generated/jql'
 import useJql from '../hooks/useJql'
 import { WCA_LOGIN_REDIRECT } from '../config'
-import { GetMeType } from '../jql/getMe'
 import useJqlMutation from '../hooks/useJqlMutation'
 
 export interface IUserContext {
-  isLoggedIn: boolean
+  isLoggedIn: () => boolean
   userInfo?: User
   signIn: () => void
   signOut: () => void
@@ -15,14 +15,14 @@ export interface IUserContext {
 const UserContext = createContext<IUserContext>({
   signIn: () => {},
   signOut: () => {},
-  isLoggedIn: false,
+  isLoggedIn: () => false,
 })
 
 UserContext.displayName = 'User Context'
 
 const UserProvider = ({ children }: React.PropsWithChildren<{}>) => {
-  const { serverUrl, authToken, expiresAt, resetAuth } = useJql()
-  const [user, setUser] = React.useState<User>()
+  const { authToken, expiresAt, resetAuth } = useJql()
+  const [user, setUser] = React.useState<User | null>(null)
   const query = {
     id: null,
     wca_id: null,
@@ -35,13 +35,13 @@ const UserProvider = ({ children }: React.PropsWithChildren<{}>) => {
       name: null,
     },
   }
-  const [mutate, { isLoading, data, error }] = useJqlMutation<
-    JqlRes<User | null>,
-    Error,
-    GetMeType
-  >('getCurrentUser', query)
+  const [mutate, { isLoading, data, error }] = useJqlMutation<User, Error>(
+    'getCurrentUser',
+    query,
+  )
 
   function signIn() {
+    resetAuth()
     window.location.href = WCA_LOGIN_REDIRECT
   }
 
@@ -49,6 +49,8 @@ const UserProvider = ({ children }: React.PropsWithChildren<{}>) => {
     resetAuth()
     window.location.reload()
   }
+
+  const isLoggedIn = () => user !== null && user !== undefined
 
   React.useEffect(() => {
     const expiresWithinHour =
@@ -58,22 +60,24 @@ const UserProvider = ({ children }: React.PropsWithChildren<{}>) => {
       else {
         mutate()
       }
+    } else {
+      setUser(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expiresAt, authToken])
+  }, [])
 
   React.useEffect(() => {
-    if (data?.data) {
-      setUser(data.data)
+    if (data) {
+      setUser(data)
     }
   }, [data])
 
   const value = React.useMemo(
-    () => ({ signIn, signOut, userInfo: user, isLoggedIn: Boolean(user) }),
+    () => ({ signIn, signOut, userInfo: user ?? undefined, isLoggedIn }),
     [user],
   )
 
-  if (isLoading) return <></>
+  if (isLoading || user === null) return <Spinner />
   if (error) return <p>{error.message}</p>
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>
 }
