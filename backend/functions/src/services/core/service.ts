@@ -165,30 +165,31 @@ export default abstract class Service {
     
     //handle filter fields
     for(const arg in args) {
-      const filterObject = {
-        connective: "AND",
-        fields: {}
-      };
-
       if(arg in this.filterFieldsMap) {
-        filterObject.fields[this.filterFieldsMap[arg].field ?? arg] = {
+        const filterObject = {
+          connective: "AND",
+          fields: <any> []
+        };
+        filterObject.fields.push({
+          field: this.filterFieldsMap[arg].field ?? arg,
           value: args[arg]
-        }
+        });
+        filterArray.push(filterObject);
       }
-      filterArray.push(filterObject);
     }
 
     //handle search fields
     if(args.search) {
       const filterObject = {
         connective: "OR",
-        fields: {}
+        fields: <any> []
       };
       this.searchableFields.forEach((field) => {
-        filterObject.fields[field] = {
+        filterObject.fields.push({
+          field: field,
           value: '%' + args.search + '%', 
           operator: 'LIKE'
-        }
+        });
       });
       filterArray.push(filterObject);
     }
