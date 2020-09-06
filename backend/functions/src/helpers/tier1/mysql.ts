@@ -22,10 +22,10 @@ export default class Mysql {
 
     //handle where statements
     if(jqlQuery.where) {
-      const where_results = this.processJqlWhereArray(table, jqlQuery.where, previous_joins, params);
+      const whereResults = this.processJqlWhereArray(table, jqlQuery.where, previous_joins, params);
 
-      where_statement += where_results.where_statement;
-      join_statement += where_results.join_statement;
+      where_statement += whereResults.statements.join(" AND ");
+      join_statement += whereResults.join_statement;
     }
   
     let after_statement = "";
@@ -45,11 +45,11 @@ export default class Mysql {
     if(jqlQuery.orderBy) {
       const orderResults = this.processJqlSortArray(table, jqlQuery.orderBy, previous_joins);
 
-      order_statement += orderResults.order_statement;
+      order_statement += orderResults.statements.join(", ");
       join_statement += orderResults.join_statement;
     }
 
-    //handle limit/offset statements
+    //handle limit statement
     if(jqlQuery.limit) {
       limit_statement += " LIMIT " + parseInt(jqlQuery.limit) || 0;
     }
@@ -58,7 +58,7 @@ export default class Mysql {
     if(jqlQuery.groupBy) {
       const groupResults = this.processJqlGroupArray(table, jqlQuery.groupBy, previous_joins);
 
-      groupby_statement += groupResults.group_statement;
+      groupby_statement += groupResults.statements.join(", ");
       join_statement += groupResults.join_statement;
     }
 
@@ -83,10 +83,10 @@ export default class Mysql {
     
     //handle where statements
     if(whereArray) {
-      const where_results = this.processJqlWhereArray(table, whereArray, previous_joins, params);
+      const whereResults = this.processJqlWhereArray(table, whereArray, previous_joins, params);
 
-      where_statement += where_results.where_statement;
-      join_statement += where_results.join_statement;
+      where_statement += whereResults.statements.join(" AND ");
+      join_statement += whereResults.join_statement;
     }
 
     if(!where_statement) {
@@ -155,10 +155,10 @@ export default class Mysql {
 
     //handle where statements
     if(whereArray) {
-      const where_results = this.processJqlWhereArray(table, whereArray, previous_joins, params);
+      const whereResults = this.processJqlWhereArray(table, whereArray, previous_joins, params);
 
-      where_statement += where_results.where_statement;
-      join_statement += where_results.join_statement;
+      where_statement += whereResults.statements.join(" AND ");
+      join_statement += whereResults.join_statement;
     }
     
     if(!where_statement) {
@@ -180,10 +180,10 @@ export default class Mysql {
 
     //handle where statements
     if(whereArray) {
-      const where_results = this.processJqlWhereArray(table, whereArray, previous_joins, params);
+      const whereResults = this.processJqlWhereArray(table, whereArray, previous_joins, params);
 
-      where_statement += where_results.where_statement;
-      join_statement += where_results.join_statement;
+      where_statement += whereResults.statements.join(" AND ");
+      join_statement += whereResults.join_statement;
     }
     
     if(!where_statement) {
@@ -261,165 +261,67 @@ export default class Mysql {
   }
 
   static processJqlWhereArray(table, whereArray, previous_joins, params) {
-    const where_statements = <Array<string>> [];
+    console.log(JSON.stringify(whereArray))
+    const statements = <Array<string>> [];
     let join_statement = "";
 
     whereArray.forEach((whereObject, whereIndex) => {
-      const where_substatements = <Array<string>> [];
-      const connective = whereObject.connective || 'AND';
-      for(const fieldname in whereObject.fields) {
-        const fieldPath = fieldname.split(".");
-        const fieldObject = whereObject.fields[fieldname];
-        let currentTypeDef = typeDefs[table];
-        let currentTable = table;
-
-        let joinTableAlias, finalFieldname;
-
-        fieldPath.forEach((field, fieldIndex) => {
-          //if there's no next field, no more joins
-          if(fieldPath[fieldIndex+1]) {
-            //join with this type
-            const joinTableName = currentTypeDef[field]?.mysqlOptions?.joinInfo.type;
-
-            //if it requires a join, check if it was joined previously
-            if(joinTableName) {
-              if(!(joinTableName in previous_joins)) {
-                previous_joins[joinTableName] = [];
-              }
-      
-              let newJoin = false;
-              let index = previous_joins[joinTableName].indexOf(field);
-      
-              //if index not exists, join the table and get the index.
-              if(index === -1) {
-                previous_joins[joinTableName].push(field);
-      
-                index = previous_joins[joinTableName].indexOf(field);
-                newJoin = true;
-              }
-      
-              //always set the alias.
-              joinTableAlias = joinTableName + index;
-      
-              if(newJoin) {
-                //assemble join statement, if required
-                join_statement += " LEFT JOIN " + joinTableName + " " + joinTableAlias + " ON " + currentTable + "." + field + " = " + joinTableAlias + "." + (currentTypeDef[field]?.mysqlOptions?.joinInfo?.foreignKey ?? "id");
-              }
-            }
-
-            //shift the typeDef
-            currentTypeDef = typeDefs[joinTableName];
-            currentTable = joinTableAlias;
-          } else {
-            //no more fields, set the finalFieldname
-            finalFieldname = field;
-          }
-        });
-
-        const operator = fieldObject.operator ?? '=';
-        const tableName = joinTableAlias || table;
-        const placeholder = (finalFieldname in params) ? finalFieldname + whereIndex : finalFieldname;
+      const results = this.processJqlJoins(table, whereObject.fields, previous_joins, (tableName, finalFieldname, joinObject, joinFieldIndex) => {
+        const operator = joinObject.operator ?? '=';
+        const placeholder = (finalFieldname in params) ? finalFieldname + joinFieldIndex : finalFieldname;
+        let where_substatement;
 
         //value must be array with at least 2 elements
         if(operator === "BETWEEN") {
-          where_substatements.push(tableName + "." + finalFieldname + " BETWEEN :" + fieldname + "0 AND :" + fieldname + "1");
+          where_substatement = tableName + "." + finalFieldname + " BETWEEN :" + finalFieldname + "0 AND :" + finalFieldname + "1";
           
-          params[fieldname + "0"] = fieldObject.value[0];
-          params[fieldname + "1"] = fieldObject.value[1];
+          params[finalFieldname + "0"] = joinObject.value[0];
+          params[finalFieldname + "1"] = joinObject.value[1];
         } else {
-          if(Array.isArray(fieldObject.value)) {
-            where_substatements.push(tableName + "." + finalFieldname + " IN (:" + placeholder + ")");
-            params[placeholder] = fieldObject.value;
-          } else if(fieldObject.value === null) {
+          if(Array.isArray(joinObject.value)) {
+            where_substatement = tableName + "." + finalFieldname + " IN (:" + placeholder + ")";
+            params[placeholder] = joinObject.value;
+          } else if(joinObject.value === null) {
             //if fieldvalue.value === null, change the format accordingly
-            where_substatements.push(tableName + "." + finalFieldname + " IS NULL");
+            where_substatement = tableName + "." + finalFieldname + " IS NULL";
           } else {
-            where_substatements.push(tableName + "." + finalFieldname + " " + operator + " :" + placeholder);
-            params[placeholder] = fieldObject.value;
+            where_substatement = tableName + "." + finalFieldname + " " + operator + " :" + placeholder;
+            params[placeholder] = joinObject.value;
           }
         }
+
+        return where_substatement
+      });
+
+      const connective = whereObject.connective || 'AND';
+
+      if(results.statements.length > 0) {
+        statements.push("(" + results.statements.join(" " + connective + " ") + ")");
       }
-      if(where_substatements.length > 0) {
-        where_statements.push("(" + where_substatements.join(" " + connective + " ") + ")");
-      }
+
+      join_statement += results.join_statement;
     });
 
-    const where_statement = where_statements.join(" AND ");
-
     return {
-      where_statement,
+      statements,
       join_statement
     };
   }
 
   static processJqlSortArray(table, sortArray, previous_joins) {
-    const sort_statements = <Array<string>> [];
-    let join_statement = "";
-
-    sortArray.forEach((sortObject) => {
-      const fieldPath = sortObject.field.split(".");
-      let currentTypeDef = typeDefs[table];
-      let currentTable = table;
-
-      let joinTableAlias, finalFieldname;
-
-      fieldPath.forEach((field, fieldIndex) => {
-        //if there's no next field, no more joins
-        if(fieldPath[fieldIndex+1]) {
-          //join with this type
-          const joinTableName = currentTypeDef[field]?.mysqlOptions?.joinInfo.type;
-
-          //if it requires a join, check if it was joined previously
-          if(joinTableName) {
-            if(!(joinTableName in previous_joins)) {
-              previous_joins[joinTableName] = [];
-            }
-    
-            let newJoin = false;
-            let index = previous_joins[joinTableName].indexOf(field);
-    
-            //if index not exists, join the table and get the index.
-            if(index === -1) {
-              previous_joins[joinTableName].push(field);
-    
-              index = previous_joins[joinTableName].indexOf(field);
-              newJoin = true;
-            }
-    
-            //always set the alias.
-            joinTableAlias = joinTableName + index;
-    
-            if(newJoin) {
-              //assemble join statement, if required
-              join_statement += " LEFT JOIN " + joinTableName + " " + joinTableAlias + " ON " + currentTable + "." + field + " = " + joinTableAlias + "." + (currentTypeDef[field]?.mysqlOptions?.joinInfo?.foreignKey ?? "id");
-            }
-          }
-
-          //shift the typeDef
-          currentTypeDef = typeDefs[joinTableName];
-          currentTable = joinTableAlias;
-        } else {
-          //no more fields, set the finalFieldname
-          finalFieldname = field;
-        }
-      });
-
-      const tableName = joinTableAlias || table;
-      sort_statements.push(tableName + "." + finalFieldname + " " + (sortObject.desc ? "DESC" : "ASC"));
-    });
-
-    return {
-      order_statement: sort_statements.join(", "),
-      join_statement
-    };
+    return this.processJqlJoins(table, sortArray, previous_joins, (tableName, finalFieldname, joinObject, joinFieldIndex) => tableName + "." + finalFieldname + " " + (joinObject.desc ? "DESC" : "ASC"));
   }
 
   static processJqlGroupArray(table, groupArray, previous_joins) {
+    return this.processJqlJoins(table, groupArray, previous_joins, (tableName, finalFieldname, joinObject, joinFieldIndex) => tableName + "." + finalFieldname);
+  }
+
+  static processJqlJoins(table, joinFieldsArray, previous_joins, assemblyFn: Function) {
     const statements = <Array<string>> [];
     let join_statement = "";
 
-    groupArray.forEach((groupObject) => {
-      const fieldPath = groupObject.field.split(".");
+    joinFieldsArray.forEach((joinObject, joinFieldIndex) => {
+      const fieldPath = joinObject.field.split(".");
       let currentTypeDef = typeDefs[table];
       let currentTable = table;
 
@@ -467,11 +369,11 @@ export default class Mysql {
       });
 
       const tableName = joinTableAlias || table;
-      statements.push(tableName + "." + finalFieldname);
+      statements.push(assemblyFn(tableName, finalFieldname, joinObject, joinFieldIndex));
     });
 
     return {
-      group_statement: statements.join(", "),
+      statements,
       join_statement
     };
   }

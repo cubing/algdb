@@ -81,12 +81,13 @@ export function generateEnumField(name: string, service: any, options?: object, 
       },
       filterable: true,
       updateable: true,
+      addable: true,
       ...options
     },
   };
 };
 
-export function generatePaginatorArgs(service: any) {
+export function generatePaginatorArgs(service: any, excludeProperties: Array<string> = []) {
   const getArgs = {
     id: { type: dataTypes.ID },
     first: { type: dataTypes.INTEGER },
@@ -97,7 +98,9 @@ export function generatePaginatorArgs(service: any) {
   };
   if(service.filterFieldsMap) {
     for(const field in service.filterFieldsMap) {
-      getArgs[field] = { type: dataTypes.STRING }
+      if(!excludeProperties.includes(field)) {
+        getArgs[field] = { type: dataTypes.STRING }
+      }
     }
   }
 
