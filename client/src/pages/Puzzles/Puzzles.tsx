@@ -22,7 +22,7 @@ const query = {
 const puzzleIDs = [
   '3x3x3',
   'custom',
-  '2x2xm2',
+  '2x2x2',
   '4x4x4',
   'megaminx',
   'pyraminx',
@@ -70,9 +70,7 @@ const PuzzleView = ({
     justify="center"
     direction="column"
   >
-    <Heading fontSize="xl" align="center">
-      {name}
-    </Heading>
+    <Heading fontSize="xl">{name}</Heading>
     {puzzleIDs.includes(id) ? (
       <Box
         as={TransparentTwisty}
