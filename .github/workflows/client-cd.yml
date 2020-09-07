@@ -26,7 +26,7 @@ jobs:
         uses: actions/upload-artifact@master
         with:
           name: build
-          path: build
+          path: client/build
     env:
       SKIP_PREFLIGHT_CHECK: true
       REACT_APP_WCA_LOGIN_URL_DEV: ${{ secrets.REACT_APP_WCA_LOGIN_URL_DEV}}
@@ -42,7 +42,7 @@ jobs:
         uses: actions/download-artifact@master
         with:
           name: build
-          path: build
+          path: client/build
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
         with:
