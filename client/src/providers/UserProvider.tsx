@@ -22,7 +22,7 @@ UserContext.displayName = 'User Context'
 
 const UserProvider = ({ children }: React.PropsWithChildren<{}>) => {
   const { authToken, expiresAt, resetAuth } = useJql()
-  const [user, setUser] = React.useState<User | null>(null)
+  const [user, setUser] = React.useState<User | null | undefined>(null)
   const query = {
     id: null,
     wca_id: null,
@@ -62,7 +62,7 @@ const UserProvider = ({ children }: React.PropsWithChildren<{}>) => {
         mutate()
       }
     } else {
-      setUser(null)
+      setUser(undefined)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

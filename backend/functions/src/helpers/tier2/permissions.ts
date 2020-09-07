@@ -65,3 +65,22 @@ export function generateUserAdminGuard() {
     }
   }
 }
+
+export function generateUserRoleGuard(allowedRoles: Array<any>) {
+  return async function(req, args, query) {
+    //check if logged in
+    if(!req.user) return false;
+
+    try {
+      const userRecords = await mysqlHelper.executeDBQuery("SELECT role FROM user WHERE id = :id", {
+        id: req.user.id
+      });
+
+      if(!userRecords[0]) return false;
+
+      return allowedRoles.includes(userRecords[0].role);
+    } catch(err) {
+      return false;
+    }
+  }
+}

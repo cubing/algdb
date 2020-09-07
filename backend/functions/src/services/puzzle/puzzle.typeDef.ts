@@ -28,6 +28,16 @@ export default {
   ...generateCreatedAtField(),
   ...generateUpdatedAtField(),
   ...generateCreatedByField(User),
+  is_public: {
+    type: dataTypes.BOOLEAN,
+    mysqlOptions: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+      allowNull: false,
+    },
+    addable: true,
+    updateable: true,
+  },
   algsets: {
     type: Algset.__typename,
     args: generatePaginatorArgs(Algset, ["puzzle"]),

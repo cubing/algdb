@@ -261,7 +261,6 @@ export default class Mysql {
   }
 
   static processJqlWhereArray(table, whereArray, previous_joins, params) {
-    console.log(JSON.stringify(whereArray))
     const statements = <Array<string>> [];
     let join_statement = "";
 
