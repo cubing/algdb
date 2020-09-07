@@ -1,5 +1,7 @@
 import routerHelper from "./helpers/router";
 
+const allowedOrigins = ["https://alpha.algdb.net", "http://localhost:3000"]
+
 export function process(app: any, schema) {
   app.use(function(req: any, res, next) {
     //handle jql queries
@@ -32,7 +34,10 @@ export function process(app: any, schema) {
   });
   
   app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
+    const origin = allowedOrigins.includes(req.headers.origin) ? req.headers.origin : allowedOrigins[0];
+
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Vary", "Origin");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control");
     res.header('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS');
     next();
