@@ -29,6 +29,16 @@ export default {
   ...generateCreatedAtField(),
   ...generateUpdatedAtField(),
   ...generateCreatedByField(User),
+  is_public: {
+    type: dataTypes.BOOLEAN,
+    mysqlOptions: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+      allowNull: false,
+    },
+    addable: true,
+    updateable: true,
+  },
   puzzle: {
     type: Puzzle.__typename,
     mysqlOptions: {
