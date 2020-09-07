@@ -1,4 +1,4 @@
-name: Deploy Firebase Function
+name: Backend Deploy
 on:
   workflow_dispatch:
     inputs:
