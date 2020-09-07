@@ -3,7 +3,9 @@ on:
   push:
     branches:
       - main
-
+defaults:
+  run:
+    working-directory: client
 jobs:
   build:
     name: Build
