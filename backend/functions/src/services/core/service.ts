@@ -275,9 +275,9 @@ export default abstract class Service {
     //check if record exists
     const recordExistCount = await resolverHelper.countTableRows(this.__typename, [
       {
-        fields: {
-          id: { value: args.id }
-        }
+        fields: [
+          { field: "id", value: args.id }
+        ]
       }
     ]);
 
@@ -289,7 +289,7 @@ export default abstract class Service {
       ...args,
     }, {
       date_modified: null
-    }, [{ fields: { id: { value: args.id } } }]);
+    }, [{ fields: [ { field: "id", value: args.id } ] }]);
     
 
     const returnData = this.getRecord(req, { id: args.id }, query);
@@ -324,9 +324,9 @@ export default abstract class Service {
 
     await resolverHelper.deleteTableRow(this.__typename, args, [
       {
-        fields: {
-          id: { value: args.id }
-        }
+        fields: [
+          { field: "id", value: args.id }
+        ]
       }
     ]);
 
@@ -339,9 +339,9 @@ export default abstract class Service {
     if(this.permissionsLink) {
       await resolverHelper.deleteTableRow(this.permissionsLink.__typename, args, [
         {
-          fields: {
-            [this.__typename]: { value: args.id }
-          }
+          fields: [
+            { field: this.__typename, value: args.id }
+          ]
         }
       ]);
     }

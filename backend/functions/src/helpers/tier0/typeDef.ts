@@ -87,6 +87,26 @@ export function generateEnumField(name: string, service: any, options?: object, 
   };
 };
 
+export function generateBooleanField(name: string, options?: object, mysqlOptions?: object) {
+  return {
+    [name]: {
+      type: dataTypes.BOOLEAN,
+      mysqlOptions: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+        allowNull: false,
+        ...mysqlOptions
+      },
+      transform: {
+        getter: (value) => value === 1
+      },
+      addable: true,
+      updateable: true,
+      ...options
+    },
+  };
+};
+
 export function generatePaginatorArgs(service: any, excludeProperties: Array<string> = []) {
   const getArgs = {
     id: { type: dataTypes.ID },

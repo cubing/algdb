@@ -165,6 +165,11 @@ export default class {
 
     const returnArray = hasMysqlFields ? sharedHelper.collapseObjectArray(await mysqlHelper.fetchTableRows(classname, jqlQuery)) : [{ __typename: context.__typename }];
 
+    //apply transformations of results
+    for(const returnObject of returnArray) {
+      await jqlHelper.handleTransformQueries(returnObject, validatedGraphql.validatedQuery, context, req, args);
+    }
+
     //handle resolved fields
     for(const returnObject of returnArray) {
       await jqlHelper.handleResolvedQueries(returnObject, validatedGraphql.validatedResolvedQuery, context, req, args);

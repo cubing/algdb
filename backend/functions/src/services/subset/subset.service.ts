@@ -141,9 +141,9 @@ export class Subset extends Service {
 
     await resolverHelper.deleteTableRow(this.__typename, args, [
       {
-        fields: {
-          id: { value: args.id }
-        }
+        fields: [
+          { field: "id", value: args.id }
+        ]
       }
     ]);
 
@@ -156,9 +156,9 @@ export class Subset extends Service {
     if(this.permissionsLink) {
       await resolverHelper.deleteTableRow(this.permissionsLink.__typename, args, [
         {
-          fields: {
-            [this.__typename]: { value: args.id }
-          }
+          fields: [
+            { field: this.__typename, value: args.id }
+          ]
         }
       ]);
     }

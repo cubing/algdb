@@ -1,4 +1,4 @@
-import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generateCreatedByField, generatePaginatorArgs } from '../../helpers/tier0/typeDef';
+import { generateIdField, generateUpdatedAtField, generateCreatedAtField, generateCreatedByField, generatePaginatorArgs, generateBooleanField } from '../../helpers/tier0/typeDef';
 
 import { User, Algset } from '../services'
 
@@ -28,16 +28,7 @@ export default {
   ...generateCreatedAtField(),
   ...generateUpdatedAtField(),
   ...generateCreatedByField(User),
-  is_public: {
-    type: dataTypes.BOOLEAN,
-    mysqlOptions: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
-      allowNull: false,
-    },
-    addable: true,
-    updateable: true,
-  },
+  ...generateBooleanField("is_public"),
   algsets: {
     type: Algset.__typename,
     args: generatePaginatorArgs(Algset, ["puzzle"]),

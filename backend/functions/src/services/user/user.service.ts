@@ -111,7 +111,7 @@ export class User extends Service {
       ...args,
     }, {
       date_modified: null
-    }, [{ fields: { id: { value: args.id } } }]);
+    }, [{ fields: [ { field: "id", value: args.id } ] }]);
     
 
     const returnData = this.getRecord(req, { id: args.id }, query);

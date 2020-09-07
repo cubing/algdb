@@ -5,6 +5,7 @@ export default class {
     const validatedQuery = {};
     const validatedResolvedQuery = {};
     const validatedAggregatedQuery = {};
+    const validatedTransformQuery = {};
     const validQuery = typeDef || typeDefs[typename];
 
     //ensure the id field is there
@@ -114,6 +115,21 @@ export default class {
       validatedResolvedQuery
     };
   };
+
+  //handle transformations
+  static async handleTransformQueries(obj, resolvedQuery, context, req, args, previous?: Object) {
+    for(const field in resolvedQuery) {
+      //if there is a transform getter, apply the function
+      if(resolvedQuery[field].transform?.getter) {
+        obj[field] = resolvedQuery[field]?.transform?.getter(obj[field]);
+      }
+
+      //if it has __nested fields, go deeper
+      if(resolvedQuery[field].__nestedQuery) {
+        await this.handleTransformQueries(obj[field], resolvedQuery[field].__nestedQuery, context, req, args);
+      }
+    }
+  }
 
   //resolves the queries, and attaches them to the obj (if possible)
   static async handleResolvedQueries(obj, resolvedQuery, context, req, args, previous?: Object) {
