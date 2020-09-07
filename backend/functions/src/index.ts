@@ -37,7 +37,6 @@ app.post('/mysql/sync', function(req, res) {
   //loop through typeDefs to identify needed mysql tables
   mysql.initializeSequelize();
   const sequelize = mysql.getSequelizeInstance();
-  
 
   for(const type in schema.typeDefs) {
     const definition = {};

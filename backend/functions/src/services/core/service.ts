@@ -78,9 +78,9 @@ export default abstract class Service {
       select: selectQuery,
       where: [
         {
-          fields: {
-            id: { value: args.id }
-          }
+          fields: [
+            { field: "id", value: args.id }
+          ]
         }
       ]
 
@@ -135,9 +135,9 @@ export default abstract class Service {
       select: selectQuery,
       where: [
         {
-          fields: {
-            id: { value: args.id }
-          }
+          fields: [
+            { field: "id", value: args.id }
+          ]
         }
       ]
     }, args);
