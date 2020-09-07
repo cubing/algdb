@@ -25,6 +25,7 @@ jobs:
     env:
       SKIP_PREFLIGHT_CHECK: true
       REACT_APP_WCA_LOGIN_URL_DEV: ${{ secrets.REACT_APP_WCA_LOGIN_URL_DEV}}
+      CI: false
   deploy:
     name: Deploy
     needs: build
