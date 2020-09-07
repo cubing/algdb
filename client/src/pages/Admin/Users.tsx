@@ -1,5 +1,5 @@
 import React, { ReactElement, ChangeEvent } from 'react'
-import { Flex, Heading, Spinner, Select, CircularProgress } from '@chakra-ui/core'
+import { Flex, Heading, Spinner, Select, CircularProgress, Alert, AlertIcon, AlertDescription } from '@chakra-ui/core'
 import useJqlQuery from '../../hooks/useJqlQuery'
 import useJqlMutation from '../../hooks/useJqlMutation'
 import { Maybe, User, UserPaginator, UserRole, UserRoleEnum } from '../../generated/jql'
@@ -44,10 +44,6 @@ const RoleSelector = ({ user, role, onChange }: RoleSelectorProps): ReactElement
     }
   }
 
-  if (error) {
-    console.error(error)
-  }
-
   return (
     <Flex>
       {isLoading && <CircularProgress size="1em" /> }
@@ -89,8 +85,12 @@ export default function Users(): ReactElement {
   }
 
   if (error) {
-    console.error(error)
-    return <>error</>
+    return (
+      <Alert status='error'>
+        <AlertIcon />
+        {error.message}
+      </Alert>
+    )
   }
 
   return (

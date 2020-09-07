@@ -78,7 +78,7 @@ const UserProvider = ({ children }: React.PropsWithChildren<{}>) => {
     [user],
   )
 
-  if (isLoading || user !== null) return <Spinner />
+  if (isLoading) return <Spinner />
 
   return (
     <UserContext.Provider value={value}>
