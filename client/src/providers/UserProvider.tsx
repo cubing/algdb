@@ -1,5 +1,5 @@
 import React, { createContext } from 'react'
-import { Spinner } from '@chakra-ui/core'
+import { Spinner, Alert, AlertIcon, AlertTitle, AlertDescription } from '@chakra-ui/core'
 import { User } from '../generated/jql'
 import useJql from '../hooks/useJql'
 import { WCA_LOGIN_REDIRECT } from '../config'
@@ -79,8 +79,19 @@ const UserProvider = ({ children }: React.PropsWithChildren<{}>) => {
   )
 
   if (isLoading || user !== null) return <Spinner />
-  if (error) return <p>{error.message}</p>
-  return <UserContext.Provider value={value}>{children}</UserContext.Provider>
+
+  return (
+    <UserContext.Provider value={value}>
+      {error ? (
+        <Alert status="error">
+          <AlertIcon />
+          <AlertTitle mr={2}>Error when fetching user</AlertTitle>
+          <AlertDescription>{error.message}</AlertDescription>
+        </Alert>
+      ) : false}
+      {children}
+    </UserContext.Provider>
+)
 }
 
 export { UserContext }
