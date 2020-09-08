@@ -11,6 +11,7 @@ type Query {
 		created_by: String
 	): UserPaginator!
 	getPuzzle(id: ID!): Puzzle!
+	getPuzzleByCode(code: String!): Puzzle!
 	getMultiplePuzzle(
 		id: String
 		first: Int

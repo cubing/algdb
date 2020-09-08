@@ -2,6 +2,9 @@ import Service from '../core/service'
 import generatePaginatorService from '../core/generator/paginator.service'
 import { generateUserRoleGuard } from '../../helpers/tier2/permissions'
 
+import errorHelper from '../../helpers/tier0/error';
+import resolverHelper from '../../helpers/tier2/resolver';
+
 import { userRole } from '../enums';
 
 export class Puzzle extends Service {
@@ -51,4 +54,30 @@ export class Puzzle extends Service {
     create: generateUserRoleGuard([userRole.ADMIN]),
     delete: generateUserRoleGuard([userRole.ADMIN]),
   };
+
+  static async getRecordByCode(req, args, query?: object, admin = false) {
+    const selectQuery = query || Object.assign({}, this.presets.default);
+
+    //if it does not pass the access control, throw an error
+    if(!admin && !await this.testPermissions('get', req, args, query)) {
+      throw errorHelper.badPermissionsError();
+    }
+
+    const results = await resolverHelper.resolveTableRows(this.__typename, this, req, {
+      select: selectQuery,
+      where: [
+        {
+          fields: [
+            { field: "code", value: args.code }
+          ]
+        }
+      ]
+    }, args);
+
+    if(results.length < 1) {
+      throw errorHelper.itemNotFoundError();
+    }
+
+    return results[0];
+  }
 };
