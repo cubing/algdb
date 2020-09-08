@@ -1,4 +1,5 @@
-import React, { ReactElement, useState, ChangeEvent, MouseEvent, FormEvent } from 'react'
+import React, { ReactElement, useState, ChangeEvent, MouseEvent } from 'react'
+import { Link, useParams } from 'react-router-dom'
 import {
   Flex,
   Heading,
@@ -19,83 +20,10 @@ import {
   DrawerFooter,
   useDisclosure,
 } from '@chakra-ui/core'
-import useJqlQuery from '../../hooks/useJqlQuery'
-import useJqlMutation from '../../hooks/useJqlMutation'
-import { Maybe, Algset, AlgsetPaginator, Puzzle, PuzzlePaginator } from '../../generated/jql'
-
-type AddAlgsetProps = {
-  onAdd: () => void
-  puzzles: Array<Maybe<Puzzle>>
-}
-
-type AlgsetMutationArgs = {
-  id?: string
-  name?: string
-  puzzle?: string
-  mask?: Maybe<string> | null
-  visualization?: string
-  is_public?: boolean,
-}
-
-function AddAlgset({ onAdd, puzzles }: AddAlgsetProps): ReactElement {
-  const [algsetName, setAlgsetName] = useState<string>('')
-  const [selectedPuzzle, setSelectedPuzzle] = useState<string>('0')
-
-  const [mutate, { isLoading, error }] = useJqlMutation<
-    Maybe<Algset>,
-    Error,
-    AlgsetMutationArgs
-  >('createAlgset', {
-    id: null,
-    name: null,
-  })
-
-  const onClick = async (e: MouseEvent<HTMLButtonElement> | FormEvent) => {
-    e.preventDefault();
-    if (algsetName) {
-      try {
-        await mutate({
-          name: algsetName,
-          puzzle: selectedPuzzle,
-        })
-        onAdd()
-        setAlgsetName('')
-      } catch (err) {
-        console.error(err)
-      }
-    }
-  }
-
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setAlgsetName(event.target.value)
-  }
-
-  const handleChangePuzzle = (event: ChangeEvent<HTMLSelectElement>) => {
-    setSelectedPuzzle(event.target.value)
-  }
-
-  return (
-    <tr>
-      <td />
-      <td>
-        <Input placeholder="OLL" value={algsetName} onChange={handleChange} />
-      </td>
-      <td>
-        <Select value={selectedPuzzle} onChange={handleChangePuzzle}>
-          <option key={0} value="0">Select</option>
-          {puzzles.map((puzzle) => (
-            <option key={puzzle?.id} value={puzzle?.id}>{puzzle?.name}</option>
-          ))}
-        </Select>
-      </td>
-      <td />
-      <td />
-      <td>
-        <Button isLoading={isLoading} isDisabled={!algsetName} onClick={onClick}>Add</Button>
-      </td>
-    </tr>
-  )
-}
+import AddAlgset, { AlgsetMutationArgs } from './AddAlgset'
+import useJqlQuery from '../../../hooks/useJqlQuery'
+import useJqlMutation from '../../../hooks/useJqlMutation'
+import { Maybe, Algset, AlgsetPaginator, PuzzlePaginator } from '../../../generated/jql'
 
 const getAlgsetsQuery = (puzzle?: string) => {
   const query = {
@@ -125,7 +53,7 @@ const getAlgsetsQuery = (puzzle?: string) => {
   if (puzzle) {
     // eslint-disable-next-line no-underscore-dangle
     query.__args = {
-      'puzzle.code': puzzle,
+      puzzle,
     }
   }
 
@@ -139,11 +67,12 @@ export default function Algsets(): ReactElement {
   const [ editingAlgsetPublic, setEditingAlgsetPublic ] = useState<boolean | undefined>();
   const [ editingAlgsetMask, setEditingAlgsetMask ] = useState<Maybe<string> | null>();
 
+  const { puzzleId } = useParams()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { isLoading, data, refetch, error } = useJqlQuery<AlgsetPaginator, Error>(
     'getMultipleAlgset',
     'getMultipleAlgset',
-    getAlgsetsQuery(),
+    getAlgsetsQuery(puzzleId),
   )
 
   const puzzleQuery = useJqlQuery<PuzzlePaginator, Error>(
@@ -193,8 +122,7 @@ export default function Algsets(): ReactElement {
   }
 
   if (error) {
-    console.error(error)
-    return <>error</>
+    return <>{error.message}</>
   }
 
   return (
@@ -211,7 +139,7 @@ export default function Algsets(): ReactElement {
               <th style={{textAlign: 'left'}}>Puzzle</th>
               <th style={{textAlign: 'left'}}>Visible</th>
               <th style={{textAlign: 'left'}}>Created</th>
-              <th style={{textAlign: 'left'}}>{' '}</th>
+              <th style={{textAlign: 'left'}} rowSpan={2}>Edit</th>
             </tr>
           </thead>
           <tbody>
@@ -223,6 +151,7 @@ export default function Algsets(): ReactElement {
                 <td>{algset.is_public ? 'true' : 'false'}</td>
                 <td>{new Date(algset.created_at * 1000).toLocaleString()}</td>
                 <td><Button onClick={edit(algset)}>Edit</Button></td>
+                <td><Link to="">Manage</Link></td>
               </tr>
             ) : false)}
             <AddAlgset onAdd={refetch} puzzles={puzzles} />
