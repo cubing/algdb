@@ -16,6 +16,16 @@ export default {
     addable: true,
     updateable: true,
   },
+  code: {
+    type: dataTypes.STRING,
+    mysqlOptions: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: "codePuzzleIndex",
+    },
+    addable: true,
+    updateable: true,
+  },
   mask: {
     type: dataTypes.STRING,
     allowNull: true,
@@ -35,6 +45,7 @@ export default {
     mysqlOptions: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      unique: "codePuzzleIndex",
       joinInfo: {
         type: Puzzle.__typename
       }
