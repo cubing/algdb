@@ -21,6 +21,7 @@ type Query {
 		sortDesc: [Boolean]
 		created_by: String
 		is_public: Boolean
+		code: String
 	): PuzzlePaginator!
 	getAlgset(id: ID!): Algset!
 	getMultipleAlgset(
@@ -33,6 +34,7 @@ type Query {
 		created_by: String
 		puzzle: String
 		is_public: Boolean
+		code: String
 	): AlgsetPaginator!
 	getSubset(id: ID!): Subset!
 	getMultipleSubset(
@@ -46,6 +48,7 @@ type Query {
 		puzzle: String
 		algset: String
 		parent: String
+		code: String
 		is_public: Boolean
 	): SubsetPaginator!
 	getAlgcase(id: ID!): Algcase!
@@ -222,6 +225,7 @@ type PuzzlePaginator {
 type Algset {
 	id: ID!
 	name: String!
+	code: String!
 	mask: String
 	visualization: CaseVisualizationEnum!
 	created_at: Int!
@@ -260,6 +264,7 @@ type AlgsetPaginator {
 type Subset {
 	id: ID!
 	name: String!
+	code: String!
 	mask: String
 	visualization: CaseVisualizationEnum!
 	created_at: Int!
