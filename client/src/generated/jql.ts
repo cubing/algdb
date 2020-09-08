@@ -15,6 +15,7 @@ export type Query = {
   getUser: User;
   getMultipleUser: UserPaginator;
   getPuzzle: Puzzle;
+  getPuzzleByCode: Puzzle;
   getMultiplePuzzle: PuzzlePaginator;
   getAlgset: Algset;
   getMultipleAlgset: AlgsetPaginator;
@@ -54,6 +55,11 @@ export type QueryGetPuzzleArgs = {
 };
 
 
+export type QueryGetPuzzleByCodeArgs = {
+  code: Scalars['String'];
+};
+
+
 export type QueryGetMultiplePuzzleArgs = {
   id?: Maybe<Scalars['String']>;
   first?: Maybe<Scalars['Int']>;
@@ -63,6 +69,7 @@ export type QueryGetMultiplePuzzleArgs = {
   sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
   created_by?: Maybe<Scalars['String']>;
   is_public?: Maybe<Scalars['Boolean']>;
+  code?: Maybe<Scalars['String']>;
 };
 
 
@@ -81,6 +88,7 @@ export type QueryGetMultipleAlgsetArgs = {
   created_by?: Maybe<Scalars['String']>;
   puzzle?: Maybe<Scalars['String']>;
   is_public?: Maybe<Scalars['Boolean']>;
+  code?: Maybe<Scalars['String']>;
 };
 
 
@@ -100,6 +108,7 @@ export type QueryGetMultipleSubsetArgs = {
   puzzle?: Maybe<Scalars['String']>;
   algset?: Maybe<Scalars['String']>;
   parent?: Maybe<Scalars['String']>;
+  code?: Maybe<Scalars['String']>;
   is_public?: Maybe<Scalars['Boolean']>;
 };
 
@@ -263,6 +272,7 @@ export type MutationDeletePuzzleArgs = {
 export type MutationUpdatePuzzleArgs = {
   id: Scalars['ID'];
   name?: Maybe<Scalars['String']>;
+  is_public?: Maybe<Scalars['Boolean']>;
   code?: Maybe<Scalars['String']>;
 };
 
@@ -281,6 +291,7 @@ export type MutationDeleteAlgsetArgs = {
 export type MutationUpdateAlgsetArgs = {
   id: Scalars['ID'];
   name?: Maybe<Scalars['String']>;
+  is_public?: Maybe<Scalars['Boolean']>;
   mask?: Maybe<Scalars['String']>;
   visualization?: Maybe<CaseVisualization>;
 };
@@ -303,6 +314,7 @@ export type MutationDeleteSubsetArgs = {
 export type MutationUpdateSubsetArgs = {
   id: Scalars['ID'];
   name?: Maybe<Scalars['String']>;
+  is_public?: Maybe<Scalars['Boolean']>;
   mask?: Maybe<Scalars['String']>;
   visualization?: Maybe<CaseVisualization>;
 };
@@ -455,6 +467,7 @@ export type Algset = {
   __typename?: 'Algset';
   id: Scalars['ID'];
   name: Scalars['String'];
+  code: Scalars['String'];
   mask?: Maybe<Scalars['String']>;
   visualization: CaseVisualizationEnum;
   created_at: Scalars['Int'];
@@ -503,6 +516,7 @@ export type Subset = {
   __typename?: 'Subset';
   id: Scalars['ID'];
   name: Scalars['String'];
+  code: Scalars['String'];
   mask?: Maybe<Scalars['String']>;
   visualization: CaseVisualizationEnum;
   created_at: Scalars['Int'];
