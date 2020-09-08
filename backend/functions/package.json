@@ -15,7 +15,6 @@
   "main": "lib/index.js",
   "dependencies": {
     "axios": "^0.20.0",
-    "bcrypt": "^5.0.0",
     "bcryptjs": "^2.4.3",
     "express": "^4.17.1",
     "firebase-admin": "^8.6.0",
