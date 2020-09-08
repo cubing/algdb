@@ -7,10 +7,10 @@ import resolverHelper from '../../../helpers/tier2/resolver';
 import mysqlHelper from '../../../helpers/tier1/mysql';
 import { handleJqlSubscriptionTriggerIterative, handleJqlSubscriptionTrigger } from '../../../helpers/tier3/subscription'
 
-export class AlgAlgcaseLink extends Service {
-  static __typename = 'algAlgcaseLink';
+export class AlgTagLink extends Service {
+  static __typename = 'algTagLink';
 
-  static paginator = generatePaginatorService(AlgAlgcaseLink);
+  static paginator = generatePaginatorService(AlgTagLink);
 
   static presets = {
     default: {
@@ -29,25 +29,13 @@ export class AlgAlgcaseLink extends Service {
     "created_by": {},
     "created_by.name": {},
     "alg": {},
-    "algcase": {},
-    "algcase.name": {},
-    "algcase.subset": {},
-    "algcase.subset.name": {},
-    "algcase.algset": {},
-    "algcase.algset.name": {},
-    "algcase.puzzle": {},
-    "algcase.puzzle.name": {},
-    "tag.name": {
-      joinFields: [
-        { field: "alg", table: "algTagLink", foreignField: "alg" },
-      ]
-    }
+    "tag": {},
+    "tag.name": {},
   };
 
   static sortFieldsMap = {
     id: {},
     created_at: {},
-    "algcase.subset.name": {}
   };
 
   static groupByFieldsMap = {
@@ -67,7 +55,7 @@ export class AlgAlgcaseLink extends Service {
   static async createRecord(req, args = <any> {}, query?: object) {
     if(!req.user) throw errorHelper.loginRequiredError();
 
-    if(!args.alg && !args.algcase) throw errorHelper.missingParamsError();
+    if(!args.alg && !args.tag) throw errorHelper.missingParamsError();
 
     //if it does not pass the access control, throw an error
     if(!await this.testPermissions('create', req, args, query)) {
@@ -79,11 +67,11 @@ export class AlgAlgcaseLink extends Service {
 
     if(algResults.length < 1) throw errorHelper.generateError("Invalid alg");
 
-    //verify algcase exists
-    const algcaseResults = await mysqlHelper.executeDBQuery("SELECT id FROM algcase WHERE id = :id", { id: args.algcase });
+    //verify tag exists
+    const tagResults = await mysqlHelper.executeDBQuery("SELECT id FROM tag WHERE id = :id", { id: args.tag });
 
-    if(algcaseResults.length < 1) throw errorHelper.generateError("Invalid algcase");
-
+    if(tagResults.length < 1) throw errorHelper.generateError("Invalid tag");
+   
     const addResults = await resolverHelper.addTableRow(this.__typename, {
       ...args,
     }, { created_by: req.user.id }, true);

@@ -6,10 +6,11 @@ import Subset from './subset/subset.resolver';
 import Algcase from './algcase/algcase.resolver';
 import Alg from './alg/alg.resolver';
 import AlgAlgCaseLink from './link/algAlgcaseLink/algAlgcaseLink.resolver';
+import AlgTagLink from './link/algTagLink/algTagLink.resolver';
 import UserAlgTagLink from './link/userAlgTagLink/userAlgTagLink.resolver';
 import Tag from './tag/tag.resolver';
 
-const rootResolvers = [User, Auth, Puzzle, Algset, Subset, Algcase, Alg, AlgAlgCaseLink, UserAlgTagLink, Tag];
+const rootResolvers = [User, Auth, Puzzle, Algset, Subset, Algcase, Alg, AlgAlgCaseLink, AlgTagLink, UserAlgTagLink, Tag];
 
 const resolvers = {
   query: {},

@@ -3,7 +3,7 @@ import generatePaginatorInfoTypeDef from './core/generator/paginatorInfo.typeDef
 
 import generateEnumTypeDef from './core/generator/enum.typeDef'
 
-import { User, Puzzle, Algset, Subset, Algcase, Alg, Tag, AlgAlgcaseLink, UserAlgTagLink } from './services'
+import { User, Puzzle, Algset, Subset, Algcase, Alg, Tag, AlgAlgcaseLink, AlgTagLink, UserAlgTagLink } from './services'
 
 import user from './user/user.typeDef'
 
@@ -20,6 +20,7 @@ import algcase from './algcase/algcase.typeDef'
 import alg from './alg/alg.typeDef'
 
 import algAlgcaseLink from './link/algAlgcaseLink/algAlgcaseLink.typeDef'
+import algTagLink from './link/algTagLink/algTagLink.typeDef'
 import userAlgTagLink from './link/userAlgTagLink/userAlgTagLink.typeDef'
 
 import tag from './tag/tag.typeDef'
@@ -44,6 +45,9 @@ export const typeDefs = {
 
   algAlgcaseLink,
   algAlgcaseLinkPaginator: generatePaginatorTypeDef(AlgAlgcaseLink),
+
+  algTagLink,
+  algTagLinkPaginator: generatePaginatorTypeDef(AlgTagLink),
 
   userAlgTagLink,
   userAlgTagLinkPaginator: generatePaginatorTypeDef(UserAlgTagLink),

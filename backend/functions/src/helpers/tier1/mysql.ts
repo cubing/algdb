@@ -320,12 +320,77 @@ export default class Mysql {
     let join_statement = "";
 
     joinFieldsArray.forEach((joinObject, joinFieldIndex) => {
+
+
       const fieldPath = joinObject.field.split(".");
       let currentTypeDef = typeDefs[table];
       let currentTable = table;
 
       let joinTableAlias, finalFieldname;
 
+      const joinArray: any = [];
+
+      //if this exists, they must be processed first before processing the fieldPath
+      if(Array.isArray(joinObject.joinFields)) {
+        joinObject.joinFields.forEach((nestedJoinObject, fieldIndex) => {
+          joinArray.push({
+            joinTableName: nestedJoinObject.table,
+            field: nestedJoinObject.field,
+            foreignField: nestedJoinObject.foreignField
+          });
+        });
+      }
+
+      //process the "normal" fields
+      fieldPath.forEach((field, fieldIndex) => {
+        joinArray.push({
+          field: field,
+          foreignField: currentTypeDef[field]?.mysqlOptions?.joinInfo?.foreignKey ?? "id"
+        })
+      });
+
+      joinArray.forEach((ele, eleIndex) => {
+        //if there's no next field, no more joins
+        if(joinArray[eleIndex+1]) {
+          //join with this type
+          const joinTableName = ele.joinTableName || currentTypeDef[ele.field]?.mysqlOptions?.joinInfo.type;
+
+          //if it requires a join, check if it was joined previously
+          if(joinTableName) {
+            if(!(joinTableName in previous_joins)) {
+              previous_joins[joinTableName] = [];
+            }
+    
+            let newJoin = false;
+            let index = previous_joins[joinTableName].indexOf(ele.field);
+    
+            //if index not exists, join the table and get the index.
+            if(index === -1) {
+              previous_joins[joinTableName].push(ele.field);
+    
+              index = previous_joins[joinTableName].indexOf(ele.field);
+              newJoin = true;
+            }
+    
+            //always set the alias.
+            joinTableAlias = joinTableName + index;
+    
+            if(newJoin) {
+              //assemble join statement, if required
+              join_statement += " LEFT JOIN " + joinTableName + " " + joinTableAlias + " ON " + currentTable + "." + ele.field + " = " + joinTableAlias + "." + ele.foreignField;
+            }
+          }
+
+          //shift the typeDef
+          currentTypeDef = typeDefs[joinTableName];
+          currentTable = joinTableAlias;
+        } else {
+          //no more fields, set the finalFieldname
+          finalFieldname = ele.field;
+        }
+      });
+
+      /*
       fieldPath.forEach((field, fieldIndex) => {
         //if there's no next field, no more joins
         if(fieldPath[fieldIndex+1]) {
@@ -366,6 +431,7 @@ export default class Mysql {
           finalFieldname = field;
         }
       });
+      */
 
       const tableName = joinTableAlias || table;
       statements.push(assemblyFn(tableName, finalFieldname, joinObject, joinFieldIndex));

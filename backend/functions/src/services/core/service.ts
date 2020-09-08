@@ -172,6 +172,7 @@ export default abstract class Service {
         };
         filterObject.fields.push({
           field: this.filterFieldsMap[arg].field ?? arg,
+          joinFields: this.filterFieldsMap[arg].joinFields,
           value: args[arg]
         });
         filterArray.push(filterObject);
