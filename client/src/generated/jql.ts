@@ -27,6 +27,8 @@ export type Query = {
   getMultipleAlg: AlgPaginator;
   getAlgAlgcaseLink: AlgAlgcaseLink;
   getMultipleAlgAlgcaseLink: AlgAlgcaseLinkPaginator;
+  getAlgTagLink: AlgTagLink;
+  getMultipleAlgTagLink: AlgTagLinkPaginator;
   getUserAlgTagLink: UserAlgTagLink;
   getMultipleUserAlgTagLink: UserAlgTagLinkPaginator;
   getTag: Tag;
@@ -106,7 +108,9 @@ export type QueryGetMultipleSubsetArgs = {
   sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
   created_by?: Maybe<Scalars['String']>;
   puzzle?: Maybe<Scalars['String']>;
+  puzzle_code?: Maybe<Scalars['String']>;
   algset?: Maybe<Scalars['String']>;
+  algset_code?: Maybe<Scalars['String']>;
   parent?: Maybe<Scalars['String']>;
   code?: Maybe<Scalars['String']>;
   is_public?: Maybe<Scalars['Boolean']>;
@@ -164,9 +168,36 @@ export type QueryGetMultipleAlgAlgcaseLinkArgs = {
   created_by?: Maybe<Scalars['String']>;
   alg?: Maybe<Scalars['String']>;
   algcase?: Maybe<Scalars['String']>;
+  algcase_name?: Maybe<Scalars['String']>;
+  algcase_subset?: Maybe<Scalars['String']>;
+  algcase_subset_name?: Maybe<Scalars['String']>;
+  algcase_algset?: Maybe<Scalars['String']>;
+  algcase_algset_name?: Maybe<Scalars['String']>;
+  algcase_puzzle?: Maybe<Scalars['String']>;
+  algcase_puzzle_name?: Maybe<Scalars['String']>;
+  tag_name?: Maybe<Scalars['String']>;
   subset?: Maybe<Scalars['String']>;
   algset?: Maybe<Scalars['String']>;
   puzzle?: Maybe<Scalars['String']>;
+};
+
+
+export type QueryGetAlgTagLinkArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type QueryGetMultipleAlgTagLinkArgs = {
+  id?: Maybe<Scalars['String']>;
+  first?: Maybe<Scalars['Int']>;
+  after?: Maybe<Scalars['ID']>;
+  search?: Maybe<Scalars['String']>;
+  sortBy?: Maybe<Array<Maybe<Scalars['String']>>>;
+  sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
+  created_by?: Maybe<Scalars['String']>;
+  alg?: Maybe<Scalars['String']>;
+  tag?: Maybe<Scalars['String']>;
+  tag_name?: Maybe<Scalars['String']>;
 };
 
 
@@ -231,6 +262,9 @@ export type Mutation = {
   deleteUserAlgTagLink: UserAlgTagLink;
   updateUserAlgTagLink: UserAlgTagLink;
   createUserAlgTagLink: UserAlgTagLink;
+  deleteAlgTagLink: AlgTagLink;
+  updateAlgTagLink: AlgTagLink;
+  createAlgTagLink: AlgTagLink;
   deleteTag: Tag;
   updateTag: Tag;
   createTag: Tag;
@@ -393,6 +427,22 @@ export type MutationUpdateUserAlgTagLinkArgs = {
 
 export type MutationCreateUserAlgTagLinkArgs = {
   user?: Maybe<User>;
+  alg?: Maybe<Alg>;
+  tag?: Maybe<Tag>;
+};
+
+
+export type MutationDeleteAlgTagLinkArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type MutationUpdateAlgTagLinkArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type MutationCreateAlgTagLinkArgs = {
   alg?: Maybe<Alg>;
   tag?: Maybe<Tag>;
 };
@@ -625,6 +675,22 @@ export type AlgAlgcaseLinkPaginator = {
   __typename?: 'AlgAlgcaseLinkPaginator';
   paginatorInfo: PaginatorInfo;
   data: Array<Maybe<AlgAlgcaseLink>>;
+};
+
+export type AlgTagLink = {
+  __typename?: 'AlgTagLink';
+  id: Scalars['ID'];
+  alg: Alg;
+  tag: Tag;
+  created_at: Scalars['Int'];
+  updated_at?: Maybe<Scalars['Int']>;
+  created_by: User;
+};
+
+export type AlgTagLinkPaginator = {
+  __typename?: 'AlgTagLinkPaginator';
+  paginatorInfo: PaginatorInfo;
+  data: Array<Maybe<AlgTagLink>>;
 };
 
 export type UserAlgTagLink = {
