@@ -26,18 +26,31 @@ export class AlgAlgcaseLink extends Service {
 
   static filterFieldsMap = {
     id: {},
-    "created_by": {},
-    "created_by.name": {},
     "alg": {},
     "algcase": {},
-    "algcase.name": {},
-    "algcase.subset": {},
-    "algcase.subset.name": {},
-    "algcase.algset": {},
-    "algcase.algset.name": {},
-    "algcase.puzzle": {},
-    "algcase.puzzle.name": {},
-    "tag.name": {
+    "algcase_name": {
+      field: "algcase.name"
+    },
+    "algcase_subset": {
+      field: "algcase.subset"
+    },
+    "algcase_subset_name": {
+      field: "algcase.subset.name"
+    },
+    "algcase_algset": {
+      field: "algcase.algset"
+    },
+    "algcase_algset_name": {
+      field: "algcase.algset.name"
+    },
+    "algcase_puzzle": {
+      field: "algcase.puzzle"
+    },
+    "algcase_puzzle_name": {
+      field: "algcase.puzzle.name"
+    },
+    "tag_name": {
+      field: "tag.name",
       joinFields: [
         { field: "alg", table: "algTagLink", foreignField: "alg" },
       ]

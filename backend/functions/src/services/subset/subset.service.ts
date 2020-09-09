@@ -29,11 +29,14 @@ export class Subset extends Service {
   static filterFieldsMap = {
     id: {},
     code: {},
-    "created_by": {},
-    "created_by.name": {},
     "puzzle": {},
+    "puzzle_code": {
+      field: "puzzle.code"
+    },
     "algset": {},
-    "algset.code": {},
+    "algset_code": {
+      field: "algset.code"
+    },
     "parent": {},
   };
 

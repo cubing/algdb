@@ -46,7 +46,9 @@ type Query {
 		sortDesc: [Boolean]
 		created_by: String
 		puzzle: String
+		puzzle_code: String
 		algset: String
+		algset_code: String
 		parent: String
 		code: String
 		is_public: Boolean
@@ -86,6 +88,14 @@ type Query {
 		created_by: String
 		alg: String
 		algcase: String
+		algcase_name: String
+		algcase_subset: String
+		algcase_subset_name: String
+		algcase_algset: String
+		algcase_algset_name: String
+		algcase_puzzle: String
+		algcase_puzzle_name: String
+		tag_name: String
 		subset: String
 		algset: String
 		puzzle: String
