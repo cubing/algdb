@@ -1,5 +1,5 @@
 import React, { ReactElement, useState, ChangeEvent, MouseEvent } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useRouteMatch } from 'react-router-dom'
 import {
   Flex,
   Heading,
@@ -37,7 +37,9 @@ const getAlgsetsQuery = (puzzle?: string) => {
       puzzle: {
         id: null,
         name: null,
+        code: null
       },
+      code: null,
       mask: null,
       visualization: {
         name: null,
@@ -46,14 +48,13 @@ const getAlgsetsQuery = (puzzle?: string) => {
       created_at: null,
     },
     __args: {
-      
     }
   }
 
   if (puzzle) {
     // eslint-disable-next-line no-underscore-dangle
     query.__args = {
-      puzzle,
+      puzzle: parseInt(puzzle, 10),
     }
   }
 
@@ -68,6 +69,7 @@ export default function Algsets(): ReactElement {
   const [ editingAlgsetMask, setEditingAlgsetMask ] = useState<Maybe<string> | null>();
 
   const { puzzleId } = useParams()
+  const match = useRouteMatch()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { isLoading, data, refetch, error } = useJqlQuery<AlgsetPaginator, Error>(
     'getMultipleAlgset',
@@ -80,7 +82,8 @@ export default function Algsets(): ReactElement {
     'getMultiplePuzzle',
     {
       data: {
-        name: null
+        name: null,
+        code: null
       }
     }
   )
@@ -151,7 +154,7 @@ export default function Algsets(): ReactElement {
                 <td>{algset.is_public ? 'true' : 'false'}</td>
                 <td>{new Date(algset.created_at * 1000).toLocaleString()}</td>
                 <td><Button onClick={edit(algset)}>Edit</Button></td>
-                <td><Link to="">Manage</Link></td>
+                <td><Link to={`${match.url}/${algset.id}`}>Manage</Link></td>
               </tr>
             ) : false)}
             <AddAlgset onAdd={refetch} puzzles={puzzles} />
