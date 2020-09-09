@@ -66,7 +66,7 @@ const getPuzzlesQuery = {
     total: null,
   },
   data: {
-    id: null,
+    code: null,
     name: null,
     created_at: null,
   },
@@ -101,7 +101,7 @@ export default function Puzzles(): ReactElement {
         <table width="100%">
           <thead>
             <tr>
-              <th style={{textAlign: 'left'}}>ID</th>
+              <th style={{textAlign: 'left'}}>Code</th>
               <th style={{textAlign: 'left'}}>Name</th>
               <th style={{textAlign: 'left'}}>Created</th>
               <th style={{textAlign: 'left'}}>{' '}</th>
@@ -111,6 +111,7 @@ export default function Puzzles(): ReactElement {
             {puzzles.map((puzzle) => puzzle ? (
               <tr key={puzzle.id}>
                 <td>{puzzle.id}</td>
+                <td>{puzzle.code}</td>
                 <td>{puzzle.name}</td>
                 <td>{new Date(puzzle.created_at * 1000).toLocaleString()}</td>
                 <td><Link to={`${match.url}/${puzzle.id}/algsets`}>Algsets</Link></td>

@@ -2,13 +2,13 @@ import React, { ReactElement } from 'react'
 import { Switch, Route, useRouteMatch, useLocation, Link, Redirect } from 'react-router-dom'
 import { Flex, Menu, MenuItem, Breadcrumb, BreadcrumbItem, BreadcrumbLink } from '@chakra-ui/core'
 import UsersPage from './Users'
+import AlgsetPage from './Algset'
 import AlgsetsPage from './Algsets'
 import PuzzlesPage from './Puzzles'
 
 export default function Landing(): ReactElement {
   const match = useRouteMatch()
   const location = useLocation()
-  console.log(location.pathname.split('/'));
 
   return (
     <Flex>
@@ -37,6 +37,12 @@ export default function Landing(): ReactElement {
           <Switch>
             <Route path={`${match.path}/users`}>
               <UsersPage />
+            </Route>
+            <Route path={[
+              `${match.path}/puzzles/:puzzleId/algsets/:algsetCode`,
+            ]}
+            >
+              <AlgsetPage />
             </Route>
             <Route path={[
               `${match.path}/algsets`,
