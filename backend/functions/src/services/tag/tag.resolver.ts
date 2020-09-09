@@ -9,7 +9,7 @@ const resolvers = {
 };
 
 generateRootResolvers(resolvers, Tag, typeDefs, {
-  methods: ["get", "getMultiple", "delete", "update", "create"]
+  methods: ["get", "getMultiple", "delete", "create"]
 });
 
 export default resolvers;

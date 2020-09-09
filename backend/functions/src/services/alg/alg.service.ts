@@ -1,6 +1,6 @@
 import Service from '../core/service'
 import generatePaginatorService from '../core/generator/paginator.service'
-import { generateUserAdminGuard } from '../../helpers/tier2/permissions'
+import { generateUserRoleGuard } from '../../helpers/tier2/permissions'
 
 import { AlgAlgcaseLink } from '../services';
 
@@ -8,6 +8,8 @@ import errorHelper from '../../helpers/tier0/error';
 import resolverHelper from '../../helpers/tier2/resolver';
 import mysqlHelper from '../../helpers/tier1/mysql';
 import { handleJqlSubscriptionTriggerIterative, handleJqlSubscriptionTrigger } from '../../helpers/tier3/subscription'
+
+import { userRole } from '../enums';
 
 export class Alg extends Service {
   static __typename = 'alg';
@@ -44,9 +46,17 @@ export class Alg extends Service {
   static searchableFields = ["name"];
 
   static accessControl = {
-    update: generateUserAdminGuard(),
-    create: generateUserAdminGuard(),
-    delete: generateUserAdminGuard()
+    update: async function(req, args, query) {
+      //if args.is_approved is provided, check permissions
+      if("is_approved" in args) {
+        return generateUserRoleGuard([userRole.ADMIN, userRole.MODERATOR])(req, args, query);
+      }
+
+      //else pass
+      return true;
+    },
+    create: generateUserRoleGuard([userRole.ADMIN]),
+    delete: generateUserRoleGuard([userRole.ADMIN]),
   };
 
   static async createRecord(req, args = <any> {}, query?: object) {
