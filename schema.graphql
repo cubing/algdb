@@ -310,7 +310,7 @@ type Subset {
 		sortDesc: [Boolean]
 		created_by: String
 		algset: String
-	): Algcase!
+	): AlgcasePaginator!
 	subsets(
 		id: String
 		first: Int
@@ -322,7 +322,7 @@ type Subset {
 		is_public: Boolean
 		puzzle: String
 		algset: String
-	): Subset!
+	): SubsetPaginator!
 }
 type SubsetPaginator {
 	paginatorInfo: PaginatorInfo!
