@@ -100,6 +100,19 @@ type Query {
 		algset: String
 		puzzle: String
 	): AlgAlgcaseLinkPaginator!
+	getAlgTagLink(id: ID!): AlgTagLink!
+	getMultipleAlgTagLink(
+		id: String
+		first: Int
+		after: ID
+		search: String
+		sortBy: [String]
+		sortDesc: [Boolean]
+		created_by: String
+		alg: String
+		tag: String
+		tag_name: String
+	): AlgTagLinkPaginator!
 	getUserAlgTagLink(id: ID!): UserAlgTagLink!
 	getMultipleUserAlgTagLink(
 		id: String
@@ -187,6 +200,12 @@ type Mutation {
 		alg: Alg
 		tag: Tag
 	): UserAlgTagLink!
+	deleteAlgTagLink(id: ID!): AlgTagLink!
+	updateAlgTagLink(id: ID!): AlgTagLink!
+	createAlgTagLink(
+		alg: Alg
+		tag: Tag
+	): AlgTagLink!
 	deleteTag(id: ID!): Tag!
 	updateTag(id: ID!): Tag!
 	createTag(name: String): Tag!
@@ -360,6 +379,18 @@ type AlgAlgcaseLink {
 type AlgAlgcaseLinkPaginator {
 	paginatorInfo: PaginatorInfo!
 	data: [AlgAlgcaseLink]!
+}
+type AlgTagLink {
+	id: ID!
+	alg: Alg!
+	tag: Tag!
+	created_at: Int!
+	updated_at: Int
+	created_by: User!
+}
+type AlgTagLinkPaginator {
+	paginatorInfo: PaginatorInfo!
+	data: [AlgTagLink]!
 }
 type UserAlgTagLink {
 	id: ID!

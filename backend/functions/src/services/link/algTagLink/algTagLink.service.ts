@@ -26,11 +26,9 @@ export class AlgTagLink extends Service {
 
   static filterFieldsMap = {
     id: {},
-    "created_by": {},
-    "created_by.name": {},
     "alg": {},
     "tag": {},
-    "tag.name": {},
+    "tag_name": { field: "tag.name" },
   };
 
   static sortFieldsMap = {
