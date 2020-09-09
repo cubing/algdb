@@ -201,13 +201,11 @@ type Mutation {
 		tag: Tag
 	): UserAlgTagLink!
 	deleteAlgTagLink(id: ID!): AlgTagLink!
-	updateAlgTagLink(id: ID!): AlgTagLink!
 	createAlgTagLink(
 		alg: Alg
 		tag: Tag
 	): AlgTagLink!
 	deleteTag(id: ID!): Tag!
-	updateTag(id: ID!): Tag!
 	createTag(name: String): Tag!
 }
 

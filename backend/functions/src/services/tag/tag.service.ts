@@ -1,11 +1,13 @@
 import Service from '../core/service'
 import generatePaginatorService from '../core/generator/paginator.service'
-import { generateUserAdminGuard } from '../../helpers/tier2/permissions'
+import { generateUserRoleGuard } from '../../helpers/tier2/permissions'
 
 import errorHelper from '../../helpers/tier0/error';
 import resolverHelper from '../../helpers/tier2/resolver';
 import mysqlHelper from '../../helpers/tier1/mysql';
 import { handleJqlSubscriptionTriggerIterative, handleJqlSubscriptionTrigger } from '../../helpers/tier3/subscription'
+
+import { userRole } from '../enums';
 
 export class Tag extends Service {
   static __typename = 'tag';
@@ -42,8 +44,7 @@ export class Tag extends Service {
   static sortFields = ["id", "created_by"];
 
   static accessControl = {
-    update: generateUserAdminGuard(),
-    create: generateUserAdminGuard(),
-    delete: generateUserAdminGuard()
+    create: generateUserRoleGuard([userRole.MODERATOR, userRole.ADMIN]),
+    delete: generateUserRoleGuard([userRole.MODERATOR, userRole.ADMIN]),
   };
 };
