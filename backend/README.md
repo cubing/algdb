@@ -1,13 +1,15 @@
 # algdb backend
 
-Important Requests:
+The schema of the backend can be found [here](https://github.com/cubing/algdb/blob/main/schema.graphql)
+
+Example Requests:
 
 - **(AUTH)** = Authorization required in the header of each request
 - **(ADMIN)** = Authenticated user must have ADMIN role
 
 **Login Using WCA Code**
 
-`POST https://us-central1-algdb-d312e.cloudfunctions.net/api/jql`
+`POST https://api.algdb.net/jql`
 
 ```
 {
@@ -25,7 +27,7 @@ Important Requests:
 
 **Get Current User Info (AUTH)**
 
-`POST https://us-central1-algdb-d312e.cloudfunctions.net/api/jql`
+`POST https://api.algdb.net/jql`
 
 ```
 {
@@ -47,7 +49,7 @@ Important Requests:
 
 **Update User by ID (ADMIN) (AUTH)**
 
-`POST https://us-central1-algdb-d312e.cloudfunctions.net/api/jql`
+`POST https://api.algdb.net/jql`
 
 ```
 {
@@ -74,7 +76,7 @@ Important Requests:
 
 **Add Puzzle (ADMIN) (AUTH)**
 
-`POST https://us-central1-algdb-d312e.cloudfunctions.net/api/jql`
+`POST https://api.algdb.net/jql`
 
 ```
 {
@@ -92,7 +94,7 @@ Important Requests:
 
 **List All Puzzles (showing totals/counts)**
 
-`POST https://us-central1-algdb-d312e.cloudfunctions.net/api/jql`
+`POST https://api.algdb.net/jql`
 
 ```
 {
