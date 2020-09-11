@@ -46,6 +46,9 @@ export class Subset extends Service {
     "algset_code": {
       field: "algset.code"
     },
+    "puzzle_code": {
+      field: "puzzle.code"
+    },
   };
 
   static sortFieldsMap = {

@@ -24,6 +24,8 @@ export class Auth extends Service {
 
   static filterFieldsMap = {};
 
+  static hasKeys = false;
+
   static sortFieldsMap = {};
 
   static isFilterRequired = false;

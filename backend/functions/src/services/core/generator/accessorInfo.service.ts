@@ -14,6 +14,8 @@ export default function(service: any) {
       }
     };
 
+    static hasKeys = false;
+
     static async getRecord(req, args, query?: object) {
       const results = await resolverHelper.resolveTableRows(this, req, { select: query }, args, generateAccessorInfoTypeDef(service));
     

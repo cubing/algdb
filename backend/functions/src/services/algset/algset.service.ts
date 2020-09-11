@@ -28,17 +28,18 @@ export class Algset extends Service {
   
   static filterFieldsMap = {
     id: {},
-    "created_by": {},
-    "created_by.name": {},
     "puzzle": {},
-    "puzzle_name": {
-      field: "puzzle.name"
+    "puzzle_code": {
+      field: "puzzle.code"
     }
   };
 
   static filterFieldsKeyMap = {
     id: {},
     code: {},
+    "puzzle_code": {
+      field: "puzzle.code"
+    }
   };
 
   static sortFieldsMap = {

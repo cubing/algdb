@@ -22,7 +22,7 @@ type Query {
 		is_public: Boolean
 		code: String
 	): PuzzlePaginator!
-	getAlgset(id: ID, code: String): Algset!
+	getAlgset(id: ID, code: String, puzzle_code: String): Algset!
 	getMultipleAlgset(
 		id: String
 		first: Int
@@ -32,11 +32,11 @@ type Query {
 		sortDesc: [Boolean]
 		created_by: String
 		puzzle: String
-		puzzle_name: String
+		puzzle_code: String
 		is_public: Boolean
 		code: String
 	): AlgsetPaginator!
-	getSubset(id: ID, code: String, algset_code: String): Subset!
+	getSubset(id: ID, code: String, algset_code: String, puzzle_code: String): Subset!
 	getMultipleSubset(
 		id: String
 		first: Int

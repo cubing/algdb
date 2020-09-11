@@ -12,6 +12,8 @@ export default function(service: any) {
       }
     };
 
+    static hasKeys = false;
+
     static getTypeDef = Service.getTypeDef;
 
     static getRecord = Service.getRecord;

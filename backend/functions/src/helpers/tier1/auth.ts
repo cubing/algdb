@@ -11,7 +11,7 @@ export async function validateToken(auth: string) {
 
   try {
     const decoded: any = await jwt.verify(token, env.general.jwt_secret);
-
+    
     return decoded;
   } catch (err) {
     const message = 'Token error: ' + (err.message || err.name);

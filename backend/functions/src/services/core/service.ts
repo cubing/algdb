@@ -23,6 +23,8 @@ export default abstract class Service {
 
   static filterFieldsKeyMap: Object = { id: {} };
 
+  static hasKeys: Boolean = true;
+
   static sortFieldsMap: Object = {};
 
   static groupByFieldsMap: Object = {};
@@ -134,32 +136,33 @@ export default abstract class Service {
     }
 
     const filterArray: Array<any> = [];
-    
-    //handle filter fields
-    for(const arg in args) {
-      if(arg in this.filterFieldsKeyMap) {
-        const filterObject = {
-          connective: "AND",
-          fields: <any> []
-        };
-        filterObject.fields.push({
-          field: this.filterFieldsKeyMap[arg].field ?? arg,
-          joinFields: this.filterFieldsKeyMap[arg].joinFields,
-          value: args[arg]
-        });
-        filterArray.push(filterObject);
+    if(this.hasKeys) {
+      //handle filter fields
+      for(const arg in args) {
+        if(arg in this.filterFieldsKeyMap) {
+          const filterObject = {
+            connective: "AND",
+            fields: <any> []
+          };
+          filterObject.fields.push({
+            field: this.filterFieldsKeyMap[arg].field ?? arg,
+            joinFields: this.filterFieldsKeyMap[arg].joinFields,
+            value: args[arg]
+          });
+          filterArray.push(filterObject);
+        }
       }
-    }
 
-    if(filterArray.length < 1) {
-      throw errorHelper.generateError("Must supply at least 1 filter parameter");
+      if(filterArray.length < 1) {
+        throw errorHelper.generateError("Must supply at least 1 filter parameter");
+      }
     }
 
     const results = await resolverHelper.resolveTableRows(this.__typename, this, req, {
       select: selectQuery,
       where: filterArray,
       limit: 1,
-    });
+    }, args);
 
     if(results.length < 1) {
       throw errorHelper.itemNotFoundError();
@@ -259,7 +262,7 @@ export default abstract class Service {
           return total;
         }, []) : null,
         //offset: args.first*args.page || 0
-      });
+      }, args);
   
       return results;
     }
