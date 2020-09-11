@@ -73,6 +73,7 @@ export type QueryGetMultiplePuzzleArgs = {
 export type QueryGetAlgsetArgs = {
   id?: Maybe<Scalars['ID']>;
   code?: Maybe<Scalars['String']>;
+  puzzle_code?: Maybe<Scalars['String']>;
 };
 
 
@@ -85,7 +86,7 @@ export type QueryGetMultipleAlgsetArgs = {
   sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
   created_by?: Maybe<Scalars['String']>;
   puzzle?: Maybe<Scalars['String']>;
-  puzzle_name?: Maybe<Scalars['String']>;
+  puzzle_code?: Maybe<Scalars['String']>;
   is_public?: Maybe<Scalars['Boolean']>;
   code?: Maybe<Scalars['String']>;
 };
@@ -95,6 +96,7 @@ export type QueryGetSubsetArgs = {
   id?: Maybe<Scalars['ID']>;
   code?: Maybe<Scalars['String']>;
   algset_code?: Maybe<Scalars['String']>;
+  puzzle_code?: Maybe<Scalars['String']>;
 };
 
 
