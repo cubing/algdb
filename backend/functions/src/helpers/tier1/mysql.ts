@@ -267,7 +267,7 @@ export default class Mysql {
     whereArray.forEach((whereObject, whereIndex) => {
       const results = this.processJqlJoins(table, whereObject.fields, previous_joins, (tableName, finalFieldname, joinObject, joinFieldIndex) => {
         const operator = joinObject.operator ?? '=';
-        const placeholder = (finalFieldname in params) ? finalFieldname + joinFieldIndex : finalFieldname;
+        const placeholder = (finalFieldname in params) ? finalFieldname + whereIndex : finalFieldname;
         let where_substatement;
 
         //value must be array with at least 2 elements
