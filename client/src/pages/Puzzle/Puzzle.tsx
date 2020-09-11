@@ -2,7 +2,7 @@ import React, { ReactElement } from 'react'
 import { useParams , Link } from 'react-router-dom'
 import { Skeleton, Flex, Heading, SimpleGrid, Box } from '@chakra-ui/core'
 import useJqlQuery from '../../hooks/useJqlQuery'
-import { Query, Algset } from '../../generated/jql'
+import { Puzzle, Algset } from '../../generated/jql'
 import CubingIcon from '../../components/CubingIcon/CubingIcon'
 import Paginator from '../../components/Paginator/Paginator'
 import TransparentTwisty from '../../components/TwistyPlayers/Transparent'
@@ -51,7 +51,7 @@ const AlgsetList = ({ algsets }: { algsets: Algset[] }) => (
   </SimpleGrid>
 )
 
-export default function Puzzle(): ReactElement {
+export default function PuzzlePage(): ReactElement {
   const { puzzleId } = useParams<{ puzzleId: string }>()
 
   const query = React.useMemo(
@@ -86,9 +86,9 @@ export default function Puzzle(): ReactElement {
     [puzzleId],
   )
 
-  const { isLoading, data, error } = useJqlQuery<Query['getPuzzleByCode']>(
-    `${puzzleId}-get`,
-    'getPuzzleByCode',
+  const { isLoading, data, error } = useJqlQuery<Puzzle, Error>(
+    `${puzzleId}-get`,  
+    'getPuzzle',
     query,
   )
 
