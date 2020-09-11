@@ -27,7 +27,7 @@ export default function Landing(): ReactElement {
             </BreadcrumbItem>
 
             {location.pathname.split('/').slice(1).map((path, index, array) => (
-              <BreadcrumbItem isCurrentPage={index === array.length - 1}>
+              <BreadcrumbItem key={path} isCurrentPage={index === array.length - 1}>
                 <BreadcrumbLink as={Link} to={`/${array.slice(0, index + 1).join('/')}`}>{path}</BreadcrumbLink>
               </BreadcrumbItem>
             ))}
