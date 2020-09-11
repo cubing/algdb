@@ -40,6 +40,14 @@ export class Subset extends Service {
     "parent": {},
   };
 
+  static filterFieldsKeyMap = {
+    id: {},
+    code: {},
+    "algset_code": {
+      field: "algset.code"
+    },
+  };
+
   static sortFieldsMap = {
     id: {},
     created_at: {},

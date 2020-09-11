@@ -21,6 +21,8 @@ export default abstract class Service {
 
   static filterFieldsMap: Object = {};
 
+  static filterFieldsKeyMap: Object = { id: {} };
+
   static sortFieldsMap: Object = {};
 
   static groupByFieldsMap: Object = {};
@@ -123,7 +125,7 @@ export default abstract class Service {
     };
   }
 
-  static async getRecord(req, args, query?: object, admin = false) {
+  static async getRecord(req, args = <any> {}, query?: object, count = false, admin = false) {
     const selectQuery = query || Object.assign({}, this.presets.default);
 
     //if it does not pass the access control, throw an error
@@ -131,16 +133,33 @@ export default abstract class Service {
       throw errorHelper.badPermissionsError();
     }
 
+    const filterArray: Array<any> = [];
+    
+    //handle filter fields
+    for(const arg in args) {
+      if(arg in this.filterFieldsKeyMap) {
+        const filterObject = {
+          connective: "AND",
+          fields: <any> []
+        };
+        filterObject.fields.push({
+          field: this.filterFieldsKeyMap[arg].field ?? arg,
+          joinFields: this.filterFieldsKeyMap[arg].joinFields,
+          value: args[arg]
+        });
+        filterArray.push(filterObject);
+      }
+    }
+
+    if(filterArray.length < 1) {
+      throw errorHelper.generateError("Must supply at least 1 filter parameter");
+    }
+
     const results = await resolverHelper.resolveTableRows(this.__typename, this, req, {
       select: selectQuery,
-      where: [
-        {
-          fields: [
-            { field: "id", value: args.id }
-          ]
-        }
-      ]
-    }, args);
+      where: filterArray,
+      limit: 1,
+    });
 
     if(results.length < 1) {
       throw errorHelper.itemNotFoundError();
@@ -149,15 +168,6 @@ export default abstract class Service {
     return results[0];
   }
 
-  static async getFirstRecord(req, args = <any> {}, query?: object, admin = false) {
-    const records = await this.getRecords(req, args, query, false, admin);
-
-    if(records.length < 1) {
-      throw errorHelper.itemNotFoundError();
-    }
-
-    return records[0];
-  }
 
   /*
   ** Expected args: first, page, created_by

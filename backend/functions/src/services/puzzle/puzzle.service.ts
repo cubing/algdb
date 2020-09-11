@@ -32,6 +32,11 @@ export class Puzzle extends Service {
     "is_public": {},
   };
 
+  static filterFieldsKeyMap = {
+    id: {},
+    code: {},
+  };
+
   static sortFieldsMap = {
     id: {},
     created_at: {},

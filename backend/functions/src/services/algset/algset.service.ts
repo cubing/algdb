@@ -36,6 +36,11 @@ export class Algset extends Service {
     }
   };
 
+  static filterFieldsKeyMap = {
+    id: {},
+    code: {},
+  };
+
   static sortFieldsMap = {
     id: {},
     created_at: {},

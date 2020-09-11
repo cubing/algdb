@@ -12,12 +12,10 @@ export function generateRootResolvers(rootResolvers: any, service: any, typeDefs
           method: "get",
           route: "/" + service.__typename + "/:id",
           type: service.__typename,
-          args: {
-            id: { type: dataTypes.ID, required: true }
-          },
+          args: generatePaginatorArgs(service),
           resolver: (req) => service.getRecord(req, {
             ...req.query,
-            ...req.params,
+            ...req.params.id !== ":id" && { id: req.params.id },
             ...req.jql?.__args
           }, req.jql)
         }
@@ -29,19 +27,6 @@ export function generateRootResolvers(rootResolvers: any, service: any, typeDefs
           type: service.paginator.__typename,
           args: generatePaginatorArgs(service),
           resolver: (req) => service.paginator.getRecord(req, {
-            ...req.query,
-            ...req.params,
-            ...req.jql?.__args
-          }, req.jql)
-        }
-        break;
-      case "getFirst":
-        rootResolvers.query[method + capitalizedClass] = {
-          method: "get",
-          route: "/" + service.__typename + "/first",
-          type: service.paginator.__typename,
-          args: generatePaginatorArgs(service),
-          resolver: (req) => service.getFirstRecord(req, {
             ...req.query,
             ...req.params,
             ...req.jql?.__args
