@@ -7,9 +7,8 @@ import {
   Button,
   FlexProps,
   useColorModeValue,
-  Link,
 } from '@chakra-ui/core'
-import { useHistory } from 'react-router-dom'
+import { useHistory, Link } from 'react-router-dom'
 import ColorModeSwitcher from '../../components/ColorModeSwitcher/ColorModeSwitcher'
 import useUser from '../../hooks/useUser'
 
@@ -29,7 +28,6 @@ const Header = (props: Props) => {
   const border = useColorModeValue('gray.900', 'gray.100')
   const history = useHistory()
   const { signIn, isLoggedIn, signOut, userInfo } = useUser()
-  console.log(userInfo)
   return (
     <Flex
       as="nav"
@@ -45,7 +43,7 @@ const Header = (props: Props) => {
       {...props}
     >
       <Flex align="center" mr={5}>
-        <Heading as="a" href="/" size="lg" letterSpacing="-.1rem">
+        <Heading as={Link} to="/" size="lg" letterSpacing="-.1rem">
           AlgDB
         </Heading>
       </Flex>
@@ -69,32 +67,20 @@ const Header = (props: Props) => {
         flexGrow={1}
       >
         <MenuItem>
-          <Link
-            onClick={() => history.push('/puzzles')}
-            fontWeight="bold"
-            letterSpacing="wide"
-          >
+          <Text as={Link} to="/puzzles" fontWeight="bold" letterSpacing="wide">
             Puzzles
-          </Link>
+          </Text>
         </MenuItem>
         <MenuItem>
-          <Link
-            onClick={() => history.push('/users')}
-            fontWeight="bold"
-            letterSpacing="wide"
-          >
+          <Text as={Link} to="/users" fontWeight="bold" letterSpacing="wide">
             Users
-          </Link>
+          </Text>
         </MenuItem>
         {isLoggedIn() && userInfo?.role?.name === 'ADMIN' && (
           <MenuItem>
-            <Link
-              onClick={() => history.push('/admin')}
-              fontWeight="bold"
-              letterSpacing="wide"
-            >
+            <Text as={Link} to="/admin" fontWeight="bold" letterSpacing="wide">
               Admin
-            </Link>
+            </Text>
           </MenuItem>
         )}
       </Box>

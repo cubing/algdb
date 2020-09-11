@@ -6,5 +6,4 @@ interface Props extends TwistyPlayerConfig {}
 const TransparentTwistyPlayer = ({ ...props }: Props): ReactElement => (
   <TwistyPlayer {...props} background="none" />
 )
-
 export default TransparentTwistyPlayer
