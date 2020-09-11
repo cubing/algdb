@@ -39,14 +39,20 @@ export default function Landing(): ReactElement {
               <UsersPage />
             </Route>
             <Route path={[
-              `${match.path}/puzzles/:puzzleId/algsets/:algsetCode`,
+              `${match.path}/puzzles/:puzzleCode/:algsetCode-:subsetCode`,
+            ]}
+            >
+              <AlgsetPage />
+            </Route>
+            <Route path={[
+              `${match.path}/puzzles/:puzzleCode/:algsetCode`,
             ]}
             >
               <AlgsetPage />
             </Route>
             <Route path={[
               `${match.path}/algsets`,
-              `${match.path}/puzzles/:puzzleId/algsets`,
+              `${match.path}/puzzles/:puzzleCode`,
             ]}
             >
               <AlgsetsPage />

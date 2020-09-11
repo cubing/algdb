@@ -1,11 +1,22 @@
 import React, { ReactElement } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams, useRouteMatch } from 'react-router-dom'
 import { Flex, Heading, Spinner, Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/core'
 import useJqlQuery from '../../hooks/useJqlQuery'
 import { Maybe, Algset, Algcase } from '../../generated/jql'
 
+type AddSubsetProps = {
+  OnAdd: () => void
+}
 
-const query = (algsetId: number) => ({
+function AddSubset ({ OnAdd }: AddSubsetProps): ReactElement {
+  return (
+    <tr>
+      <td />
+    </tr>
+  )
+}
+
+const query = (puzzleCode: string, algsetCode: string, subsetCode : string) => ({
   id: null,
   name: null,
   code: null,
@@ -20,20 +31,37 @@ const query = (algsetId: number) => ({
       id: null,
       code: null,
       name: null,
+      algcases: {
+        paginatorInfo: {
+          count: null,
+          total: null,
+        },
+      },
+      subsets: {
+        paginatorInfo: {
+          count: null,
+          total: null,
+        },
+      }
+    },
+    __args: {
+      parent: null
     }
   },
   __args: {
-    id: algsetId
+    code: subsetCode || algsetCode,
+    algset_code: algsetCode,
+    puzzle_code: puzzleCode,
   }
 })
 
 export default function AlgsetPage(): ReactElement {
-  const { algsetCode } = useParams()
+  const { puzzleCode, algsetCode, subsetCode } = useParams()
 
   const { isLoading, data, error } = useJqlQuery<Maybe<Algset>, Error>(
-    'getAlgset',
-    'getAlgset',
-    query(parseInt(algsetCode, 10)),
+    subsetCode ? 'getSubset' : 'getAlgset',
+    subsetCode ? 'getSubset' : 'getAlgset',
+    query(puzzleCode, algsetCode, subsetCode),
   )
 
   if (isLoading) {
@@ -52,6 +80,7 @@ export default function AlgsetPage(): ReactElement {
       <Heading fontSize="4em" textAlign="left">
         {data?.name}
       </Heading>
+
       <Tabs w="100%">
         <TabList>
           <Tab>Subsets</Tab>
@@ -66,6 +95,9 @@ export default function AlgsetPage(): ReactElement {
                   <th style={{textAlign: 'left'}}>ID</th>
                   <th style={{textAlign: 'left'}}>Code</th>
                   <th style={{textAlign: 'left'}}>Name</th>
+                  <th style={{textAlign: 'left'}}>Algs</th>
+                  <th style={{textAlign: 'left'}}>Subsets</th>
+                  <th style={{textAlign: 'left'}}>{' '}</th>
                 </tr>
               </thead>
               <tbody>
@@ -74,6 +106,9 @@ export default function AlgsetPage(): ReactElement {
                     <td>{subset.id}</td>
                     <td>{subset.code}</td>
                     <td>{subset.name}</td>
+                    <td>{subset.algcases.paginatorInfo.count}</td>
+                    <td>{subset.subsets.paginatorInfo.count}</td>
+                    <td><Link to={`/admin/puzzles/${puzzleCode}/${algsetCode}-${subset.code}`}>Manage</Link></td>
                   </tr>
                 ) : false)}
               </tbody>

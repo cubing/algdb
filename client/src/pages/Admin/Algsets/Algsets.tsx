@@ -25,7 +25,7 @@ import useJqlQuery from '../../../hooks/useJqlQuery'
 import useJqlMutation from '../../../hooks/useJqlMutation'
 import { Maybe, Algset, AlgsetPaginator, PuzzlePaginator } from '../../../generated/jql'
 
-const getAlgsetsQuery = (puzzle?: string) => {
+const getAlgsetsQuery = (puzzleCode?: string) => {
   const query = {
     paginatorInfo: {
       count: null,
@@ -51,10 +51,10 @@ const getAlgsetsQuery = (puzzle?: string) => {
     }
   }
 
-  if (puzzle) {
+  if (puzzleCode) {
     // eslint-disable-next-line no-underscore-dangle
     query.__args = {
-      puzzle: parseInt(puzzle, 10),
+      puzzle_code: puzzleCode,
     }
   }
 
@@ -68,13 +68,13 @@ export default function Algsets(): ReactElement {
   const [ editingAlgsetPublic, setEditingAlgsetPublic ] = useState<boolean | undefined>();
   const [ editingAlgsetMask, setEditingAlgsetMask ] = useState<Maybe<string> | null>();
 
-  const { puzzleId } = useParams()
+  const { puzzleCode } = useParams()
   const match = useRouteMatch()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { isLoading, data, refetch, error } = useJqlQuery<AlgsetPaginator, Error>(
     'getMultipleAlgset',
     'getMultipleAlgset',
-    getAlgsetsQuery(puzzleId),
+    getAlgsetsQuery(puzzleCode),
   )
 
   const puzzleQuery = useJqlQuery<PuzzlePaginator, Error>(
@@ -154,7 +154,7 @@ export default function Algsets(): ReactElement {
                 <td>{algset.is_public ? 'true' : 'false'}</td>
                 <td>{new Date(algset.created_at * 1000).toLocaleString()}</td>
                 <td><Button onClick={edit(algset)}>Edit</Button></td>
-                <td><Link to={`${match.url}/${algset.id}`}>Manage</Link></td>
+                <td><Link to={`/admin/puzzles/${algset.puzzle.code}/${algset.code}`}>Manage</Link></td>
               </tr>
             ) : false)}
             <AddAlgset onAdd={refetch} puzzles={puzzles} />

@@ -114,7 +114,7 @@ export default function Puzzles(): ReactElement {
                 <td>{puzzle.code}</td>
                 <td>{puzzle.name}</td>
                 <td>{new Date(puzzle.created_at * 1000).toLocaleString()}</td>
-                <td><Link to={`${match.url}/${puzzle.id}/algsets`}>Algsets</Link></td>
+                <td><Link to={`${match.url}/${puzzle.code}`}>Algsets</Link></td>
               </tr>
             ) : false)}
             <AddPuzzle onAdd={refetch} />
