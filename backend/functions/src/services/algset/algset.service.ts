@@ -31,6 +31,9 @@ export class Algset extends Service {
     "created_by": {},
     "created_by.name": {},
     "puzzle": {},
+    "puzzle_name": {
+      field: "puzzle.name"
+    }
   };
 
   static sortFieldsMap = {

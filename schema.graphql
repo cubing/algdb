@@ -1,6 +1,15 @@
 type Query {
 	getCurrentUser: User
 	getUser(id: ID!): User!
+	getFirstUser(
+		id: String
+		first: Int
+		after: ID
+		search: String
+		sortBy: [String]
+		sortDesc: [Boolean]
+		created_by: String
+	): User!
 	getMultipleUser(
 		id: String
 		first: Int
@@ -11,7 +20,17 @@ type Query {
 		created_by: String
 	): UserPaginator!
 	getPuzzle(id: ID!): Puzzle!
-	getPuzzleByCode(code: String!): Puzzle!
+	getFirstPuzzle(
+		id: String
+		first: Int
+		after: ID
+		search: String
+		sortBy: [String]
+		sortDesc: [Boolean]
+		created_by: String
+		is_public: Boolean
+		code: String
+	): Puzzle!
 	getMultiplePuzzle(
 		id: String
 		first: Int
@@ -24,6 +43,19 @@ type Query {
 		code: String
 	): PuzzlePaginator!
 	getAlgset(id: ID!): Algset!
+	getFirstAlgset(
+		id: String
+		first: Int
+		after: ID
+		search: String
+		sortBy: [String]
+		sortDesc: [Boolean]
+		created_by: String
+		puzzle: String
+		puzzle_name: String
+		is_public: Boolean
+		code: String
+	): Algset!
 	getMultipleAlgset(
 		id: String
 		first: Int
@@ -33,10 +65,27 @@ type Query {
 		sortDesc: [Boolean]
 		created_by: String
 		puzzle: String
+		puzzle_name: String
 		is_public: Boolean
 		code: String
 	): AlgsetPaginator!
 	getSubset(id: ID!): Subset!
+	getFirstSubset(
+		id: String
+		first: Int
+		after: ID
+		search: String
+		sortBy: [String]
+		sortDesc: [Boolean]
+		created_by: String
+		puzzle: String
+		puzzle_code: String
+		algset: String
+		algset_code: String
+		parent: String
+		code: String
+		is_public: Boolean
+	): Subset!
 	getMultipleSubset(
 		id: String
 		first: Int
@@ -54,6 +103,17 @@ type Query {
 		is_public: Boolean
 	): SubsetPaginator!
 	getAlgcase(id: ID!): Algcase!
+	getFirstAlgcase(
+		id: String
+		first: Int
+		after: ID
+		search: String
+		sortBy: [String]
+		sortDesc: [Boolean]
+		created_by: String
+		algset: String
+		subset: String
+	): Algcase!
 	getMultipleAlgcase(
 		id: String
 		first: Int
@@ -66,6 +126,17 @@ type Query {
 		subset: String
 	): AlgcasePaginator!
 	getAlg(id: ID!): Alg!
+	getFirstAlg(
+		id: String
+		first: Int
+		after: ID
+		search: String
+		sortBy: [String]
+		sortDesc: [Boolean]
+		created_by: String
+		algset: String
+		subset: String
+	): Alg!
 	getMultipleAlg(
 		id: String
 		first: Int
@@ -78,6 +149,28 @@ type Query {
 		subset: String
 	): AlgPaginator!
 	getAlgAlgcaseLink(id: ID!): AlgAlgcaseLink!
+	getFirstAlgAlgcaseLink(
+		id: String
+		first: Int
+		after: ID
+		search: String
+		sortBy: [String]
+		sortDesc: [Boolean]
+		created_by: String
+		alg: String
+		algcase: String
+		algcase_name: String
+		algcase_subset: String
+		algcase_subset_name: String
+		algcase_algset: String
+		algcase_algset_name: String
+		algcase_puzzle: String
+		algcase_puzzle_name: String
+		tag_name: String
+		subset: String
+		algset: String
+		puzzle: String
+	): AlgAlgcaseLink!
 	getMultipleAlgAlgcaseLink(
 		id: String
 		first: Int
@@ -101,6 +194,18 @@ type Query {
 		puzzle: String
 	): AlgAlgcaseLinkPaginator!
 	getAlgTagLink(id: ID!): AlgTagLink!
+	getFirstAlgTagLink(
+		id: String
+		first: Int
+		after: ID
+		search: String
+		sortBy: [String]
+		sortDesc: [Boolean]
+		created_by: String
+		alg: String
+		tag: String
+		tag_name: String
+	): AlgTagLink!
 	getMultipleAlgTagLink(
 		id: String
 		first: Int
@@ -114,6 +219,18 @@ type Query {
 		tag_name: String
 	): AlgTagLinkPaginator!
 	getUserAlgTagLink(id: ID!): UserAlgTagLink!
+	getFirstUserAlgTagLink(
+		id: String
+		first: Int
+		after: ID
+		search: String
+		sortBy: [String]
+		sortDesc: [Boolean]
+		created_by: String
+		alg: String
+		user: String
+		tag: String
+	): UserAlgTagLink!
 	getMultipleUserAlgTagLink(
 		id: String
 		first: Int
@@ -127,6 +244,15 @@ type Query {
 		tag: String
 	): UserAlgTagLinkPaginator!
 	getTag(id: ID!): Tag!
+	getFirstTag(
+		id: String
+		first: Int
+		after: ID
+		search: String
+		sortBy: [String]
+		sortDesc: [Boolean]
+		created_by: String
+	): Tag!
 	getMultipleTag(
 		id: String
 		first: Int

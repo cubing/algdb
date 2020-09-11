@@ -149,6 +149,16 @@ export default abstract class Service {
     return results[0];
   }
 
+  static async getFirstRecord(req, args = <any> {}, query?: object, admin = false) {
+    const records = await this.getRecords(req, args, query, false, admin);
+
+    if(records.length < 1) {
+      throw errorHelper.itemNotFoundError();
+    }
+
+    return records[0];
+  }
+
   /*
   ** Expected args: first, page, created_by
   */
@@ -213,6 +223,9 @@ export default abstract class Service {
   
       return resultsCount;
     } else {
+      //parse args.first and ensure it is less than 100
+      const limit = parseInt(args.first) > 100 ? 100 : (parseInt(args.first) || 100);
+
       const results = await resolverHelper.resolveTableRows(this.__typename, this, req, {
         select: selectQuery,
         where: filterArray,
@@ -225,7 +238,7 @@ export default abstract class Service {
           }
           return total;
         }, []) : null,
-        limit: args.first,
+        limit: limit,
         after: args.after,
         groupBy: Array.isArray(args.groupBy) ? args.groupBy.reduce((total, item, index) => {
           if(item in this.groupByFieldsMap) {

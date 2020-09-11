@@ -28,6 +28,7 @@ export class Puzzle extends Service {
     id: {},
     "created_by": {},
     "created_by.name": {},
+    "code": {},
     "is_public": {},
   };
 

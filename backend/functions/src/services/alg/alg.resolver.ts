@@ -9,7 +9,7 @@ const resolvers = {
 };
 
 generateRootResolvers(resolvers, Alg, typeDefs, {
-  methods: ["get", "getMultiple", "delete", "update", "create"]
+  methods: ["get", "getMultiple", "getFirst", "delete", "update", "create"]
 });
 
 export default resolvers;

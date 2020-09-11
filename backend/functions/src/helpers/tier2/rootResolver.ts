@@ -35,6 +35,19 @@ export function generateRootResolvers(rootResolvers: any, service: any, typeDefs
           }, req.jql)
         }
         break;
+      case "getFirst":
+        rootResolvers.query[method + capitalizedClass] = {
+          method: "get",
+          route: "/" + service.__typename + "/first",
+          type: service.paginator.__typename,
+          args: generatePaginatorArgs(service),
+          resolver: (req) => service.getFirstRecord(req, {
+            ...req.query,
+            ...req.params,
+            ...req.jql?.__args
+          }, req.jql)
+        }
+        break;
       case "delete":
         rootResolvers.mutation[method + capitalizedClass] = {
           method: "delete",
