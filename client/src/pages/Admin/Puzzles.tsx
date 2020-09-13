@@ -1,4 +1,5 @@
 import React, { ReactElement, useState, ChangeEvent } from 'react'
+import { Link, useRouteMatch } from 'react-router-dom'
 import { Flex, Heading, Spinner, Input, Button } from '@chakra-ui/core'
 import useJqlQuery from '../../hooks/useJqlQuery'
 import useJqlMutation from '../../hooks/useJqlMutation'
@@ -65,13 +66,15 @@ const getPuzzlesQuery = {
     total: null,
   },
   data: {
-    id: null,
+    code: null,
     name: null,
     created_at: null,
   },
 }
 
 export default function Puzzles(): ReactElement {
+  const match = useRouteMatch()
+
   const { isLoading, data, refetch, error } = useJqlQuery<PuzzlePaginator, Error>(
     'getMultiplePuzzle',
     'getMultiplePuzzle',
@@ -98,17 +101,20 @@ export default function Puzzles(): ReactElement {
         <table width="100%">
           <thead>
             <tr>
-              <th style={{textAlign: 'left'}}>ID</th>
+              <th style={{textAlign: 'left'}}>Code</th>
               <th style={{textAlign: 'left'}}>Name</th>
               <th style={{textAlign: 'left'}}>Created</th>
+              <th style={{textAlign: 'left'}}>{' '}</th>
             </tr>
           </thead>
           <tbody>
             {puzzles.map((puzzle) => puzzle ? (
               <tr key={puzzle.id}>
                 <td>{puzzle.id}</td>
+                <td>{puzzle.code}</td>
                 <td>{puzzle.name}</td>
                 <td>{new Date(puzzle.created_at * 1000).toLocaleString()}</td>
+                <td><Link to={`${match.url}/${puzzle.code}`}>Algsets</Link></td>
               </tr>
             ) : false)}
             <AddPuzzle onAdd={refetch} />

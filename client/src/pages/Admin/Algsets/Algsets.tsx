@@ -1,4 +1,5 @@
-import React, { ReactElement, useState, ChangeEvent, MouseEvent, FormEvent } from 'react'
+import React, { ReactElement, useState, ChangeEvent, MouseEvent } from 'react'
+import { Link, useParams, useRouteMatch } from 'react-router-dom'
 import {
   Flex,
   Heading,
@@ -7,6 +8,7 @@ import {
   Button,
   Select,
   FormLabel,
+  Checkbox,
   Stack,
   Box,
   Drawer,
@@ -18,115 +20,61 @@ import {
   DrawerFooter,
   useDisclosure,
 } from '@chakra-ui/core'
-import useJqlQuery from '../../hooks/useJqlQuery'
-import useJqlMutation from '../../hooks/useJqlMutation'
-import { Maybe, Algset, AlgsetPaginator, Puzzle, PuzzlePaginator } from '../../generated/jql'
+import AddAlgset, { AlgsetMutationArgs } from './AddAlgset'
+import useJqlQuery from '../../../hooks/useJqlQuery'
+import useJqlMutation from '../../../hooks/useJqlMutation'
+import { Maybe, Algset, AlgsetPaginator, PuzzlePaginator } from '../../../generated/jql'
 
-type AddAlgsetProps = {
-  onAdd: () => void
-  puzzles: Array<Maybe<Puzzle>>
-}
-
-type AlgsetMutationArgs = {
-  id?: string
-  name?: string
-  puzzle?: string
-  mask?: string
-  visualization?: string
-}
-
-function AddAlgset({ onAdd, puzzles }: AddAlgsetProps): ReactElement {
-  const [algsetName, setAlgsetName] = useState<string>('')
-  const [selectedPuzzle, setSelectedPuzzle] = useState<string>('0')
-
-  const [mutate, { isLoading, error }] = useJqlMutation<
-    Maybe<Algset>,
-    Error,
-    AlgsetMutationArgs
-  >('createAlgset', {
-    id: null,
-    name: null,
-  })
-
-  const onClick = async (e: MouseEvent<HTMLButtonElement> | FormEvent) => {
-    e.preventDefault();
-    if (algsetName) {
-      try {
-        await mutate({
-          name: algsetName,
-          puzzle: selectedPuzzle,
-        })
-        onAdd()
-        setAlgsetName('')
-      } catch (err) {
-        console.error(err)
-      }
+const getAlgsetsQuery = (puzzleCode?: string) => {
+  const query = {
+    paginatorInfo: {
+      count: null,
+      total: null,
+    },
+    data: {
+      id: null,
+      name: null,
+      puzzle: {
+        id: null,
+        name: null,
+        code: null
+      },
+      code: null,
+      mask: null,
+      visualization: {
+        name: null,
+      },
+      is_public: null,
+      created_at: null,
+    },
+    __args: {
     }
   }
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setAlgsetName(event.target.value)
+  if (puzzleCode) {
+    // eslint-disable-next-line no-underscore-dangle
+    query.__args = {
+      puzzle_code: puzzleCode,
+    }
   }
 
-  const handleChangePuzzle = (event: ChangeEvent<HTMLSelectElement>) => {
-    setSelectedPuzzle(event.target.value)
-  }
-
-  if (error) {
-    console.error(error);
-  }
-
-  return (
-    <tr>
-      <td />
-      <td>
-        <Input placeholder="OLL" value={algsetName} onChange={handleChange} />
-      </td>
-      <td>
-        <Select value={selectedPuzzle} onChange={handleChangePuzzle}>
-          <option key={0} value="0">Select</option>
-          {puzzles.map((puzzle) => (
-            <option key={puzzle?.id} value={puzzle?.id}>{puzzle?.name}</option>
-          ))}
-        </Select>
-      </td>
-      <td>
-        <Button isLoading={isLoading} isDisabled={!algsetName} onClick={onClick}>Add</Button>
-      </td>
-    </tr>
-  )
-}
-
-const getAlgsetsQuery = {
-  paginatorInfo: {
-    count: null,
-    total: null,
-  },
-  data: {
-    id: null,
-    name: null,
-    puzzle: {
-      id: null,
-      name: null,
-    },
-    mask: null,
-    visualization: {
-      name: null,
-    },
-    created_at: null,
-  },
+  return query;
 }
 
 export default function Algsets(): ReactElement {
   const [ editingAlgsetId, setEditingAlgsetId ] = useState<string | undefined>();
   const [ editingAlgsetName, setEditingAlgsetName ] = useState<string | undefined>();
   const [ editingAlgsetVisualization, setEditingAlgsetVisualization ] = useState<string | undefined>();
+  const [ editingAlgsetPublic, setEditingAlgsetPublic ] = useState<boolean | undefined>();
+  const [ editingAlgsetMask, setEditingAlgsetMask ] = useState<Maybe<string> | null>();
 
+  const { puzzleCode } = useParams()
+  const match = useRouteMatch()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { isLoading, data, refetch, error } = useJqlQuery<AlgsetPaginator, Error>(
     'getMultipleAlgset',
     'getMultipleAlgset',
-    getAlgsetsQuery,
+    getAlgsetsQuery(puzzleCode),
   )
 
   const puzzleQuery = useJqlQuery<PuzzlePaginator, Error>(
@@ -134,7 +82,8 @@ export default function Algsets(): ReactElement {
     'getMultiplePuzzle',
     {
       data: {
-        name: null
+        name: null,
+        code: null
       }
     }
   )
@@ -154,6 +103,8 @@ export default function Algsets(): ReactElement {
       onOpen();
       setEditingAlgsetName(algset.name)
       setEditingAlgsetVisualization(algset.visualization.name)
+      setEditingAlgsetPublic(algset.is_public)
+      setEditingAlgsetMask(algset.mask)
       setEditingAlgsetId(algset.id)
     }
 
@@ -162,6 +113,8 @@ export default function Algsets(): ReactElement {
       id: editingAlgsetId,
       name: editingAlgsetName,
       visualization: editingAlgsetVisualization,
+      is_public: editingAlgsetPublic,
+      mask: editingAlgsetMask,
     })
     refetch()
     onClose()
@@ -172,8 +125,7 @@ export default function Algsets(): ReactElement {
   }
 
   if (error) {
-    console.error(error)
-    return <>error</>
+    return <>{error.message}</>
   }
 
   return (
@@ -188,9 +140,9 @@ export default function Algsets(): ReactElement {
               <th style={{textAlign: 'left'}}>ID</th>
               <th style={{textAlign: 'left'}}>Name</th>
               <th style={{textAlign: 'left'}}>Puzzle</th>
-              <th style={{textAlign: 'left'}}>Visualization</th>
+              <th style={{textAlign: 'left'}}>Visible</th>
               <th style={{textAlign: 'left'}}>Created</th>
-              <th style={{textAlign: 'left'}}>{' '}</th>
+              <th style={{textAlign: 'left'}} rowSpan={2}>Edit</th>
             </tr>
           </thead>
           <tbody>
@@ -199,9 +151,10 @@ export default function Algsets(): ReactElement {
                 <td>{algset.id}</td>
                 <td>{algset.name}</td>
                 <td>{algset.puzzle?.name}</td>
-                <td>{algset?.visualization?.name}</td>
+                <td>{algset.is_public ? 'true' : 'false'}</td>
                 <td>{new Date(algset.created_at * 1000).toLocaleString()}</td>
                 <td><Button onClick={edit(algset)}>Edit</Button></td>
+                <td><Link to={`/admin/puzzles/${algset.puzzle.code}/${algset.code}`}>Manage</Link></td>
               </tr>
             ) : false)}
             <AddAlgset onAdd={refetch} puzzles={puzzles} />
@@ -248,6 +201,29 @@ export default function Algsets(): ReactElement {
                       <option value="V_3D">V_3D</option>
                       <option value="V_PG3D">VPg3D</option>
                     </Select>
+                  </Box>
+
+                  <Box>
+                    <FormLabel htmlFor="editingAlgsetMask">Mask</FormLabel>
+                    <Input
+                      value={editingAlgsetMask || ''}
+                      onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                        setEditingAlgsetMask(event.target.value)
+                      }}
+                      id="editingAlgsetMask"
+                      placeholder={editingAlgsetMask || ''}
+                    />
+                  </Box>
+
+                  <Box>
+                    <Checkbox
+                      isChecked={editingAlgsetPublic}
+                      onChange={(event) => {
+                        setEditingAlgsetPublic(event.target.checked)
+                      }}
+                    >
+                      Visible
+                    </Checkbox>
                   </Box>
 
                 </Stack>
