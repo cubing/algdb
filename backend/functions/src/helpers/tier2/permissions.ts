@@ -1,4 +1,4 @@
-import mysqlHelper from '../tier1/mysql';
+import { mysqlHelper } from '../../jql';
 import { UserRoleEnum } from '../../services/services';
 
 export function generateItemCreatedByUserGuard(service: any) {

@@ -1,4 +1,4 @@
-import firestore from '../../utils/firestore';
+import firestore from '../../jql/utils/firestore';
 
 export default {
   db: firestore.db,

@@ -1,20 +1,19 @@
-import generateEnumService from './core/generator/enum.service'
 import { userRole, caseVisualization } from './enums';
+import { generators } from '../jql';
+const userRoleEnum = generators.generateEnumService('userRole', userRole);
+const caseVisualizationEnum = generators.generateEnumService('caseVisualization', caseVisualization);
 
-const userRoleEnum = generateEnumService('userRole', userRole);
-const caseVisualizationEnum = generateEnumService('caseVisualization', caseVisualization);
-
-export { User } from './user/user.service'
-export { Auth } from './auth/auth.service'
-export { Puzzle } from './puzzle/puzzle.service'
-export { Algset } from './algset/algset.service'
-export { Subset } from './subset/subset.service'
-export { Algcase } from './algcase/algcase.service'
-export { Alg } from './alg/alg.service'
-export { AlgAlgcaseLink } from './link/algAlgcaseLink/algAlgcaseLink.service'
-export { AlgTagLink } from './link/algTagLink/algTagLink.service'
-export { UserAlgTagLink } from './link/userAlgTagLink/userAlgTagLink.service'
-export { Tag } from './tag/tag.service'
+export { User } from './user/service'
+export { Auth } from './auth/service'
+export { Puzzle } from './puzzle/service'
+export { Algset } from './algset/service'
+export { Subset } from './subset/service'
+export { Algcase } from './algcase/service'
+export { Alg } from './alg/service'
+export { AlgAlgcaseLink } from './link/algAlgcaseLink/service'
+export { AlgTagLink } from './link/algTagLink/service'
+export { UserAlgTagLink } from './link/userAlgTagLink/service'
+export { Tag } from './tag/service'
 
 
 export { userRoleEnum as UserRoleEnum }

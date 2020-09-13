@@ -1,14 +1,14 @@
-import User from './user/user.resolver';
-import Auth from './auth/auth.resolver';
-import Puzzle from './puzzle/puzzle.resolver';
-import Algset from './algset/algset.resolver';
-import Subset from './subset/subset.resolver';
-import Algcase from './algcase/algcase.resolver';
-import Alg from './alg/alg.resolver';
-import AlgAlgCaseLink from './link/algAlgcaseLink/algAlgcaseLink.resolver';
-import AlgTagLink from './link/algTagLink/algTagLink.resolver';
-import UserAlgTagLink from './link/userAlgTagLink/userAlgTagLink.resolver';
-import Tag from './tag/tag.resolver';
+import User from './user/resolver';
+import Auth from './auth/resolver';
+import Puzzle from './puzzle/resolver';
+import Algset from './algset/resolver';
+import Subset from './subset/resolver';
+import Algcase from './algcase/resolver';
+import Alg from './alg/resolver';
+import AlgAlgCaseLink from './link/algAlgcaseLink/resolver';
+import AlgTagLink from './link/algTagLink/resolver';
+import UserAlgTagLink from './link/userAlgTagLink/resolver';
+import Tag from './tag/resolver';
 
 const rootResolvers = [User, Auth, Puzzle, Algset, Subset, Algcase, Alg, AlgAlgCaseLink, AlgTagLink, UserAlgTagLink, Tag];
 
