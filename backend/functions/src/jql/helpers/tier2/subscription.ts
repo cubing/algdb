@@ -1,4 +1,4 @@
-import { pusher } from '../tier1/pusher';
+import { getPusher } from '../../utils/pusher';
 
 import sharedHelper from '../tier0/shared';
 
@@ -58,7 +58,7 @@ export async function handleJqlSubscriptionTrigger(req, service, operationName, 
       }
     };
     promises.push(service.getRecord(simulatedReq, JSON.parse(item.args), JSON.parse(item.query)).then(data => {
-      pusher.trigger('private-' + item.channel, 'subscription-data', {
+      getPusher().trigger('private-' + item.channel, 'subscription-data', {
         'data': data
       });
     }).catch(e => e));
@@ -94,7 +94,7 @@ export async function handleJqlSubscriptionTriggerIterative(req, service, operat
       }
     };
     promises.push(service.getRecord(simulatedReq, { ...itemArgs, ...moreArgs }, JSON.parse(item.query)).then(data => {
-      pusher.trigger('private-' + item.channel, 'subscription-data', {
+      getPusher().trigger('private-' + item.channel, 'subscription-data', {
         'data': data
       });
     }).catch(e => console.log(e)));
@@ -140,7 +140,7 @@ export function handlePusherAuth(req: any, res) {
       };
     }
   }
-  const auth = pusher.authenticate(socketId, channel, presenceData);
+  const auth = getPusher().authenticate(socketId, channel, presenceData);
   res.send(auth);
 }
 

@@ -38,19 +38,7 @@ export default {
   ...typeDefHelper.generateUpdatedAtField(),
   ...typeDefHelper.generateCreatedByField(User),
   ...typeDefHelper.generateBooleanField("is_public"),
-  puzzle: {
-    type: Puzzle.__typename,
-    mysqlOptions: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      unique: "codePuzzleIndex",
-      joinInfo: {
-        type: Puzzle.__typename
-      }
-    },
-    addable: true,
-    filterable: true,
-  },
+  ...typeDefHelper.generateJoinableField({ service: Puzzle, mysqlOptions: { unique: "codePuzzleIndex" } }),
   algcases: {
     type: Algcase.paginator.__typename,
     args: typeDefHelper.generatePaginatorArgs(Algcase, ["algset"]),

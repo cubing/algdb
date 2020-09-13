@@ -35,8 +35,6 @@ export class Algcase extends Service {
 
   static isFilterRequired = false;
 
-  static searchableFields = ["name"];
-
   static accessControl = {
     update: generateUserAdminGuard(),
     create: generateUserAdminGuard(),

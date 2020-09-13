@@ -34,8 +34,6 @@ export class Tag extends Service {
 
   static isFilterRequired = false;
 
-  static searchableFields = ["name"];
-
   static sortFields = ["id", "created_by"];
 
   static accessControl = {

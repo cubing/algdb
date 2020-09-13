@@ -22,6 +22,7 @@ export function generateUpdatedAtField() {
       allowNull: true,
       mysqlOptions: {
         type: DataTypes.DATE,
+        allowNull: true,
         getter: (field) => "UNIX_TIMESTAMP(" + field + ")",
         setter: () => "CURRENT_TIMESTAMP"
       },
@@ -45,17 +46,38 @@ export function generateIdField() {
 };
 
 export function generateCreatedByField(service: any) {
+  return generateJoinableField({ name: "created_by", service });
+};
+
+export function generateJoinableField(args: {
+  name?: string,
+  service: any,
+  options?: object,
+  mysqlOptions?: object,
+  required?: boolean
+}) {
+  const {
+    name,
+    service,
+    options,
+    mysqlOptions,
+    required = true
+  } = args
   return {
-    created_by: {
+    [name ?? service.__typename]: {
       type: service.__typename,
       mysqlOptions: {
         type: DataTypes.INTEGER,
-        allowNull: false,
         joinInfo: {
           type: service.__typename,
         },
+        ...mysqlOptions,
+        allowNull: !required
       },
+      addable: true,
       filterable: true,
+      ...options,
+      allowNull: !required,
     },
   };
 };

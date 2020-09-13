@@ -29,9 +29,9 @@ export abstract class Service {
 
   static groupByFieldsMap: Object = {};
 
-  static isFilterRequired: Boolean = false;
+  static searchFieldsMap: Object = {};
 
-  static searchableFields: Array<string> = [];
+  static isFilterRequired: Boolean = false;
   
   static permissionsLink?: any;
 
@@ -175,11 +175,6 @@ export abstract class Service {
     return results[0];
   }
 
-
-  /*
-  ** Expected args: first, page, created_by
-  */
-
   static async getRecords(req, args = <any> {}, query?: object, count = false, admin = false) {
     const selectQuery = query || Object.assign({}, this.presets.default);
 
@@ -212,13 +207,16 @@ export abstract class Service {
         connective: "OR",
         fields: <any> []
       };
-      this.searchableFields.forEach((field) => {
+
+      for(const prop in this.searchFieldsMap) {
         filterObject.fields.push({
-          field: field,
+          field: this.searchFieldsMap[prop].field ?? prop,
+          joinFields: this.searchFieldsMap[prop].joinFields,
           value: '%' + args.search + '%', 
           operator: 'LIKE'
         });
-      });
+      }
+      
       filterArray.push(filterObject);
     }
 

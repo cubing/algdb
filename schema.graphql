@@ -73,9 +73,14 @@ type Query {
 		search: String
 		sortBy: [String]
 		sortDesc: [Boolean]
+		groupBy: [String]
 		created_by: String
-		algset: String
-		subset: String
+		algcase_name: String
+		algcase: ID
+		subset_name: String
+		algset_name: String
+		puzzle_name: String
+		tag_name: [String]
 	): AlgPaginator!
 	getAlgAlgcaseLink(id: ID!): AlgAlgcaseLink!
 	getMultipleAlgAlgcaseLink(
@@ -345,11 +350,12 @@ type Algcase {
 		sortBy: [String]
 		sortDesc: [Boolean]
 		created_by: String
-		alg: String
-		subset: String
-		algset: String
-		puzzle: String
-	): AlgAlgcaseLinkPaginator!
+		algcase_name: String
+		subset_name: String
+		algset_name: String
+		puzzle_name: String
+		tag_name: [String]
+	): AlgPaginator!
 }
 type AlgcasePaginator {
 	paginatorInfo: PaginatorInfo!

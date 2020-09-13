@@ -1,4 +1,4 @@
-import { User, Puzzle, Algset, Subset, AlgAlgcaseLink } from '../services'
+import { User, Puzzle, Algset, Subset, Alg } from '../services'
 
 import { DataTypes } from "sequelize";
 import { dataTypes, typeDefHelper } from '../../jql';
@@ -17,46 +17,14 @@ export default {
   ...typeDefHelper.generateCreatedAtField(),
   ...typeDefHelper.generateUpdatedAtField(),
   ...typeDefHelper.generateCreatedByField(User),
-  puzzle: {
-    type: Puzzle.__typename,
-    mysqlOptions: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      joinInfo: {
-        type: Puzzle.__typename,
-      },
-    },
-    addable: true,
-    filterable: true,
-  },
-  algset: {
-    type: Algset.__typename,
-    mysqlOptions: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      joinInfo: {
-        type: Algset.__typename,
-      },
-    },
-    addable: true,
-    filterable: true,
-  },
-  subset: {
-    type: Subset.__typename,
-    mysqlOptions: {
-      type: DataTypes.INTEGER,
-      joinInfo: {
-        type: Subset.__typename,
-      },
-    },
-    addable: true,
-    filterable: true,
-  },
+  ...typeDefHelper.generateJoinableField({ service: Puzzle }),
+  ...typeDefHelper.generateJoinableField({ service: Algset }),
+  ...typeDefHelper.generateJoinableField({ service: Subset, required: false }),
   algs: {
-    type: AlgAlgcaseLink.paginator.__typename,
-    args: typeDefHelper.generatePaginatorArgs(AlgAlgcaseLink, ["algcase"]),
+    type: Alg.paginator.__typename,
+    args: typeDefHelper.generatePaginatorArgs(Alg, ["algcase"]),
     resolver: async (context, req, currentObject, query, args, parent) => {
-      return AlgAlgcaseLink.paginator.getRecord(req, {
+      return Alg.paginator.getRecord(req, {
         ...query?.__args,
         algcase: currentObject.id
       }, query);

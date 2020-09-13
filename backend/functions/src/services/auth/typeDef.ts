@@ -2,7 +2,7 @@ import { User } from '../services'
 
 import * as jwt from 'jsonwebtoken';
 
-import { env } from '../../helpers/tier0/config'
+import { env } from '../../config';
 import { dataTypes } from '../../jql';
 
 export default {

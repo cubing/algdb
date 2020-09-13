@@ -26,10 +26,42 @@ export class Alg extends Service {
   
   static filterFieldsMap = {
     id: {},
-    "created_by": {},
-    "created_by.name": {},
-    "algset": {},
-    "subset": {},
+    "algcase_name": {
+      field: "algcase.name",
+      joinFields: [
+        { field: "id", table: "algAlgcaseLink", foreignField: "alg" },
+      ]
+    },
+    "algcase": {
+      field: "algcase",
+      joinFields: [
+        { field: "id", table: "algAlgcaseLink", foreignField: "alg" },
+      ]
+    },
+    "subset_name": {
+      field: "algcase.subset.name",
+      joinFields: [
+        { field: "id", table: "algAlgcaseLink", foreignField: "alg" },
+      ]
+    },
+    "algset_name": {
+      field: "algcase.algset.name",
+      joinFields: [
+        { field: "id", table: "algAlgcaseLink", foreignField: "alg" },
+      ]
+    },
+    "puzzle_name": {
+      field: "algcase.puzzle.name",
+      joinFields: [
+        { field: "id", table: "algAlgcaseLink", foreignField: "alg" },
+      ]
+    },
+    "tag_name": {
+      field: "tag.name",
+      joinFields: [
+        { field: "id", table: "algTagLink", foreignField: "alg" },
+      ]
+    }
   };
 
   static sortFieldsMap = {
@@ -37,9 +69,15 @@ export class Alg extends Service {
     created_at: {},
   };
 
-  static isFilterRequired = false;
+  static searchFieldsMap = {
+    sequence: {}
+  };
 
-  static searchableFields = ["name"];
+  static groupByFieldsMap = {
+    "id": {},
+  };
+
+  static isFilterRequired = false;
 
   static accessControl = {
     update: async function(req, args, query) {

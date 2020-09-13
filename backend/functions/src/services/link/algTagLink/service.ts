@@ -38,9 +38,12 @@ export class AlgTagLink extends Service {
     "alg": {},
   };
 
-  static isFilterRequired = false;
+  static searchFieldsMap = {
+    "algcase.subset.name": {}
+  };
+  
 
-  static searchableFields = ["algcase.subset.name"];
+  static isFilterRequired = false;
 
   static accessControl = {
     create: generateUserRoleGuard([userRole.MODERATOR, userRole.ADMIN]),

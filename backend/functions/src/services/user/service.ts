@@ -36,8 +36,6 @@ export class User extends Service {
 
   static isFilterRequired = false;
 
-  static searchableFields = ["name"];
-
   static accessControl = {
     get: () => true,
 

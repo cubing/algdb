@@ -1,5 +1,5 @@
 import errorHelper from '../tier0/error';
-import { env } from '../tier0/config';
+import { env } from '../../config';
 import * as jwt from 'jsonwebtoken';
 
 export async function validateToken(auth: string) {

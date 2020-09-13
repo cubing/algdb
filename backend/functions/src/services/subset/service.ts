@@ -54,8 +54,6 @@ export class Subset extends Service {
 
   static isFilterRequired = false;
 
-  static searchableFields = ["name"];
-
   static accessControl = {
     getMultiple: async function(req, args, query) {
       //if args.is_public !== true or Array containing !== true, check permissions

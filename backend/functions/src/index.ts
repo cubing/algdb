@@ -5,6 +5,7 @@ admin.initializeApp();
 
 import * as jql from "./jql";
 import * as schema from "./schema";
+import { env, isDev } from "./config";
 
 import { validateToken } from "./helpers/tier1/auth";
 
@@ -22,7 +23,10 @@ app.use(async function(req: any, res, next) {
   next();
 });
 
-jql.process(app, schema, {
+jql.initialize(app, schema, {
+  mysqlEnv: env.mysql,
+  pusherEnv: env.pusher,
+  debug: isDev,
   allowedOrigins: ["https://alpha.algdb.net", "http://localhost:3000"],
 });
 

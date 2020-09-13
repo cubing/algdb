@@ -5,32 +5,8 @@ import { typeDefHelper } from '../../../jql';
 
 export default {
   ...typeDefHelper.generateIdField(),
-  alg: {
-    type: Alg.__typename,
-    mysqlOptions: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      unique: "compositeIndex",
-      joinInfo: {
-        type: Alg.__typename,
-      },
-    },
-    addable: true,
-    filterable: true,
-  },
-  tag: {
-    type: Tag.__typename,
-    mysqlOptions: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      unique: "compositeIndex",
-      joinInfo: {
-        type: Tag.__typename,
-      },
-    },
-    addable: true,
-    filterable: true,
-  },
+  ...typeDefHelper.generateJoinableField({ service: Alg, mysqlOptions: { unique: "compositeIndex" } }),
+  ...typeDefHelper.generateJoinableField({ service: Tag, mysqlOptions: { unique: "compositeIndex" } }),
   ...typeDefHelper.generateCreatedAtField(),
   ...typeDefHelper.generateUpdatedAtField(),
   ...typeDefHelper.generateCreatedByField(User),

@@ -1,6 +1,6 @@
 import { User } from '../services';
 
-import { env } from '../../helpers/tier0/config';
+import { env } from '../../config';
 import * as bcrypt from 'bcryptjs';
 import axios from 'axios';
 import errorHelper from '../../helpers/tier0/error';
@@ -27,8 +27,6 @@ export class Auth extends Service {
   static sortFieldsMap = {};
 
   static isFilterRequired = false;
-
-  static searchableFields = [];
   
   static accessControl = {};
 

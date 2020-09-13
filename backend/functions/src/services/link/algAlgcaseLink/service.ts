@@ -63,9 +63,11 @@ export class AlgAlgcaseLink extends Service {
     "alg": {},
   };
 
-  static isFilterRequired = false;
+  static searchFieldsMap = {
+    "algcase.subset.name": {}
+  };
 
-  static searchableFields = ["algcase.subset.name"];
+  static isFilterRequired = false;
 
   static accessControl = {
     update: generateUserAdminGuard(),

@@ -38,43 +38,9 @@ export default {
   ...typeDefHelper.generateUpdatedAtField(),
   ...typeDefHelper.generateCreatedByField(User),
   ...typeDefHelper.generateBooleanField("is_public"),
-  puzzle: {
-    type: Puzzle.__typename,
-    mysqlOptions: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      joinInfo: {
-        type: Puzzle.__typename
-      }
-    },
-    addable: true,
-    filterable: true,
-  },
-  algset: {
-    type: Algset.__typename,
-    mysqlOptions: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      unique: "codeAlgsetIndex",
-      joinInfo: {
-        type: Algset.__typename,
-      },
-    },
-    addable: true,
-    filterable: true,
-  },
-  parent: {
-    type: Subset.__typename,
-    allowNull: true,
-    mysqlOptions: {
-      type: DataTypes.INTEGER,
-      joinInfo: {
-        type: Subset.__typename,
-      },
-    },
-    addable: true,
-    filterable: true,
-  },
+  ...typeDefHelper.generateJoinableField({ service: Puzzle }),
+  ...typeDefHelper.generateJoinableField({ service: Algset, mysqlOptions: { unique: "codeAlgsetIndex" } }),
+  ...typeDefHelper.generateJoinableField({ name: "parent", service: Algset, mysqlOptions: { unique: "compositeIndex" }, required: false }),
   algcases: {
     type: Algcase.paginator.__typename,
     args: typeDefHelper.generatePaginatorArgs(Algcase, ["subset"]),

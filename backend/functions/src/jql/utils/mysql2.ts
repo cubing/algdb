@@ -1,20 +1,19 @@
-import { env, isDev } from '../../helpers/tier0/config';
 const mysql = require('mysql2')
 const toUnnamed = require('named-placeholders')();
 const { Sequelize } = require('sequelize');
 
-let sequelize, pool, promisePool;
+let sequelize, pool, promisePool, isDev;
 
 export default {
-  initializeSequelize: async function() {
+  initializeSequelize: async function(mysqlEnv) {
     try {
-      sequelize = new Sequelize(env.mysql.database, env.mysql.user, env.mysql.password, {
-        ...!env.mysql.socketpath && {
-          host: env.mysql.host,
-          port: env.mysql.port
+      sequelize = new Sequelize(mysqlEnv.database, mysqlEnv.user, mysqlEnv.password, {
+        ...!mysqlEnv.socketpath && {
+          host: mysqlEnv.host,
+          port: mysqlEnv.port
         },
-        ...env.mysql.socketpath && {
-          socketPath: env.mysql.socketpath
+        ...mysqlEnv.socketpath && {
+          socketPath: mysqlEnv.socketpath
         },
         dialect: "mysql",
       
@@ -30,18 +29,20 @@ export default {
     }
   },
 
-  initializePool: async function() {
+  initializePool: async function(mysqlEnv, debug) {
     try {
+      isDev = !!debug;
+
       pool = await mysql.createPool({
-        user: env.mysql.user,
-        password: env.mysql.password,
-        database: env.mysql.database,
-        ...!env.mysql.socketpath && {
-          host: env.mysql.host,
-          port: env.mysql.port
+        user: mysqlEnv.user,
+        password: mysqlEnv.password,
+        database: mysqlEnv.database,
+        ...!mysqlEnv.socketpath && {
+          host: mysqlEnv.host,
+          port: mysqlEnv.port
         },
-        ...env.mysql.socketpath && {
-          socketPath: env.mysql.socketpath
+        ...mysqlEnv.socketpath && {
+          socketPath: mysqlEnv.socketpath
         }
       });
       promisePool = pool.promise();

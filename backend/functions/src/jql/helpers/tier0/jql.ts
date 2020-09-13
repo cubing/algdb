@@ -13,6 +13,16 @@ export default class {
       externalQuery.id = null;
     }
 
+    //if the * field is provided, make sure all non-arg, non-hidden fields are there
+    if("*" in externalQuery) {
+      for(const field in validQuery) {
+        if(!validQuery[field].hidden && !validQuery[field].args && !(field in externalQuery)) {
+          externalQuery[field] = null;
+        }
+      }
+      delete externalQuery["*"];
+    }
+
     let validFieldsCount = 0;
 
     for(const field in externalQuery) {

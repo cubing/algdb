@@ -1,17 +1,26 @@
 import routerHelper from "./helpers/tier1/router";
 import { generateSchema, generateGraphqlSchema } from './helpers/tier0/schema';
-import { handleWebhook, handlePusherAuth, typeDef } from "./helpers/tier2/subscription";
+import { handleWebhook, handlePusherAuth, typeDef as jqlSubscriptionTypeDef } from "./helpers/tier2/subscription";
+import { initializePusher } from './utils/pusher';
 
 //utils
 import mysql from './utils/mysql2';
 
 let exportedSchema;
 
-mysql.initializePool();
+export function initialize(app: any, schema, params: any = {}) {
+  const {
+    mysqlEnv,
+    pusherEnv,
+    debug,
+    allowedOrigins
+  } = params;
 
-export function process(app: any, schema, options: any = {}) {
   exportedSchema = schema;
   
+  mysql.initializePool(mysqlEnv, debug);
+  initializePusher(pusherEnv);
+
   app.use(function(req: any, res, next) {
     //aggregate all root resolvers
     const allRootResolvers = {};
@@ -52,10 +61,12 @@ export function process(app: any, schema, options: any = {}) {
   });
   
   app.use(function(req, res, next) {
-    const origin = options.allowedOrigins.includes(req.headers.origin) ? req.headers.origin : options.allowedOrigins[0];
+    const origin = (Array.isArray(allowedOrigins) && allowedOrigins.length) ? (allowedOrigins.includes(req.headers.origin) ? req.headers.origin : allowedOrigins[0]) : "*";
 
     res.header("Access-Control-Allow-Origin", origin);
-    res.header("Vary", "Origin");
+    if(origin !== "*") {
+      res.header("Vary", "Origin");
+    }
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control");
     res.header('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS');
     next();
@@ -80,7 +91,7 @@ export function process(app: any, schema, options: any = {}) {
 
   app.post('/mysql/sync', function(req, res) {
     //loop through typeDefs to identify needed mysql tables
-    mysql.initializeSequelize();
+    mysql.initializeSequelize(mysqlEnv);
     const sequelize = mysql.getSequelizeInstance();
   
     for(const type in schema.typeDefs) {
@@ -98,13 +109,8 @@ export function process(app: any, schema, options: any = {}) {
     }
   
     //define the jql subscription table
-    sequelize.define('jqlSubscription', typeDef, { timestamps: false, freezeTableName: true });
-  
-    /*
-    User.belongsTo(User, {
-      foreignKey: 'created_by'
-    });
-    */
+    sequelize.define('jqlSubscription', jqlSubscriptionTypeDef, { timestamps: false, freezeTableName: true });
+
     sequelize.sync({ alter: true }).then(() => {
       console.log("Drop and re-sync db.");
       sequelize.close();
