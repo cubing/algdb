@@ -19,10 +19,8 @@
     "express": "^4.17.1",
     "firebase-admin": "^8.6.0",
     "firebase-functions": "^3.11.0",
+    "jamesql": "0.0.5",
     "jsonwebtoken": "^8.5.1",
-    "mysql2": "^2.1.0",
-    "named-placeholders": "^1.1.2",
-    "pusher": "^3.0.1",
     "randomstring": "^1.1.5",
     "sequelize": "^6.3.4"
   },

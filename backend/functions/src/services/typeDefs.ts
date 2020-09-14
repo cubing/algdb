@@ -1,4 +1,4 @@
-import { generators } from '../jql';
+import { generators } from 'jamesql';
 
 import { User, Puzzle, Algset, Subset, Algcase, Alg, Tag, AlgAlgcaseLink, AlgTagLink, UserAlgTagLink } from './services'
 

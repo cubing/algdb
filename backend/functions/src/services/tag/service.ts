@@ -1,13 +1,13 @@
 import { generateUserRoleGuard } from '../../helpers/tier2/permissions'
 
-import { Service } from '../../jql';
+import { serviceHelper } from 'jamesql';
 
 import { userRole } from '../enums';
 
-export class Tag extends Service {
+export class Tag extends serviceHelper.Service {
   static __typename = 'tag';
 
-  static paginator = Service.generatePaginatorService(Tag);
+  static paginator = serviceHelper.Service.generatePaginatorService(Tag);
 
   static presets = {
     default: {

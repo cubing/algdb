@@ -1,5 +1,5 @@
 import { User } from '../services';
-import { rootResolverHelper } from '../../jql'
+import { rootResolverHelper } from 'jamesql'
 import { typeDefs } from '../typeDefs';
 
 const resolvers = {

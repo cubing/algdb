@@ -3,7 +3,7 @@ import * as express from 'express';
 import * as admin from 'firebase-admin';
 admin.initializeApp();
 
-import * as jql from "./jql";
+import * as jql from "jamesql";
 import * as schema from "./schema";
 import { env, isDev } from "./config";
 

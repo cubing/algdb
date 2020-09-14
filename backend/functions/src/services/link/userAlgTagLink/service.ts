@@ -1,12 +1,12 @@
 import { generateUserAdminGuard } from '../../../helpers/tier2/permissions'
 
 import errorHelper from '../../../helpers/tier0/error';
-import { Service, mysqlHelper, resolverHelper, subscriptionHelper } from '../../../jql';
+import { serviceHelper, mysqlHelper, resolverHelper, subscriptionHelper } from 'jamesql';
 
-export class UserAlgTagLink extends Service {
+export class UserAlgTagLink extends serviceHelper.Service {
   static __typename = 'userAlgTagLink';
 
-  static paginator = Service.generatePaginatorService(UserAlgTagLink);
+  static paginator = serviceHelper.Service.generatePaginatorService(UserAlgTagLink);
 
   static presets = {
     default: {

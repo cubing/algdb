@@ -4,9 +4,9 @@ import { env } from '../../config';
 import * as bcrypt from 'bcryptjs';
 import axios from 'axios';
 import errorHelper from '../../helpers/tier0/error';
-import { Service, mysqlHelper } from '../../jql';
+import { serviceHelper, mysqlHelper } from 'jamesql';
 
-export class Auth extends Service {
+export class Auth extends serviceHelper.Service {
   static __typename = 'auth';
   
   static presets = {

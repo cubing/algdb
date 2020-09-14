@@ -1,7 +1,6 @@
 import { User, Tag, Alg } from '../../services'
 
-import { DataTypes } from "sequelize";
-import { typeDefHelper } from '../../../jql';
+import { typeDefHelper } from 'jamesql';
 
 export default {
   ...typeDefHelper.generateIdField(),

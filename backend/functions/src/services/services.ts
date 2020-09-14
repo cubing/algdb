@@ -1,5 +1,5 @@
 import { userRole, caseVisualization } from './enums';
-import { generators } from '../jql';
+import { generators } from 'jamesql';
 const userRoleEnum = generators.generateEnumService('userRole', userRole);
 const caseVisualizationEnum = generators.generateEnumService('caseVisualization', caseVisualization);
 

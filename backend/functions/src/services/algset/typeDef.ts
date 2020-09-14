@@ -1,7 +1,7 @@
 import { User, Puzzle, Algcase, Subset, CaseVisualizationEnum } from '../services'
 
 import { DataTypes } from "sequelize";
-import { dataTypes, typeDefHelper } from '../../jql';
+import { dataTypes, typeDefHelper } from 'jamesql';
 
 export default {
   ...typeDefHelper.generateIdField(),

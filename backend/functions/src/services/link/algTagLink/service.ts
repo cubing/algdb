@@ -1,14 +1,14 @@
 import { generateUserRoleGuard } from '../../../helpers/tier2/permissions'
 
 import errorHelper from '../../../helpers/tier0/error';
-import { Service, mysqlHelper, resolverHelper, subscriptionHelper } from '../../../jql';
+import { serviceHelper, mysqlHelper, resolverHelper, subscriptionHelper } from 'jamesql';
 
 import { userRole } from '../../enums';
 
-export class AlgTagLink extends Service {
+export class AlgTagLink extends serviceHelper.Service {
   static __typename = 'algTagLink';
 
-  static paginator = Service.generatePaginatorService(AlgTagLink);
+  static paginator = serviceHelper.Service.generatePaginatorService(AlgTagLink);
 
   static presets = {
     default: {

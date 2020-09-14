@@ -1,4 +1,4 @@
-import { Service, mysqlHelper, resolverHelper, subscriptionHelper } from '../../jql';
+import { serviceHelper, mysqlHelper, resolverHelper, subscriptionHelper } from 'jamesql';
 
 import errorHelper from '../../helpers/tier0/error';
 
@@ -6,10 +6,10 @@ import { userRole } from '../enums';
 
 import { generateItemCreatedByUserGuard, generateUserAdminGuard } from '../../helpers/tier2/permissions'
 
-export class User extends Service {
+export class User extends serviceHelper.Service {
   static __typename = 'user';
 
-  static paginator = Service.generatePaginatorService(User);
+  static paginator = serviceHelper.Service.generatePaginatorService(User);
 
   static presets = {
     default: {
