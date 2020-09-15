@@ -40,7 +40,7 @@ export default {
   ...typeDefHelper.generateBooleanField("is_public"),
   ...typeDefHelper.generateJoinableField({ service: Puzzle }),
   ...typeDefHelper.generateJoinableField({ service: Algset, mysqlOptions: { unique: "codeAlgsetIndex" } }),
-  ...typeDefHelper.generateJoinableField({ name: "parent", service: Algset, mysqlOptions: { unique: "compositeIndex" }, required: false }),
+  ...typeDefHelper.generateJoinableField({ name: "parent", service: Subset, mysqlOptions: {}, required: false }),
   algcases: {
     type: Algcase.paginator.__typename,
     args: typeDefHelper.generatePaginatorArgs(Algcase, ["subset"]),
