@@ -176,6 +176,7 @@ type Mutation {
 		puzzle: Puzzle
 		algset: Algset
 		parent: Subset
+		code: String
 	): Subset!
 	deleteAlgcase(id: ID!): Algcase!
 	updateAlgcase(
