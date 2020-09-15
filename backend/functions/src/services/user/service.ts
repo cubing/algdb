@@ -13,13 +13,7 @@ export class User extends serviceHelper.Service {
 
   static presets = {
     default: {
-      id: null,
-      uid: null,
-      email: null,
-      display_name: null,
-      display_image: null,
-      date_created: null,
-      date_modified: null
+      "*": null,
     }
   };
   
