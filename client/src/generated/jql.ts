@@ -148,9 +148,14 @@ export type QueryGetMultipleAlgArgs = {
   search?: Maybe<Scalars['String']>;
   sortBy?: Maybe<Array<Maybe<Scalars['String']>>>;
   sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
+  groupBy?: Maybe<Array<Maybe<Scalars['String']>>>;
   created_by?: Maybe<Scalars['String']>;
-  algset?: Maybe<Scalars['String']>;
-  subset?: Maybe<Scalars['String']>;
+  algcase_name?: Maybe<Scalars['String']>;
+  algcase?: Maybe<Scalars['ID']>;
+  subset_name?: Maybe<Scalars['String']>;
+  algset_name?: Maybe<Scalars['String']>;
+  puzzle_name?: Maybe<Scalars['String']>;
+  tag_name?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 
@@ -360,6 +365,7 @@ export type MutationCreateSubsetArgs = {
   puzzle?: Maybe<Puzzle>;
   algset?: Maybe<Algset>;
   parent?: Maybe<Subset>;
+  code?: Maybe<Scalars['String']>;
 };
 
 
@@ -611,7 +617,7 @@ export type Algcase = {
   puzzle: Puzzle;
   algset: Algset;
   subset: Subset;
-  algs: AlgAlgcaseLinkPaginator;
+  algs: AlgPaginator;
 };
 
 
@@ -623,10 +629,11 @@ export type AlgcaseAlgsArgs = {
   sortBy?: Maybe<Array<Maybe<Scalars['String']>>>;
   sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
   created_by?: Maybe<Scalars['String']>;
-  alg?: Maybe<Scalars['String']>;
-  subset?: Maybe<Scalars['String']>;
-  algset?: Maybe<Scalars['String']>;
-  puzzle?: Maybe<Scalars['String']>;
+  algcase_name?: Maybe<Scalars['String']>;
+  subset_name?: Maybe<Scalars['String']>;
+  algset_name?: Maybe<Scalars['String']>;
+  puzzle_name?: Maybe<Scalars['String']>;
+  tag_name?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type AlgcasePaginator = {
