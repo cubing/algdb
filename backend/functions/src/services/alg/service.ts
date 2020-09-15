@@ -3,7 +3,7 @@ import { generateUserRoleGuard } from '../../helpers/tier2/permissions'
 import { AlgAlgcaseLink } from '../services';
 
 import errorHelper from '../../helpers/tier0/error';
-import { serviceHelper, mysqlHelper, resolverHelper, subscriptionHelper } from 'jamesql';
+import { serviceHelper, mysqlHelper, resolverHelper, subscriptionHelper } from 'jomql';
 
 import { userRole } from '../enums';
 

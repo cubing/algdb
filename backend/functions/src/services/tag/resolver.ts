@@ -1,5 +1,5 @@
 import { Tag } from '../services';
-import { rootResolverHelper } from 'jamesql'
+import { rootResolverHelper } from 'jomql'
 import { typeDefs } from '../typeDefs';
 
 const resolvers = {

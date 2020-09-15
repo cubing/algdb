@@ -3,7 +3,7 @@ import * as bcrypt from 'bcryptjs';
 import { User, UserRoleEnum } from '../services'
 
 import { DataTypes } from "sequelize";
-import { dataTypes, typeDefHelper } from 'jamesql';
+import { dataTypes, typeDefHelper } from 'jomql';
 
 export default {
   ...typeDefHelper.generateIdField(),

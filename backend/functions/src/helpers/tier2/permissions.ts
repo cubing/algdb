@@ -1,4 +1,4 @@
-import { mysqlHelper } from 'jamesql';
+import { mysqlHelper } from 'jomql';
 import { UserRoleEnum } from '../../services/services';
 
 export function generateItemCreatedByUserGuard(service: any) {

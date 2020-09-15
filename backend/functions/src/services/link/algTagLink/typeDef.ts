@@ -1,6 +1,6 @@
 import { User, Tag, Alg } from '../../services'
 
-import { typeDefHelper } from 'jamesql';
+import { typeDefHelper } from 'jomql';
 
 export default {
   ...typeDefHelper.generateIdField(),

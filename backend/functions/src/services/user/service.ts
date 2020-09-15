@@ -1,4 +1,4 @@
-import { serviceHelper, mysqlHelper, resolverHelper, subscriptionHelper } from 'jamesql';
+import { serviceHelper, mysqlHelper, resolverHelper, subscriptionHelper } from 'jomql';
 
 import errorHelper from '../../helpers/tier0/error';
 

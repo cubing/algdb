@@ -1,6 +1,6 @@
 import { generateUserRoleGuard } from '../../helpers/tier2/permissions'
 
-import { serviceHelper } from 'jamesql';
+import { serviceHelper } from 'jomql';
 
 import { userRole } from '../enums';
 

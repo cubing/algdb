@@ -3,7 +3,7 @@ import { User } from '../services'
 import * as jwt from 'jsonwebtoken';
 
 import { env } from '../../config';
-import { dataTypes } from 'jamesql';
+import { dataTypes } from 'jomql';
 
 export default {
   type: {

@@ -3,7 +3,7 @@ import { generateUserRoleGuard } from '../../helpers/tier2/permissions'
 import { userRole } from '../enums';
 
 import errorHelper from '../../helpers/tier0/error';
-import { serviceHelper, mysqlHelper, resolverHelper, subscriptionHelper } from 'jamesql';
+import { serviceHelper, mysqlHelper, resolverHelper, subscriptionHelper } from 'jomql';
 
 export class Algset extends serviceHelper.Service {
   static __typename = 'algset';
