@@ -1,5 +1,5 @@
 import { userRole, caseVisualization } from './enums';
-import { generators } from 'jomql';
+import * as generators from './core/generators';
 const userRoleEnum = generators.generateEnumService('userRole', userRole);
 const caseVisualizationEnum = generators.generateEnumService('caseVisualization', caseVisualization);
 
@@ -14,7 +14,6 @@ export { AlgAlgcaseLink } from './link/algAlgcaseLink/service'
 export { AlgTagLink } from './link/algTagLink/service'
 export { UserAlgTagLink } from './link/userAlgTagLink/service'
 export { Tag } from './tag/service'
-
 
 export { userRoleEnum as UserRoleEnum }
 export { caseVisualizationEnum as CaseVisualizationEnum }

@@ -1,12 +1,14 @@
+import { Service } from '../core/service';
+
 import { User } from '../services';
 
 import { env } from '../../config';
 import * as bcrypt from 'bcryptjs';
 import axios from 'axios';
 import errorHelper from '../../helpers/tier0/error';
-import { serviceHelper, mysqlHelper } from 'jomql';
+import { mysqlHelper } from 'jomql';
 
-export class Auth extends serviceHelper.Service {
+export class Auth extends Service {
   static __typename = 'auth';
   
   static presets = {

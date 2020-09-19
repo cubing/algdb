@@ -1,15 +1,17 @@
+import { Service } from '../core/service';
+
 import { generateUserRoleGuard } from '../../helpers/tier2/permissions'
 
 import errorHelper from '../../helpers/tier0/error';
 
-import { serviceHelper, resolverHelper } from 'jomql';
+import { resolverHelper } from 'jomql';
 
 import { userRole } from '../enums';
 
-export class Puzzle extends serviceHelper.Service {
+export class Puzzle extends Service {
   static __typename = 'puzzle';
 
-  static paginator = serviceHelper.Service.generatePaginatorService(Puzzle);
+  static paginator = Service.generatePaginatorService(Puzzle);
 
   static presets = {
     default: {
