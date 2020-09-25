@@ -1,6 +1,6 @@
 import { Service } from '../../core/service';
 
-import { generateUserAdminGuard } from '../../../helpers/tier2/permissions'
+import { generateItemCreatedByUserGuard } from '../../../helpers/tier2/permissions'
 import { generatePaginatorService } from '../../core/generators'
 
 import errorHelper from '../../../helpers/tier0/error';
@@ -45,7 +45,9 @@ export class UserAlgVoteLink extends Service {
 
   static isFilterRequired = false;
 
-  static accessControl = {};
+  static accessControl = {
+    update: generateItemCreatedByUserGuard(UserAlgVoteLink),
+  };
 
   static async upsertRecord(req, args = <any> {}, query?: object) {
     //login required
