@@ -1,7 +1,9 @@
 import { User } from '../services'
 
 import { DataTypes } from "sequelize";
-import { dataTypes, typeDefHelper } from 'jomql';
+import { dataTypes } from 'jomql';
+
+import * as typeDefHelper from '../../helpers/tier0/typeDef';
 
 export default {
   ...typeDefHelper.generateIdField(),

@@ -1,6 +1,6 @@
-import { generators } from 'jomql';
+import * as generators from './core/generators';
 
-import { User, Puzzle, Algset, Subset, Algcase, Alg, Tag, AlgAlgcaseLink, AlgTagLink, UserAlgTagLink } from './services'
+import { User, Puzzle, Algset, Subset, Algcase, Alg, Tag, AlgAlgcaseLink, AlgTagLink, UserAlgTagLink, UserAlgVoteLink } from './services'
 
 import user from './user/typeDef'
 
@@ -19,6 +19,7 @@ import alg from './alg/typeDef'
 import algAlgcaseLink from './link/algAlgcaseLink/typeDef'
 import algTagLink from './link/algTagLink/typeDef'
 import userAlgTagLink from './link/userAlgTagLink/typeDef'
+import userAlgVoteLink from './link/userAlgVoteLink/typeDef'
 
 import tag from './tag/typeDef'
 
@@ -48,6 +49,9 @@ export const typeDefs = {
 
   userAlgTagLink,
   userAlgTagLinkPaginator: generators.generatePaginatorTypeDef(UserAlgTagLink),
+
+  userAlgVoteLink,
+  userAlgVoteLinkPaginator: generators.generatePaginatorTypeDef(UserAlgVoteLink),
 
   tag,
   tagPaginator: generators.generatePaginatorTypeDef(Tag),

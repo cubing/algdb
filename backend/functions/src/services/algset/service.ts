@@ -1,6 +1,7 @@
 import { Service } from '../core/service';
 
 import { generateUserRoleGuard } from '../../helpers/tier2/permissions'
+import { generatePaginatorService } from '../core/generators'
 
 import { userRole } from '../enums';
 
@@ -10,7 +11,7 @@ import { mysqlHelper, resolverHelper, subscriptionHelper } from 'jomql';
 export class Algset extends Service {
   static __typename = 'algset';
 
-  static paginator = Service.generatePaginatorService(Algset);
+  static paginator = generatePaginatorService(Algset);
 
   static presets = {
     default: {

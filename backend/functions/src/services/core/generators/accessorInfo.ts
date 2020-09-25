@@ -1,9 +1,7 @@
 import { Service } from '../service';
 
-import * as resolverHelper from '../../resolvers/virtualResolver';
-import errorHelper from '../../helpers/tier0/error';
-
-import { dataTypes } from '../../helpers/tier0/dataType';
+import { resolverHelper, dataTypes } from 'jomql';
+import errorHelper from '../../../helpers/tier0/error';
 
 export function generateAccessorInfoService(service: any) {
   return class extends Service {
@@ -17,7 +15,7 @@ export function generateAccessorInfoService(service: any) {
     static hasKeys = false;
 
     static async getRecord(req, args, query?: object) {
-      const results = await resolverHelper.resolveTableRows(this, req, { select: query }, args, generateAccessorInfoTypeDef(service));
+      const results = await resolverHelper.resolveTableRows(this.__typename, req, { select: query }, args, generateAccessorInfoTypeDef(service));
     
       if(results.length < 1) {
         throw errorHelper.itemNotFoundError();
@@ -32,7 +30,7 @@ export function generateAccessorInfoTypeDef(service: any = {}) {
   return {
     permissions: {
       type: dataTypes.STRING,
-      resolver: async (context, req, currentObject, query, args) => {
+      resolver: async (typename, req, currentObject, query, args) => {
         return service.getRecords(req, {
           ...args
         }, null, true);
@@ -40,7 +38,7 @@ export function generateAccessorInfoTypeDef(service: any = {}) {
     },
     sufficientPermissions: {
       type: dataTypes.BOOLEAN,
-      resolver: async (context, req, currentObject, query, args) => {
+      resolver: async (typename, req, currentObject, query, args) => {
         return service.testPermissions('get', req);
       }
     }

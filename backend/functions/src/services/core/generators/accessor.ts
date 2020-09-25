@@ -1,6 +1,6 @@
 import { Service } from '../service';
 import { generateAccessorInfoService } from './accessorInfo'
-import errorHelper from '../../helpers/tier0/error';
+import errorHelper from '../../../helpers/tier0/error';
 
 export function generateAccessorService(service: any) {
   return class extends Service {
@@ -28,7 +28,7 @@ export function generateAccessorTypeDef(service: any) {
   return {
     accessorInfo: {
       type: AccessorInfo.__typename,
-      resolver: async (context, req, currentObject, query, args) => {
+      resolver: async (typename, req, currentObject, query, args) => {
         return AccessorInfo.getRecord(req, {
           ...args
         }, query);
@@ -36,7 +36,7 @@ export function generateAccessorTypeDef(service: any) {
     },
     data: {
       type: [service.__typename],
-      resolver: async (context, req, currentObject, query, args) => {
+      resolver: async (typename, req, currentObject, query, args) => {
         try {
           //if it does not pass the access control, throw an error
           if(!await service.testPermissions('get', req)) {

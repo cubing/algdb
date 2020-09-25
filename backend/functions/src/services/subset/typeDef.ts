@@ -1,7 +1,9 @@
 import { User, Puzzle, Algset, Subset, Algcase, CaseVisualizationEnum } from '../services'
 
 import { DataTypes } from "sequelize";
-import { dataTypes, typeDefHelper } from 'jomql';
+import { dataTypes } from 'jomql';
+
+import * as typeDefHelper from '../../helpers/tier0/typeDef';
 
 export default {
   ...typeDefHelper.generateIdField(),
@@ -44,7 +46,7 @@ export default {
   algcases: {
     type: Algcase.paginator.__typename,
     args: typeDefHelper.generatePaginatorArgs(Algcase, ["subset"]),
-    resolver: async (context, req, currentObject, query, args, parent) => {
+    resolver: async (typename, req, currentObject, query, args, parent) => {
       return Algcase.paginator.getRecord(req, {
         ...query?.__args,
         subset: currentObject.id
@@ -54,7 +56,7 @@ export default {
   subsets: {
     type: Subset.paginator.__typename,
     args: typeDefHelper.generatePaginatorArgs(Subset, ["parent"]),
-    resolver: async (context, req, currentObject, query, args, parent) => {
+    resolver: async (typename, req, currentObject, query, args, parent) => {
       return Subset.paginator.getRecord(req, {
         ...query?.__args,
         parent: currentObject.id

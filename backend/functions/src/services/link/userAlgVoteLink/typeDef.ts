@@ -9,30 +9,14 @@ export default {
   ...typeDefHelper.generateIdField(),
   ...typeDefHelper.generateJoinableField({ service: User, mysqlOptions: { unique: "compositeIndex" } }),
   ...typeDefHelper.generateJoinableField({ service: Alg, mysqlOptions: { unique: "compositeIndex" } }),
-  /*
-  tag: {
-    type: Tag.__typename,
+  vote_value: {
+    type: dataTypes.INTEGER,
     mysqlOptions: {
       type: DataTypes.INTEGER,
-      joinInfo: {
-        type: Tag.__typename,
-        allowNull: false,
-        unique: "compositeIndex"
-      },
-    },
-    addable: true,
-    filterable: true,
-  },
-  */
-  tag: {
-    type: dataTypes.STRING,
-    mysqlOptions: {
-      type: DataTypes.STRING,
       allowNull: false,
-      unique: "compositeIndex",
     },
     addable: true,
-    filterable: true,
+    updateable: true,
   },
   ...typeDefHelper.generateCreatedAtField(),
   ...typeDefHelper.generateUpdatedAtField(),

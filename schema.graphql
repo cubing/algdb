@@ -213,6 +213,7 @@ type Mutation {
 	): AlgTagLink!
 	deleteTag(id: ID!): Tag!
 	createTag(name: String): Tag!
+	upsertUserAlgVoteLink(alg: ID!, vote_value: Integer!): UserAlgVoteLink!
 }
 
 type User {
@@ -368,6 +369,8 @@ type Alg {
 	created_at: Int!
 	updated_at: Int
 	created_by: User!
+	score: Int!
+	current_user_vote: UserAlgVoteLink
 }
 type AlgPaginator {
 	paginatorInfo: PaginatorInfo!
@@ -410,6 +413,21 @@ type UserAlgTagLinkPaginator {
 	paginatorInfo: PaginatorInfo!
 	data: [UserAlgTagLink]!
 }
+
+type UserAlgVoteLink {
+	id: ID!
+	user: User!
+	alg: Alg!
+	vote_value: Integer!
+	created_at: Int!
+	updated_at: Int
+	created_by: User!
+}
+type UserAlgTagVotePaginator {
+	paginatorInfo: PaginatorInfo!
+	data: [UserAlgVoteLink]!
+}
+
 type Tag {
 	id: ID!
 	name: String!

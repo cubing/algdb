@@ -1,6 +1,7 @@
 import { Service } from '../../core/service';
 
 import { generateUserRoleGuard } from '../../../helpers/tier2/permissions'
+import { generatePaginatorService } from '../../core/generators'
 
 import errorHelper from '../../../helpers/tier0/error';
 import { mysqlHelper, resolverHelper, subscriptionHelper } from 'jomql';
@@ -10,7 +11,7 @@ import { userRole } from '../../enums';
 export class AlgTagLink extends Service {
   static __typename = 'algTagLink';
 
-  static paginator = Service.generatePaginatorService(AlgTagLink);
+  static paginator = generatePaginatorService(AlgTagLink);
 
   static presets = {
     default: {

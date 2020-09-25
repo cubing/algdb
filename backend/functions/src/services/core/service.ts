@@ -1,5 +1,4 @@
 import errorHelper from '../../helpers/tier0/error';
-import { generatePaginatorService, generateAccessorService } from './generators'
 
 import { resolverHelper, jomqlHelper, subscriptionHelper, getTypeDefs } from 'jomql'
 
@@ -39,10 +38,6 @@ export abstract class Service {
   static getTypeDef() {
     return getTypeDefs()[this.__typename];
   }
-
-  static generatePaginatorService = generatePaginatorService;
-
-  static generateAccessorService = generateAccessorService;
 
   static async testPermissions(operation: string, req, args, query) {
     if(!req.cache) {
@@ -119,12 +114,12 @@ export abstract class Service {
 
     const channel = await subscriptionHelper.handleJqlSubscription(req, operationName, validatedArgs, query || Object.assign({}, this.presets.default))
 
-    return {
+    return { 
       channel_name: channel
     };
   }
 
-  static async getRecord(req, args = <any> {}, query?: object, count = false, admin = false) {
+  static async getRecord(req, args = <any> {}, query?: object, admin = false) {
     const selectQuery = query || Object.assign({}, this.presets.default);
 
     //if it does not pass the access control, throw an error

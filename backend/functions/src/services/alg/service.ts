@@ -1,6 +1,7 @@
 import { Service } from '../core/service';
 
 import { generateUserRoleGuard } from '../../helpers/tier2/permissions'
+import { generatePaginatorService } from '../core/generators'
 
 import { AlgAlgcaseLink } from '../services';
 
@@ -12,7 +13,7 @@ import { userRole } from '../enums';
 export class Alg extends Service {
   static __typename = 'alg';
 
-  static paginator = Service.generatePaginatorService(Alg);
+  static paginator = generatePaginatorService(Alg);
 
   static presets = {
     default: {

@@ -1,6 +1,6 @@
 import { User, Algcase, Alg } from '../../services'
 
-import { typeDefHelper } from 'jomql';
+import * as typeDefHelper from '../../../helpers/tier0/typeDef';
 
 export default {
   ...typeDefHelper.generateIdField(),

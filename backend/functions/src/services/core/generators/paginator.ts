@@ -28,7 +28,7 @@ export function generatePaginatorTypeDef(service: any) {
   return {
     paginatorInfo: {
       type: PaginatorInfo.__typename,
-      resolver: async (context, req, currentObject, query, args) => {
+      resolver: async (typename, req, currentObject, query, args) => {
         return PaginatorInfo.getRecord(req, {
           ...args
         }, query);
@@ -36,7 +36,7 @@ export function generatePaginatorTypeDef(service: any) {
     },
     data: {
       type: [service.__typename],
-      resolver: async (context, req, currentObject, query, args) => {
+      resolver: async (typename, req, currentObject, query, args) => {
         return service.getRecords(req, {
           ...args
         }, query);

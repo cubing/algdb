@@ -1,5 +1,6 @@
 import { User } from '../services';
-import { rootResolverHelper } from 'jomql'
+import * as rootResolverHelper from '../../helpers/tier2/rootResolver'
+import errorHelper from '../../helpers/tier0/error';
 import { typeDefs } from '../typeDefs';
 
 const resolvers = {
@@ -8,11 +9,15 @@ const resolvers = {
       method: "get",
       route: "/currentUser",
       type: User.__typename,
-      resolver: (req) => User.getRecord(req, {
-        ...req.params,
-        ...req.jql?.__args,
-        id: req.user?.id
-      }, req.jql)
+      resolver: (req) => {
+        if(!req.user) throw errorHelper.loginRequiredError();
+
+        return User.getRecord(req, {
+          ...req.params,
+          ...req.jql?.__args,
+          id: req.user?.id
+        }, req.jql)
+      }
     },
   },
   mutation: {},

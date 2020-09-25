@@ -1,7 +1,9 @@
 import { User, Algset } from '../services'
 
 import { DataTypes } from "sequelize";
-import { dataTypes, typeDefHelper } from 'jomql';
+import { dataTypes } from 'jomql';
+
+import * as typeDefHelper from '../../helpers/tier0/typeDef';
 
 export default {
   ...typeDefHelper.generateIdField(),
@@ -30,7 +32,7 @@ export default {
   algsets: {
     type: Algset.__typename,
     args: typeDefHelper.generatePaginatorArgs(Algset, ["puzzle"]),
-    resolver: async (context, req, currentObject, query, args, parent) => {
+    resolver: async (typename, req, currentObject, query, args, parent) => {
       return Algset.paginator.getRecord(req, {
         ...query?.__args,
         puzzle: currentObject.id

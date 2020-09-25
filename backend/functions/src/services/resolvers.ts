@@ -8,9 +8,10 @@ import Alg from './alg/resolver';
 import AlgAlgCaseLink from './link/algAlgcaseLink/resolver';
 import AlgTagLink from './link/algTagLink/resolver';
 import UserAlgTagLink from './link/userAlgTagLink/resolver';
+import UserAlgVoteLink from './link/userAlgVoteLink/resolver';
 import Tag from './tag/resolver';
 
-const rootResolvers = [User, Auth, Puzzle, Algset, Subset, Algcase, Alg, AlgAlgCaseLink, AlgTagLink, UserAlgTagLink, Tag];
+const rootResolvers = [User, Auth, Puzzle, Algset, Subset, Algcase, Alg, AlgAlgCaseLink, AlgTagLink, UserAlgTagLink, UserAlgVoteLink, Tag];
 
 const resolvers = {
   query: {},

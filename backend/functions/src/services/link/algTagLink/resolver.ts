@@ -1,5 +1,5 @@
 import { AlgTagLink } from '../../services';
-import { rootResolverHelper } from 'jomql'
+import * as rootResolverHelper from '../../../helpers/tier2/rootResolver'
 import { typeDefs } from '../../typeDefs';
 
 const resolvers = {

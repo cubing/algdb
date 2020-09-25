@@ -7,11 +7,12 @@ import errorHelper from '../../helpers/tier0/error';
 import { resolverHelper } from 'jomql';
 
 import { userRole } from '../enums';
+import { generatePaginatorService } from '../core/generators'
 
 export class Puzzle extends Service {
   static __typename = 'puzzle';
 
-  static paginator = Service.generatePaginatorService(Puzzle);
+  static paginator = generatePaginatorService(Puzzle);
 
   static presets = {
     default: {

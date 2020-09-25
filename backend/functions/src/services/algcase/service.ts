@@ -1,6 +1,7 @@
 import { Service } from '../core/service';
 
 import { generateUserAdminGuard } from '../../helpers/tier2/permissions'
+import { generatePaginatorService } from '../core/generators'
 
 import errorHelper from '../../helpers/tier0/error';
 import { mysqlHelper, resolverHelper, subscriptionHelper } from 'jomql';
@@ -8,7 +9,7 @@ import { mysqlHelper, resolverHelper, subscriptionHelper } from 'jomql';
 export class Algcase extends Service {
   static __typename = 'algcase';
 
-  static paginator = Service.generatePaginatorService(Algcase);
+  static paginator = generatePaginatorService(Algcase);
 
   static presets = {
     default: {

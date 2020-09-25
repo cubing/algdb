@@ -1,12 +1,4 @@
-class ErrorWrapper {
-  constructor(public errorMessage: string, public statusCode: number, public errorCode: string, public errorObject?: Error) {
-    if(errorObject) {
-      this.errorObject = errorObject;
-    } else {
-      this.errorObject = new Error(errorMessage);
-    }
-  }
-};
+import { ErrorWrapper } from 'jomql';
 
 export default {
   generateError(message: string, statusCode = 400, errorCode = "misc/other") {

@@ -13,6 +13,7 @@ export { Alg } from './alg/service'
 export { AlgAlgcaseLink } from './link/algAlgcaseLink/service'
 export { AlgTagLink } from './link/algTagLink/service'
 export { UserAlgTagLink } from './link/userAlgTagLink/service'
+export { UserAlgVoteLink } from './link/userAlgVoteLink/service'
 export { Tag } from './tag/service'
 
 export { userRoleEnum as UserRoleEnum }

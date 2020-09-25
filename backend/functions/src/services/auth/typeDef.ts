@@ -12,7 +12,7 @@ export default {
   },
   token: {
     type: dataTypes.STRING,
-    resolver: async (context, req, currentObject, query, args) => {
+    resolver: async (typename, req, currentObject, query, args) => {
       return jwt.sign(
         {
           id: args.id,
@@ -29,7 +29,7 @@ export default {
   },
   user: {
     type: User.__typename,
-    resolver: async (context, req, currentObject, query, args) => {
+    resolver: async (typename, req, currentObject, query, args) => {
       return User.getRecord(req, {
         id: args.id
       }, query);

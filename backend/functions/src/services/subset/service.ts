@@ -6,11 +6,12 @@ import { userRole } from '../enums';
 
 import errorHelper from '../../helpers/tier0/error';
 import { mysqlHelper, resolverHelper, subscriptionHelper } from 'jomql';
+import { generatePaginatorService } from '../core/generators'
 
 export class Subset extends Service {
   static __typename = 'subset';
 
-  static paginator = Service.generatePaginatorService(Subset);
+  static paginator = generatePaginatorService(Subset);
 
   static presets = {
     default: {
