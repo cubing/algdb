@@ -49,7 +49,8 @@ export class Puzzle extends Service {
   static accessControl = {
     getMultiple: async function(req, args, query) {
       //if args.is_public !== true or Array containing !== true, check permissions
-      if(Array.isArray(args.is_public) ? args.is_public.includes(false) : args.is_public !== true) {
+      const isPublic = args?.filterBy?.is_public;
+      if(Array.isArray(isPublic) ? isPublic.includes(false) : isPublic !== true) {
         return generateUserRoleGuard([userRole.ADMIN, userRole.MODERATOR])(req, args, query);
       }
 

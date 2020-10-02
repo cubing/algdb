@@ -19,7 +19,7 @@ const resolvers = {
 };
 
 rootResolverHelper.generateRootResolvers(resolvers, UserAlgVoteLink, typeDefs, {
-  methods: ["get", "getMultiple"]
+  methods: []
 });
 
 export default resolvers;

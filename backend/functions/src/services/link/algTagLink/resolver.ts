@@ -9,7 +9,7 @@ const resolvers = {
 };
 
 rootResolverHelper.generateRootResolvers(resolvers, AlgTagLink, typeDefs, {
-  methods: ["get", "getMultiple", "delete", "create"]
+  methods: ["delete", "create"]
 });
 
 export default resolvers;

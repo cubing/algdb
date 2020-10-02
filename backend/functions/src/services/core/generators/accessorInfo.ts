@@ -15,7 +15,9 @@ export function generateAccessorInfoService(service: any) {
     static hasKeys = false;
 
     static async getRecord(req, args, query?: object) {
-      const results = await resolverHelper.resolveTableRows(this.__typename, req, { select: query }, args, generateAccessorInfoTypeDef(service));
+      const selectQuery = query || Object.assign({}, this.presets.default);
+
+      const results = await resolverHelper.resolveTableRows(this.__typename, this, req, { select: selectQuery }, args, generateAccessorInfoTypeDef(service));
     
       if(results.length < 1) {
         throw errorHelper.itemNotFoundError();

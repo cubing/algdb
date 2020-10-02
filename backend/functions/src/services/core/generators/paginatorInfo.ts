@@ -15,7 +15,9 @@ export function generatePaginatorInfoService(service: any) {
     static hasKeys = false;
 
     static async getRecord(req, args, query?: object) {
-      const results = await resolverHelper.resolveTableRows(this.__typename, req, { select: query }, args, generatePaginatorInfoTypeDef(service));
+      const selectQuery = query || Object.assign({}, this.presets.default);
+      
+      const results = await resolverHelper.resolveTableRows(this.__typename, this, req, { select: selectQuery }, args, generatePaginatorInfoTypeDef(service));
     
       if(results.length < 1) {
         throw errorHelper.itemNotFoundError();

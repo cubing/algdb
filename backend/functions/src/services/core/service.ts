@@ -174,18 +174,20 @@ export abstract class Service {
     const filterArray: Array<any> = [];
     
     //handle filter fields
-    for(const arg in args) {
-      if(arg in this.filterFieldsMap) {
-        const filterObject = {
-          connective: "AND",
-          fields: <any> []
-        };
-        filterObject.fields.push({
-          field: this.filterFieldsMap[arg].field ?? arg,
-          joinFields: this.filterFieldsMap[arg].joinFields,
-          value: args[arg]
-        });
-        filterArray.push(filterObject);
+    if(args.filterBy && typeof args.filterBy === "object") {
+      for(const arg in args.filterBy) {
+        if(arg in this.filterFieldsMap) {
+          const filterObject = {
+            connective: "AND",
+            fields: <any> []
+          };
+          filterObject.fields.push({
+            field: this.filterFieldsMap[arg].field ?? arg,
+            joinFields: this.filterFieldsMap[arg].joinFields,
+            value: args.filterBy[arg]
+          });
+          filterArray.push(filterObject);
+        }
       }
     }
 
