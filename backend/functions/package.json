@@ -17,9 +17,9 @@
     "axios": "^0.20.0",
     "bcryptjs": "^2.4.3",
     "express": "^4.17.1",
-    "firebase-admin": "^8.6.0",
+    "firebase-admin": "^9.2.0",
     "firebase-functions": "^3.11.0",
-    "jomql": "0.0.10",
+    "jomql": "0.0.12",
     "jsonwebtoken": "^8.5.1",
     "randomstring": "^1.1.5",
     "sequelize": "^6.3.4"

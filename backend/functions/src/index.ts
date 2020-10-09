@@ -26,7 +26,7 @@ app.use(async function(req: any, res, next) {
 jql.initialize(app, schema, {
   mysqlEnv: env.mysql,
   pusherEnv: env.pusher,
-  debug: isDev,
+  debug: !!isDev,
   allowedOrigins: ["https://alpha.algdb.net", "http://localhost:3000"],
 });
 

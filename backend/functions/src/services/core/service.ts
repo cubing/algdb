@@ -302,8 +302,7 @@ export abstract class Service {
     
     await resolverHelper.updateTableRow(this.__typename, {
       ...args,
-    }, {
-      date_modified: null
+      updated_at: null,
     }, [{ fields: [ { field: "id", value: args.id } ] }]);
     
 

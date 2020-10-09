@@ -1,5 +1,5 @@
 import { DataTypes, Sequelize } from 'sequelize';
-import { dataTypes } from 'jomql';
+import { dataTypes, mysqlHelper } from 'jomql';
 
 export function generateCreatedAtField() {
   return {
@@ -20,12 +20,15 @@ export function generateUpdatedAtField() {
     updated_at: {
       type: dataTypes.DATETIME,
       allowNull: true,
+      updateable: true,
       mysqlOptions: {
         type: DataTypes.DATE,
         allowNull: true,
         getter: (field) => "UNIX_TIMESTAMP(" + field + ")",
-        setter: () => "CURRENT_TIMESTAMP"
       },
+      transform: {
+        setter: () => mysqlHelper.getMysqlRaw('CURRENT_TIMESTAMP()')
+      }
     }
   };
 };
