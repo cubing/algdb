@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "algdb-d312e"
+  },
+  "targets": {
+    "algdb-d312e": {
+      "hosting": {
+        "algdb-ref-client": [
+          "algdb-ref-client"
+        ]
+      }
+    }
+  }
+}
