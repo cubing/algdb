@@ -1,0 +1,35 @@
+name: Reference Frontend Deploy
+on:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: "Log level"
+        required: true
+        default: "warning"
+      tags:
+        description: "Test scenario tags"
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@master
+      - name: Install Dependencies
+        working-directory: ./frontend
+        run: npm install
+      - name: Generate
+        working-directory: ./frontend
+        run: npm run generate
+        env:
+          API_URL: https://api.algdb.net
+          VER: "0.0.1"
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          PROJECT_PATH: ./reference_client
+          PROJECT_ID: ${{ secrets.PROJECT_ID }}

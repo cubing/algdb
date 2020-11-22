@@ -1,19 +1,24 @@
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from "bcryptjs";
 
-import { User, UserRoleEnum } from '../services'
+import { generateError } from "../../helpers/tier0/error";
+import { User, UserRole } from "../services";
+import {
+  generateIdField,
+  generateCreatedAtField,
+  generateUpdatedAtField,
+  generateCreatedByField,
+  generateKenumField,
+  generateBooleanField,
+} from "../../helpers/tier0/typeDef";
+import { dataTypes, sequelizeDataTypes, TypeDef } from "jomql";
 
-import { DataTypes } from "sequelize";
-import { dataTypes } from 'jomql';
-
-import * as typeDefHelper from '../../helpers/tier0/typeDef';
-
-export default {
-  ...typeDefHelper.generateIdField(),
+export default <TypeDef>{
+  ...generateIdField(),
   provider: {
     type: dataTypes.STRING,
     mysqlOptions: {
-      type: DataTypes.STRING,
-      unique: 'compositeIndex'
+      type: sequelizeDataTypes.STRING,
+      unique: "compositeIndex",
     },
     addable: true,
     hidden: true,
@@ -21,8 +26,8 @@ export default {
   provider_id: {
     type: dataTypes.STRING,
     mysqlOptions: {
-      type: DataTypes.STRING,
-      unique: 'compositeIndex'
+      type: sequelizeDataTypes.STRING,
+      unique: "compositeIndex",
     },
     addable: true,
     hidden: true,
@@ -31,37 +36,42 @@ export default {
     type: dataTypes.STRING,
     allowNull: true,
     mysqlOptions: {
-      type: DataTypes.STRING
+      type: sequelizeDataTypes.STRING,
     },
     addable: true,
   },
   email: {
     type: dataTypes.STRING,
+    allowNull: false,
     mysqlOptions: {
-      type: DataTypes.STRING,
+      type: sequelizeDataTypes.STRING,
       unique: true,
       allowNull: false,
     },
     addable: true,
+    updateable: true,
   },
   password: {
     type: dataTypes.STRING,
     allowNull: true,
     mysqlOptions: {
-      type: DataTypes.STRING,
+      type: sequelizeDataTypes.STRING,
     },
     addable: true,
-    updateable: false,
+    updateable: true,
     hidden: true,
     transform: {
-      setter: async (value) => await bcrypt.hash(value, 10)
-    }
+      setter: (value) =>
+        bcrypt.hash(value, 10).catch(() => {
+          throw generateError("Invalid password");
+        }),
+    },
   },
   name: {
     type: dataTypes.STRING,
     allowNull: true,
     mysqlOptions: {
-      type: DataTypes.STRING,
+      type: sequelizeDataTypes.STRING,
       allowNull: false,
     },
     addable: true,
@@ -71,7 +81,7 @@ export default {
     type: dataTypes.STRING,
     allowNull: true,
     mysqlOptions: {
-      type: DataTypes.STRING,
+      type: sequelizeDataTypes.STRING,
     },
     addable: true,
     updateable: true,
@@ -80,23 +90,19 @@ export default {
     type: dataTypes.STRING,
     allowNull: true,
     mysqlOptions: {
-      type: DataTypes.STRING,
+      type: sequelizeDataTypes.STRING,
     },
     addable: true,
     updateable: true,
   },
-  is_public: {
-    type: dataTypes.BOOLEAN,
-    mysqlOptions: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
-      allowNull: false,
-    },
-    addable: true,
-    updateable: true,
-  },
-  ...typeDefHelper.generateCreatedAtField(),
-  ...typeDefHelper.generateUpdatedAtField(),
-  ...typeDefHelper.generateCreatedByField(User),
-  ...typeDefHelper.generateEnumField('role', UserRoleEnum, {}, { defaultValue: UserRoleEnum.enum["NORMAL"] }),
-}
+  ...generateBooleanField("is_public"),
+  ...generateCreatedAtField(),
+  ...generateUpdatedAtField(),
+  ...generateCreatedByField(User),
+  ...generateKenumField(
+    "role",
+    UserRole,
+    {},
+    { defaultValue: UserRole.enum.NORMAL }
+  ),
+};

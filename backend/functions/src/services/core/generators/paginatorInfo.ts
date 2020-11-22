@@ -1,51 +1,35 @@
-import { Service } from '../service';
+import { Service, PaginatorInfoService } from "../services";
 
-import { resolverHelper, dataTypes } from 'jomql';
-import errorHelper from '../../../helpers/tier0/error';
+import { dataTypes } from "jomql";
 
-export function generatePaginatorInfoService(service: any) {
-  return class extends Service {
-    static __typename = 'paginatorInfo';
-    static presets = {
-      default: {
-        total: null
-      }
-    };
-
-    static hasKeys = false;
-
-    static async getRecord(req, args, query?: object) {
-      const selectQuery = query || Object.assign({}, this.presets.default);
-      
-      const results = await resolverHelper.resolveTableRows(this.__typename, this, req, { select: selectQuery }, args, generatePaginatorInfoTypeDef(service));
-    
-      if(results.length < 1) {
-        throw errorHelper.itemNotFoundError();
-      }
-  
-      return results[0];
-    }
-  }
+export function generatePaginatorInfoService(service: Service) {
+  return new PaginatorInfoService(service);
 }
 
-export function generatePaginatorInfoTypeDef(service: any = {}) {
+export function generatePaginatorInfoTypeDef(service: Service) {
   return {
     total: {
       type: dataTypes.INTEGER,
-      resolver: async (typename, req, currentObject, query, args) => {
-        return service.getRecords(req, {
-          ...args,
-          after: null
-        }, null, true);
-      }
+      resolver: (req, args, query, typename, currentObject) => {
+        return service.getRecords(
+          req,
+          {
+            ...args,
+            after: null,
+          },
+          undefined,
+          true
+        );
+      },
     },
     count: {
       type: dataTypes.INTEGER,
-      resolver: async (typename, req, currentObject, query, args) => {
-        return Math.min(args.first || Infinity, await service.getRecords(req, {
-          ...args
-        }, null, true));
-      }
+      resolver: async (req, args, query, typename, currentObject) => {
+        return Math.min(
+          args.first || Infinity,
+          await service.getRecords(req, args, undefined, true)
+        );
+      },
     },
-  }
-};
+  };
+}

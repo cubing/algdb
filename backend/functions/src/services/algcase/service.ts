@@ -1,17 +1,15 @@
-import { Service } from '../core/service';
+import { PaginatedService } from "../core/services";
+import { generatePaginatorService } from "../core/generators";
 
-import { generateUserAdminGuard } from '../../helpers/tier2/permissions'
-import { generatePaginatorService } from '../core/generators'
+import { generateUserRoleGuard } from "../../helpers/tier2/permissions";
+import { userRoleEnum } from "../enums";
 
-import errorHelper from '../../helpers/tier0/error';
-import { mysqlHelper, resolverHelper, subscriptionHelper } from 'jomql';
+export class AlgcaseService extends PaginatedService {
+  __typename = "algcase";
 
-export class Algcase extends Service {
-  static __typename = 'algcase';
+  paginator = generatePaginatorService(this);
 
-  static paginator = generatePaginatorService(Algcase);
-
-  static presets = {
+  presets = {
     default: {
       id: null,
       uid: null,
@@ -19,76 +17,44 @@ export class Algcase extends Service {
       display_name: null,
       display_image: null,
       date_created: null,
-      date_modified: null
-    }
-  };
-  
-  static filterFieldsMap = {
-    id: {},
-    "created_by": {},
-    "created_by.name": {},
-    "algset": {},
-    "subset": {},
+      date_modified: null,
+    },
   };
 
-  static sortFieldsMap = {
+  filterFieldsMap = {
+    id: {},
+    created_by: {},
+    "created_by.name": {},
+    algset: {},
+    subset: {},
+  };
+
+  filterFieldsKeyMap = {
+    id: {},
+    code: {},
+    puzzle_code: {
+      field: "puzzle.code",
+    },
+  };
+
+  sortFieldsMap = {
     id: {},
     created_at: {},
   };
 
-  static isFilterRequired = false;
-
-  static accessControl = {
-    update: generateUserAdminGuard(),
-    create: generateUserAdminGuard(),
-    delete: generateUserAdminGuard()
+  searchFieldsMap = {
+    name: {},
   };
 
-  static async createRecord(req, args = <any> {}, query?: object) {
-    if(!req.user) throw errorHelper.loginRequiredError();
+  isFilterRequired = false;
 
-    //algset OR subset required
-    if(!args.algset && !args.subset) throw errorHelper.missingParamsError();
+  accessControl = {
+    get: () => true,
 
-    //if it does not pass the access control, throw an error
-    if(!await this.testPermissions('create', req, args, query)) {
-      throw errorHelper.badPermissionsError();
-    }
-    
-    let addResults;
+    getMultiple: () => true,
 
-    //if subset provided, process that
-    if(args.subset) {
-      //verify subset exists, and get the puzzle_id and algset_id
-      const subsetResults = await mysqlHelper.executeDBQuery("SELECT puzzle, algset FROM subset WHERE id = :id", { id: args.subset });
-
-      if(subsetResults.length < 1) throw errorHelper.generateError("Invalid subset");
-
-      addResults = await resolverHelper.addTableRow(this.__typename, {
-        ...args,
-        puzzle: subsetResults[0].puzzle,
-        algset: subsetResults[0].algset,
-      }, { created_by: req.user.id });
-      //else process the algset
-    } else {
-      //verify algset exists, and get the puzzle_id
-      const algsetResults = await mysqlHelper.executeDBQuery("SELECT puzzle FROM algset WHERE id = :id", { id: args.algset });
-
-      if(algsetResults.length < 1) throw errorHelper.generateError("Invalid algset");
-
-      addResults = await resolverHelper.addTableRow(this.__typename, {
-        ...args,
-        puzzle: algsetResults[0].puzzle,
-        created_by: req.user.id
-      });
-    }
-
-    const validatedArgs = {
-      created_by: req.user.id
-    };
-
-    subscriptionHelper.handleJqlSubscriptionTriggerIterative(req, this, this.__typename + 'Created', validatedArgs, { id: addResults.id });
-
-    return this.getRecord(req, { id: addResults.id }, query);
-  }
-};
+    update: generateUserRoleGuard([userRoleEnum.ADMIN]),
+    create: generateUserRoleGuard([userRoleEnum.ADMIN]),
+    delete: generateUserRoleGuard([userRoleEnum.ADMIN]),
+  };
+}

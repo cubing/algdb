@@ -1,39 +1,26 @@
-import * as generators from './core/generators';
+import * as generators from "./core/generators";
 
-import { User, Puzzle, Algset, Subset, Algcase, Alg, Tag, AlgAlgcaseLink, AlgTagLink, UserAlgTagLink, UserAlgVoteLink } from './services'
+import { User, Puzzle, Algset, Algcase, Alg } from "./services";
 
-import user from './user/typeDef'
+import user from "./user/typeDef";
+import auth from "./auth/typeDef";
+import puzzle from "./puzzle/typeDef";
+import algset from "./algset/typeDef";
+import algcase from "./algcase/typeDef";
+import alg from "./alg/typeDef";
+import algAlgcaseLink from "./link/algAlgcaseLink/typeDef";
 
-import auth from './auth/typeDef'
-
-import puzzle from './puzzle/typeDef'
-
-import algset from './algset/typeDef'
-
-import subset from './subset/typeDef'
-
-import algcase from './algcase/typeDef'
-
-import alg from './alg/typeDef'
-
-import algAlgcaseLink from './link/algAlgcaseLink/typeDef'
-import algTagLink from './link/algTagLink/typeDef'
-import userAlgTagLink from './link/userAlgTagLink/typeDef'
-import userAlgVoteLink from './link/userAlgVoteLink/typeDef'
-
-import tag from './tag/typeDef'
-
-import { userRole, caseVisualization } from './enums';
+import { userRoleEnum, caseVisualizationEnum } from "./enums";
 
 export const typeDefs = {
   user,
   userPaginator: generators.generatePaginatorTypeDef(User),
+
   puzzle,
   puzzlePaginator: generators.generatePaginatorTypeDef(Puzzle),
+
   algset,
   algsetPaginator: generators.generatePaginatorTypeDef(Algset),
-  subset,
-  subsetPaginator: generators.generatePaginatorTypeDef(Subset),
 
   algcase,
   algcasePaginator: generators.generatePaginatorTypeDef(Algcase),
@@ -42,22 +29,12 @@ export const typeDefs = {
   algPaginator: generators.generatePaginatorTypeDef(Alg),
 
   algAlgcaseLink,
-  algAlgcaseLinkPaginator: generators.generatePaginatorTypeDef(AlgAlgcaseLink),
-
-  algTagLink,
-  algTagLinkPaginator: generators.generatePaginatorTypeDef(AlgTagLink),
-
-  userAlgTagLink,
-  userAlgTagLinkPaginator: generators.generatePaginatorTypeDef(UserAlgTagLink),
-
-  userAlgVoteLink,
-  userAlgVoteLinkPaginator: generators.generatePaginatorTypeDef(UserAlgVoteLink),
-
-  tag,
-  tagPaginator: generators.generatePaginatorTypeDef(Tag),
 
   auth,
-  paginatorInfo: generators.generatePaginatorInfoTypeDef(),
-  userRoleEnum: generators.generateEnumTypeDef(userRole),
-  caseVisualizationEnum: generators.generateEnumTypeDef(caseVisualization),
+
+  //specifying a bogus service, as it will never be used (for definition only)
+  paginatorInfo: generators.generatePaginatorInfoTypeDef(User),
+
+  userRole: generators.generateKenumTypeDef(userRoleEnum),
+  caseVisualization: generators.generateEnumTypeDef(caseVisualizationEnum),
 };

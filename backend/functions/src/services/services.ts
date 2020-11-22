@@ -1,20 +1,24 @@
-import { userRole, caseVisualization } from './enums';
-import * as generators from './core/generators';
-const userRoleEnum = generators.generateEnumService('userRole', userRole);
-const caseVisualizationEnum = generators.generateEnumService('caseVisualization', caseVisualization);
+import { userRoleEnum, caseVisualizationEnum } from "./enums";
+import { generateKenumService, generateEnumService } from "./core/generators";
 
-export { User } from './user/service'
-export { Auth } from './auth/service'
-export { Puzzle } from './puzzle/service'
-export { Algset } from './algset/service'
-export { Subset } from './subset/service'
-export { Algcase } from './algcase/service'
-export { Alg } from './alg/service'
-export { AlgAlgcaseLink } from './link/algAlgcaseLink/service'
-export { AlgTagLink } from './link/algTagLink/service'
-export { UserAlgTagLink } from './link/userAlgTagLink/service'
-export { UserAlgVoteLink } from './link/userAlgVoteLink/service'
-export { Tag } from './tag/service'
+import { UserService } from "./user/service";
+import { AuthService } from "./auth/service";
+import { PuzzleService } from "./puzzle/service";
+import { AlgsetService } from "./algset/service";
+import { AlgcaseService } from "./algcase/service";
+import { AlgService } from "./alg/service";
+import { AlgAlgcaseLinkService } from "./link/algAlgcaseLink/service";
 
-export { userRoleEnum as UserRoleEnum }
-export { caseVisualizationEnum as CaseVisualizationEnum }
+export const User = new UserService();
+export const Auth = new AuthService();
+export const Puzzle = new PuzzleService();
+export const Algset = new AlgsetService();
+export const Algcase = new AlgcaseService();
+export const Alg = new AlgService();
+export const AlgAlgcaseLink = new AlgAlgcaseLinkService();
+
+export const UserRole = generateKenumService("userRole", userRoleEnum);
+export const CaseVisualization = generateEnumService(
+  "caseVisualization",
+  caseVisualizationEnum
+);

@@ -1,17 +1,12 @@
-import { Service } from '../../core/service';
+import { Service } from "../../core/services";
 
-import { generateUserAdminGuard } from '../../../helpers/tier2/permissions'
-import { generatePaginatorService } from '../../core/generators'
+import { generateUserRoleGuard } from "../../../helpers/tier2/permissions";
+import { userRoleEnum } from "../../enums";
 
-import errorHelper from '../../../helpers/tier0/error';
-import { resolverHelper, subscriptionHelper, mysqlHelper } from 'jomql';
+export class AlgAlgcaseLinkService extends Service {
+  __typename = "algAlgcaseLink";
 
-export class AlgAlgcaseLink extends Service {
-  static __typename = 'algAlgcaseLink';
-
-  static paginator = generatePaginatorService(AlgAlgcaseLink);
-
-  static presets = {
+  presets = {
     default: {
       id: null,
       uid: null,
@@ -19,95 +14,41 @@ export class AlgAlgcaseLink extends Service {
       display_name: null,
       display_image: null,
       date_created: null,
-      date_modified: null
-    }
+      date_modified: null,
+    },
   };
 
-  static filterFieldsMap = {
+  filterFieldsMap = {
     id: {},
-    "alg": {},
-    "algcase": {},
-    "algcase_name": {
-      field: "algcase.name"
-    },
-    "algcase_subset": {
-      field: "algcase.subset"
-    },
-    "algcase_subset_name": {
-      field: "algcase.subset.name"
-    },
-    "algcase_algset": {
-      field: "algcase.algset"
-    },
-    "algcase_algset_name": {
-      field: "algcase.algset.name"
-    },
-    "algcase_puzzle": {
-      field: "algcase.puzzle"
-    },
-    "algcase_puzzle_name": {
-      field: "algcase.puzzle.name"
-    },
-    "tag_name": {
-      field: "tag.name",
-      joinFields: [
-        { field: "alg", table: "algTagLink", foreignField: "alg" },
-      ]
-    }
+    created_by: {},
+    "created_by.name": {},
+    code: {},
+    is_public: {},
   };
 
-  static sortFieldsMap = {
+  filterFieldsKeyMap = {
+    id: {},
+    code: {},
+  };
+
+  sortFieldsMap = {
     id: {},
     created_at: {},
-    "algcase.subset.name": {}
   };
 
-  static groupByFieldsMap = {
-    "alg": {},
+  searchFieldsMap = {
+    name: {},
   };
 
-  static searchFieldsMap = {
-    "algcase.subset.name": {}
+  isFilterRequired = false;
+
+  accessControl = {
+    get: () => false,
+
+    getMultiple: () => false,
+
+    update: () => false,
+    create: generateUserRoleGuard([userRoleEnum.ADMIN]),
+    delete: generateUserRoleGuard([userRoleEnum.ADMIN]),
   };
-
-  static isFilterRequired = false;
-
-  static accessControl = {
-    update: generateUserAdminGuard(),
-    create: generateUserAdminGuard(),
-    delete: generateUserAdminGuard()
-  };
-
-  static async createRecord(req, args = <any> {}, query?: object) {
-    if(!req.user) throw errorHelper.loginRequiredError();
-
-    if(!args.alg && !args.algcase) throw errorHelper.missingParamsError();
-
-    //if it does not pass the access control, throw an error
-    if(!await this.testPermissions('create', req, args, query)) {
-      throw errorHelper.badPermissionsError();
-    }
-
-    //verify alg exists
-    const algResults = await mysqlHelper.executeDBQuery("SELECT id FROM alg WHERE id = :id", { id: args.alg });
-
-    if(algResults.length < 1) throw errorHelper.generateError("Invalid alg");
-
-    //verify algcase exists
-    const algcaseResults = await mysqlHelper.executeDBQuery("SELECT id FROM algcase WHERE id = :id", { id: args.algcase });
-
-    if(algcaseResults.length < 1) throw errorHelper.generateError("Invalid algcase");
-
-    const addResults = await resolverHelper.addTableRow(this.__typename, {
-      ...args,
-    }, { created_by: req.user.id }, true);
-
-    const validatedArgs = {
-      created_by: req.user.id
-    };
-
-    subscriptionHelper.handleJqlSubscriptionTriggerIterative(req, this, this.__typename + 'Created', validatedArgs, { id: addResults.id });
-
-    return this.getRecord(req, { id: addResults.id }, query);
-  }
-};
+}

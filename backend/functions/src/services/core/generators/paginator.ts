@@ -1,46 +1,25 @@
-import { Service } from '../service';
-import { generatePaginatorInfoService } from './paginatorInfo'
+import { Service, PaginatorService } from "../services";
+import { generatePaginatorInfoService } from "./paginatorInfo";
 
-export function generatePaginatorService(service: any) {
-  return class extends Service {
-    static __typename = service.__typename + 'Paginator';
-    static presets = {
-      default: {
-        paginatorInfo: {
-          total: null,
-          count: null,
-        },
-        data: service.presets?.default
-      }
-    };
-
-    static hasKeys = false;
-
-    static getTypeDef = Service.getTypeDef;
-
-    static getRecord = Service.getRecord;
-  }
+export function generatePaginatorService(service: Service): Service {
+  return new PaginatorService(service);
 }
 
-export function generatePaginatorTypeDef(service: any) {
+export function generatePaginatorTypeDef(service: Service) {
   const PaginatorInfo = generatePaginatorInfoService(service);
 
   return {
     paginatorInfo: {
       type: PaginatorInfo.__typename,
-      resolver: async (typename, req, currentObject, query, args) => {
-        return PaginatorInfo.getRecord(req, {
-          ...args
-        }, query);
+      resolver: (req, args, query, typename, currentObject) => {
+        return PaginatorInfo.getRecord(req, args, query);
       },
     },
     data: {
       type: [service.__typename],
-      resolver: async (typename, req, currentObject, query, args) => {
-        return service.getRecords(req, {
-          ...args
-        }, query);
-      }
+      resolver: (req, args, query, typename, currentObject) => {
+        return service.getRecords(req, args, query);
+      },
     },
-  }
-};
+  };
+}

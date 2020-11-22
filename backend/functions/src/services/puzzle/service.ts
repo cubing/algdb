@@ -1,20 +1,15 @@
-import { Service } from '../core/service';
+import { PaginatedService } from "../core/services";
+import { generatePaginatorService } from "../core/generators";
 
-import { generateUserRoleGuard } from '../../helpers/tier2/permissions'
+import { generateUserRoleGuard } from "../../helpers/tier2/permissions";
+import { userRoleEnum } from "../enums";
 
-import errorHelper from '../../helpers/tier0/error';
+export class PuzzleService extends PaginatedService {
+  __typename = "puzzle";
 
-import { resolverHelper } from 'jomql';
+  paginator = generatePaginatorService(this);
 
-import { userRole } from '../enums';
-import { generatePaginatorService } from '../core/generators'
-
-export class Puzzle extends Service {
-  static __typename = 'puzzle';
-
-  static paginator = generatePaginatorService(Puzzle);
-
-  static presets = {
+  presets = {
     default: {
       id: null,
       uid: null,
@@ -22,69 +17,41 @@ export class Puzzle extends Service {
       display_name: null,
       display_image: null,
       date_created: null,
-      date_modified: null
-    }
+      date_modified: null,
+    },
   };
 
-  static filterFieldsMap = {
+  filterFieldsMap = {
     id: {},
-    "created_by": {},
+    created_by: {},
     "created_by.name": {},
-    "code": {},
-    "is_public": {},
+    code: {},
+    is_public: {},
   };
 
-  static filterFieldsKeyMap = {
+  filterFieldsKeyMap = {
     id: {},
     code: {},
   };
 
-  static sortFieldsMap = {
+  sortFieldsMap = {
     id: {},
     created_at: {},
   };
 
-  static isFilterRequired = false;
-
-  static accessControl = {
-    getMultiple: async function(req, args, query) {
-      //if args.is_public !== true or Array containing !== true, check permissions
-      const isPublic = args?.filterBy?.is_public;
-      if(Array.isArray(isPublic) ? isPublic.includes(false) : isPublic !== true) {
-        return generateUserRoleGuard([userRole.ADMIN, userRole.MODERATOR])(req, args, query);
-      }
-
-      //else pass
-      return true;
-    },
-    update: generateUserRoleGuard([userRole.ADMIN]),
-    create: generateUserRoleGuard([userRole.ADMIN]),
-    delete: generateUserRoleGuard([userRole.ADMIN]),
+  searchFieldsMap = {
+    name: {},
   };
 
-  static async getRecordByCode(req, args, query?: object, admin = false) {
-    const selectQuery = query || Object.assign({}, this.presets.default);
+  isFilterRequired = false;
 
-    //if it does not pass the access control, throw an error
-    if(!admin && !await this.testPermissions('get', req, args, query)) {
-      throw errorHelper.badPermissionsError();
-    }
+  accessControl = {
+    get: () => true,
 
-    const results = await resolverHelper.resolveTableRows(this.__typename, this, req, {
-      select: selectQuery,
-      where: [
-        {
-          fields: [
-            { field: "code", value: args.code }
-          ]
-        }
-      ]
-    }, args);
+    getMultiple: () => true,
 
-    if(results.length < 1) {
-      throw errorHelper.itemNotFoundError();
-    }
-
-    return results[0];
-  }
-};
+    update: generateUserRoleGuard([userRoleEnum.ADMIN]),
+    create: generateUserRoleGuard([userRoleEnum.ADMIN]),
+    delete: generateUserRoleGuard([userRoleEnum.ADMIN]),
+  };
+}

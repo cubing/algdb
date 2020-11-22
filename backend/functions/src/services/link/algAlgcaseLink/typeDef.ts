@@ -1,12 +1,23 @@
-import { User, Algcase, Alg } from '../../services'
-
-import * as typeDefHelper from '../../../helpers/tier0/typeDef';
+import { User, Algcase, Alg } from "../../services";
+import {
+  generateIdField,
+  generateCreatedAtField,
+  generateUpdatedAtField,
+  generateCreatedByField,
+  generateJoinableField,
+} from "../../../helpers/tier0/typeDef";
 
 export default {
-  ...typeDefHelper.generateIdField(),
-  ...typeDefHelper.generateJoinableField({ service: Alg, mysqlOptions: { unique: "compositeIndex" } }),
-  ...typeDefHelper.generateJoinableField({ service: Algcase, mysqlOptions: { unique: "compositeIndex" } }),
-  ...typeDefHelper.generateCreatedAtField(),
-  ...typeDefHelper.generateUpdatedAtField(),
-  ...typeDefHelper.generateCreatedByField(User),
-}
+  ...generateIdField(),
+  ...generateJoinableField({
+    service: Alg,
+    mysqlOptions: { unique: "compositeIndex" },
+  }),
+  ...generateJoinableField({
+    service: Algcase,
+    mysqlOptions: { unique: "compositeIndex" },
+  }),
+  ...generateCreatedAtField(),
+  ...generateUpdatedAtField(),
+  ...generateCreatedByField(User),
+};

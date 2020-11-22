@@ -1,16 +1,22 @@
-import { User, Puzzle, Algcase, Subset, CaseVisualizationEnum } from '../services'
-
-import { DataTypes } from "sequelize";
-import { dataTypes } from 'jomql';
-
-import * as typeDefHelper from '../../helpers/tier0/typeDef';
+import { User, Puzzle, Algset, CaseVisualization } from "../services";
+import {
+  generateIdField,
+  generateCreatedAtField,
+  generateUpdatedAtField,
+  generateCreatedByField,
+  generateBooleanField,
+  generateJoinableField,
+  generateEnumField,
+} from "../../helpers/tier0/typeDef";
+import { dataTypes, sequelizeDataTypes } from "jomql";
 
 export default {
-  ...typeDefHelper.generateIdField(),
+  ...generateIdField(),
   name: {
     type: dataTypes.STRING,
+    allowNull: false,
     mysqlOptions: {
-      type: DataTypes.STRING,
+      type: sequelizeDataTypes.STRING,
       allowNull: false,
     },
     addable: true,
@@ -19,7 +25,7 @@ export default {
   code: {
     type: dataTypes.STRING,
     mysqlOptions: {
-      type: DataTypes.STRING,
+      type: sequelizeDataTypes.STRING,
       allowNull: false,
       unique: "codePuzzleIndex",
     },
@@ -30,42 +36,36 @@ export default {
     type: dataTypes.STRING,
     allowNull: true,
     mysqlOptions: {
-      type: DataTypes.STRING,
+      type: sequelizeDataTypes.STRING,
     },
     addable: true,
     updateable: true,
   },
-  ...typeDefHelper.generateEnumField('visualization', CaseVisualizationEnum, {}, { defaultValue: CaseVisualizationEnum.enum["V_2D"] }),
-  ...typeDefHelper.generateCreatedAtField(),
-  ...typeDefHelper.generateUpdatedAtField(),
-  ...typeDefHelper.generateCreatedByField(User),
-  ...typeDefHelper.generateBooleanField("is_public"),
-  ...typeDefHelper.generateJoinableField({ service: Puzzle, mysqlOptions: { unique: "codePuzzleIndex" } }),
-  algcases: {
-    type: Algcase.paginator.__typename,
-    args: typeDefHelper.generatePaginatorArgs(Algcase, ["algset"]),
-    resolver: async (typename, req, currentObject, query, args, parent) => {
-      return Algcase.paginator.getRecord(req, {
-        ...query?.__args,
-        algset: currentObject.id
-      }, query);
-    }
-  },
-  subsets: {
-    type: Subset.paginator.__typename,
-    args: typeDefHelper.generatePaginatorArgs(Subset, ["algset"]),
-    resolver: async (typename, req, currentObject, query, args, parent) => {
-      return Subset.paginator.getRecord(req, {
-        ...query?.__args,
-        algset: currentObject.id
-      }, query);
-    }
-  },
+  ...generateEnumField(
+    "visualization",
+    CaseVisualization,
+    {},
+    { defaultValue: CaseVisualization.enum[CaseVisualization.enum.V_2D] }
+  ),
+  ...generateCreatedAtField(),
+  ...generateUpdatedAtField(),
+  ...generateCreatedByField(User),
+  ...generateBooleanField("is_public"),
+  ...generateJoinableField({
+    name: "parent",
+    service: Algset,
+    mysqlOptions: { unique: "codePuzzleIndex" },
+    required: false,
+  }),
+  ...generateJoinableField({
+    service: Puzzle,
+    mysqlOptions: { unique: "codePuzzleIndex" },
+  }),
   score: {
     type: dataTypes.INTEGER,
     mysqlOptions: {
-      type: DataTypes.INTEGER,
+      type: sequelizeDataTypes.INTEGER,
     },
     addable: true,
-  }
-}
+  },
+};

@@ -1,21 +1,23 @@
-import { Service } from '../core/service';
+import { PaginatedService } from "../core/services";
+import { generatePaginatorService } from "../core/generators";
 
-import { generateUserRoleGuard } from '../../helpers/tier2/permissions'
-import { generatePaginatorService } from '../core/generators'
+import { generateUserRoleGuard } from "../../helpers/tier2/permissions";
+import { userRoleEnum } from "../enums";
 
-import { AlgAlgcaseLink } from '../services';
+import * as errorHelper from "../../helpers/tier0/error";
 
-import errorHelper from '../../helpers/tier0/error';
-import { mysqlHelper, resolverHelper, subscriptionHelper } from 'jomql';
+import { handleJqlSubscriptionTriggerIterative } from "../../helpers/tier2/subscription";
 
-import { userRole } from '../enums';
+import { resolverHelper, mysqlHelper } from "jomql";
 
-export class Alg extends Service {
-  static __typename = 'alg';
+import { AlgAlgcaseLink } from "../services";
 
-  static paginator = generatePaginatorService(Alg);
+export class AlgService extends PaginatedService {
+  __typename = "alg";
 
-  static presets = {
+  paginator = generatePaginatorService(this);
+
+  presets = {
     default: {
       id: null,
       uid: null,
@@ -23,112 +25,140 @@ export class Alg extends Service {
       display_name: null,
       display_image: null,
       date_created: null,
-      date_modified: null
-    }
+      date_modified: null,
+    },
   };
-  
-  static filterFieldsMap = {
+
+  filterFieldsMap = {
     id: {},
-    "algcase_name": {
+    algcase_name: {
       field: "algcase.name",
       joinFields: [
         { field: "id", table: "algAlgcaseLink", foreignField: "alg" },
-      ]
+      ],
     },
-    "algcase": {
+    algcase: {
       field: "algcase",
       joinFields: [
         { field: "id", table: "algAlgcaseLink", foreignField: "alg" },
-      ]
+      ],
     },
-    "subset_name": {
+    subset_name: {
       field: "algcase.subset.name",
       joinFields: [
         { field: "id", table: "algAlgcaseLink", foreignField: "alg" },
-      ]
+      ],
     },
-    "algset_name": {
+    algset_name: {
       field: "algcase.algset.name",
       joinFields: [
         { field: "id", table: "algAlgcaseLink", foreignField: "alg" },
-      ]
+      ],
     },
-    "puzzle_name": {
+    puzzle_name: {
       field: "algcase.puzzle.name",
       joinFields: [
         { field: "id", table: "algAlgcaseLink", foreignField: "alg" },
-      ]
+      ],
     },
-    "tag_name": {
+    tag_name: {
       field: "tag.name",
-      joinFields: [
-        { field: "id", table: "algTagLink", foreignField: "alg" },
-      ]
-    }
+      joinFields: [{ field: "id", table: "algTagLink", foreignField: "alg" }],
+    },
   };
 
-  static sortFieldsMap = {
+  filterFieldsKeyMap = {
+    id: {},
+    code: {},
+    puzzle_code: {
+      field: "puzzle.code",
+    },
+  };
+
+  sortFieldsMap = {
     id: {},
     created_at: {},
   };
 
-  static searchFieldsMap = {
-    sequence: {}
+  searchFieldsMap = {
+    sequence: {},
   };
 
-  static groupByFieldsMap = {
-    "id": {},
+  groupByFieldsMap = {
+    id: {},
   };
 
-  static isFilterRequired = false;
+  isFilterRequired = false;
 
-  static accessControl = {
-    update: async function(req, args, query) {
-      //if args.is_approved is provided, check permissions
-      if("is_approved" in args) {
-        return generateUserRoleGuard([userRole.ADMIN, userRole.MODERATOR])(req, args, query);
-      }
+  accessControl = {
+    get: () => true,
 
-      //else pass
-      return true;
-    },
-    create: generateUserRoleGuard([userRole.ADMIN]),
-    delete: generateUserRoleGuard([userRole.ADMIN]),
+    getMultiple: () => true,
+
+    update: generateUserRoleGuard([userRoleEnum.ADMIN]),
+    create: generateUserRoleGuard([userRoleEnum.ADMIN]),
+    delete: generateUserRoleGuard([userRoleEnum.ADMIN]),
   };
 
-  static async createRecord(req, args = <any> {}, query?: object) {
-    if(!req.user) throw errorHelper.loginRequiredError();
-
-    //algcase required
-    if(!args.algcase) throw errorHelper.missingParamsError();
-
+  async createRecord(req, args: any, query?: object, admin = false) {
     //if it does not pass the access control, throw an error
-    if(!await this.testPermissions('create', req, args, query)) {
+    if (!admin && !(await this.testPermissions("create", req, args, query))) {
       throw errorHelper.badPermissionsError();
     }
-    
+
+    //algcase required
+    if (!args.algcase) throw errorHelper.missingParamsError();
+
     //verify algcase exists
-    const algcaseResults = await mysqlHelper.executeDBQuery("SELECT id FROM algcase WHERE id = :id", { id: args.algcase });
+    const algcaseResults = await mysqlHelper.executeDBQuery(
+      "SELECT id FROM algcase WHERE id = :id",
+      { id: args.algcase }
+    );
 
-    if(algcaseResults.length < 1) throw errorHelper.generateError("Invalid algcase");
+    if (algcaseResults.length < 1)
+      throw errorHelper.generateError("Invalid algcase");
 
-    const addResults = await resolverHelper.addTableRow(this.__typename, {
-      ...args,
-      created_by: req.user.id
-    });
+    const addResults = await resolverHelper.addTableRow(
+      this.__typename,
+      {
+        ...args,
+      },
+      {
+        created_by: req.user.id,
+      }
+    );
 
     //create algAlgcaseLink
-    await resolverHelper.addTableRow(AlgAlgcaseLink.__typename, {
-      alg: addResults.id,
-      algcase: args.algcase
-    }, { created_by: req.user.id });
+    await resolverHelper.addTableRow(
+      AlgAlgcaseLink.__typename,
+      {
+        alg: addResults.id,
+        algcase: args.algcase,
+      },
+      { created_by: req.user.id }
+    );
 
-    const validatedArgs = {
-      created_by: req.user.id
+    // args that will be compared with subscription args
+    const subscriptionFilterableArgs = {
+      created_by: req.user.id,
     };
 
-    subscriptionHelper.handleJqlSubscriptionTriggerIterative(req, this, this.__typename + 'Created', validatedArgs, { id: addResults.id });
+    handleJqlSubscriptionTriggerIterative(
+      req,
+      this,
+      this.__typename + "Created",
+      subscriptionFilterableArgs,
+      { id: addResults.id }
+    );
+
+    handleJqlSubscriptionTriggerIterative(
+      req,
+      this,
+      this.__typename + "ListUpdated",
+      subscriptionFilterableArgs,
+      { id: addResults.id }
+    );
 
     return this.getRecord(req, { id: addResults.id }, query);
   }
-};
+}

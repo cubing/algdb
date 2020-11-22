@@ -1,35 +1,34 @@
-import { User, Puzzle, Algset, Subset, Alg } from '../services'
-
-import { DataTypes } from "sequelize";
-import { dataTypes } from 'jomql';
-
-import * as typeDefHelper from '../../helpers/tier0/typeDef';
+import { User, Puzzle, Algset } from "../services";
+import {
+  generateIdField,
+  generateCreatedAtField,
+  generateUpdatedAtField,
+  generateCreatedByField,
+  generateJoinableField,
+} from "../../helpers/tier0/typeDef";
+import { dataTypes, sequelizeDataTypes } from "jomql";
 
 export default {
-  ...typeDefHelper.generateIdField(),
+  ...generateIdField(),
   name: {
     type: dataTypes.STRING,
+    allowNull: false,
     mysqlOptions: {
-      type: DataTypes.STRING,
+      type: sequelizeDataTypes.STRING,
       allowNull: false,
     },
     addable: true,
     updateable: true,
   },
-  ...typeDefHelper.generateCreatedAtField(),
-  ...typeDefHelper.generateUpdatedAtField(),
-  ...typeDefHelper.generateCreatedByField(User),
-  ...typeDefHelper.generateJoinableField({ service: Puzzle }),
-  ...typeDefHelper.generateJoinableField({ service: Algset }),
-  ...typeDefHelper.generateJoinableField({ service: Subset, required: false }),
-  algs: {
-    type: Alg.paginator.__typename,
-    args: typeDefHelper.generatePaginatorArgs(Alg, ["algcase"]),
-    resolver: async (typename, req, currentObject, query, args, parent) => {
-      return Alg.paginator.getRecord(req, {
-        ...query?.__args,
-        algcase: currentObject.id
-      }, query);
-    }
-  }
-}
+  ...generateCreatedAtField(),
+  ...generateUpdatedAtField(),
+  ...generateCreatedByField(User),
+  /*
+  ...generateJoinableField({
+    service: Puzzle,
+  }),
+  */
+  ...generateJoinableField({
+    service: Algset,
+  }),
+};

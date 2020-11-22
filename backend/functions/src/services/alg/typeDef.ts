@@ -1,42 +1,34 @@
-import { User, UserAlgVoteLink } from '../services'
-
-import { DataTypes } from "sequelize";
-import { dataTypes } from 'jomql';
-
-import * as typeDefHelper from '../../helpers/tier0/typeDef';
+import { User } from "../services";
+import {
+  generateIdField,
+  generateCreatedAtField,
+  generateUpdatedAtField,
+  generateCreatedByField,
+  generateBooleanField,
+} from "../../helpers/tier0/typeDef";
+import { dataTypes, sequelizeDataTypes } from "jomql";
 
 export default {
-  ...typeDefHelper.generateIdField(),
+  ...generateIdField(),
   sequence: {
     type: dataTypes.STRING,
+    allowNull: false,
     mysqlOptions: {
-      type: DataTypes.STRING,
+      type: sequelizeDataTypes.STRING,
       allowNull: false,
     },
     addable: true,
   },
-  ...typeDefHelper.generateCreatedAtField(),
-  ...typeDefHelper.generateUpdatedAtField(),
-  ...typeDefHelper.generateCreatedByField(User),
-  ...typeDefHelper.generateBooleanField("is_approved", {}, { defaultValue: false }),
+  ...generateCreatedAtField(),
+  ...generateUpdatedAtField(),
+  ...generateCreatedByField(User),
+  ...generateBooleanField("is_approved", {}, { defaultValue: false }),
   score: {
     type: dataTypes.INTEGER,
     mysqlOptions: {
-      type: DataTypes.INTEGER,
+      type: sequelizeDataTypes.INTEGER,
       allowNull: false,
-      defaultValue: 0
+      defaultValue: 0,
     },
   },
-  current_user_vote: {
-    type: UserAlgVoteLink.__typename,
-    resolver: async (typename, req, currentObject, query, args, parent) => {
-      if(!req.user) return null;
-      
-      return UserAlgVoteLink.getRecord(req, {
-        ...query?.__args,
-        user: req.user.id,
-        alg: currentObject.id,
-      }, query).catch(e => null);
-    }
-  }
-}
+};

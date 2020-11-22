@@ -1,9 +1,10 @@
-export { userRole } from './enum/userRole';
-import { userRole } from './enum/userRole';
-export { caseVisualization } from './enum/caseVisualization';
-import { caseVisualization } from './enum/caseVisualization';
+export { userRoleEnum } from "./enum/userRole";
+import { userRoleEnum } from "./enum/userRole";
+
+export { caseVisualizationEnum } from "./enum/caseVisualization";
+import { caseVisualizationEnum } from "./enum/caseVisualization";
 
 export const enums = {
-  userRole,
-  caseVisualization
+  userRoleEnum,
+  caseVisualizationEnum,
 };

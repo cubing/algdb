@@ -267,49 +267,6 @@ type UserAlgTagVotePaginator {
 }
 
 type Tag {
-<<<<<<< HEAD
-	id: ID!
-	name: String!
-	created_at: Int!
-	updated_at: Int
-	created_by: User!
-}
-type TagPaginator {
-	paginatorInfo: PaginatorInfo!
-	data: [Tag]!
-}
-type TagFilterInput {
-	created_by: String
-}
-type Auth {
-	type: String!
-	token: String!
-	expiration: Int!
-	user: User!
-}
-type PaginatorInfo {
-	total: Int!
-	count: Int!
-}
-type UserRoleEnum {
-	id: ID!
-	name: UserRole!
-}
-type CaseVisualizationEnum {
-	id: ID!
-	name: CaseVisualization!
-}
-enum UserRole {
-	NORMAL
-	MODERATOR
-	ADMIN
-}
-enum CaseVisualization {
-	V_2D
-	V_3D
-	V_PG3D
-}
-=======
   id: ID!
   name: String!
 }
@@ -329,4 +286,3 @@ type Alg {
   total_votes: Int!
   current_user_vote: Boolean
 }
->>>>>>> origin/master
