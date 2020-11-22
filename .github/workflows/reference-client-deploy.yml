@@ -17,10 +17,10 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@master
       - name: Install Dependencies
-        working-directory: ./frontend
+        working-directory: ./reference_client
         run: npm install
       - name: Generate
-        working-directory: ./frontend
+        working-directory: ./reference_client
         run: npm run generate
         env:
           API_URL: https://api.algdb.net

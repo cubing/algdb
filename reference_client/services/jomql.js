@@ -12,10 +12,10 @@ export async function executeJomql(action, query, args = {}) {
 
   const request = idToken
     ? {
-      headers: {
-        Authorization: 'Bearer ' + idToken,
-      },
-    }
+        headers: {
+          Authorization: 'Bearer ' + idToken,
+        },
+      }
     : null
 
   const { data } = await prodResource.post(
@@ -44,10 +44,10 @@ export async function executeJomqlSubscription(
 
   const request = idToken
     ? {
-      headers: {
-        Authorization: 'Bearer ' + idToken,
-      },
-    }
+        headers: {
+          Authorization: 'Bearer ' + idToken,
+        },
+      }
     : null
 
   const { data } = await prodResource.post(
