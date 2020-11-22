@@ -3,7 +3,8 @@
     {
       "target": "algdb-ref-client",
       "public": "dist",
-      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "trailingSlash": false
     }
   ]
 }
