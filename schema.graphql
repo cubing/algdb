@@ -1,149 +1,18 @@
 type Query {
-	getCurrentUser: User
-	getUser(id: ID!): User!
-	getMultipleUser(
-		id: String
-		first: Int
-		after: ID
-		search: String
-		sortBy: [String]
-		sortDesc: [Boolean]
-		filterBy: UserFilterInput
-	): UserPaginator!
-	getPuzzle(id: ID, code: String): Puzzle!
-	getMultiplePuzzle(
-		id: String
-		first: Int
-		after: ID
-		search: String
-		sortBy: [String]
-		sortDesc: [Boolean]
-		filterBy: PuzzleFilterInput
-	): PuzzlePaginator!
-	getAlgset(id: ID, code: String, puzzle_code: String): Algset!
-	getMultipleAlgset(
-		id: String
-		first: Int
-		after: ID
-		search: String
-		sortBy: [String]
-		sortDesc: [Boolean]
-		filterBy: AlgsetFilterInput
-	): AlgsetPaginator!
-	getSubset(id: ID, code: String, algset_code: String, puzzle_code: String): Subset!
-	getMultipleSubset(
-		id: String
-		first: Int
-		after: ID
-		search: String
-		sortBy: [String]
-		sortDesc: [Boolean]
-		filterBy: SubsetFilterInput
-	): SubsetPaginator!
-	getAlgcase(id: ID!): Algcase!
-	getMultipleAlgcase(
-		id: String
-		first: Int
-		after: ID
-		search: String
-		sortBy: [String]
-		sortDesc: [Boolean]
-		filterBy: AlgcaseFilterInput
-	): AlgcasePaginator!
-	getAlg(id: ID!): Alg!
-	getMultipleAlg(
-		id: String
-		first: Int
-		after: ID
-		search: String
-		sortBy: [String]
-		sortDesc: [Boolean]
-		groupBy: [String]
-		filterBy: AlgFilterInput
-	): AlgPaginator!
-	getTag(id: ID!): Tag!
-	getMultipleTag(
-		id: String
-		first: Int
-		after: ID
-		search: String
-		sortBy: [String]
-		sortDesc: [Boolean]
-		filterBy: TagFilterInput
-	): TagPaginator!
+  getUser(id: ID!): User!
+  getUsers(): [User]!
+  getPuzzles(): [Puzzle]!
 }
 
 type Mutation {
-	deleteUser(id: ID!): User!
-	updateUser(
-		id: ID!
-		name: String
-		avatar: String
-		country: String
-		is_public: Boolean
-		role: UserRole
-	): User!
-	loginUser(email: String!, password: String!): Auth!
-	socialLogin(provider: String!, code: String!): Auth!
-	deletePuzzle(id: ID!): Puzzle!
-	updatePuzzle(id: ID!, name: String, is_public: Boolean, code: String): Puzzle!
-	createPuzzle(name: String!, code: String!): Puzzle!
-	deleteAlgset(id: ID!): Algset!
-	updateAlgset(id: ID!, name: String, is_public: Boolean, mask: String, visualization: CaseVisualization): Algset!
-	createAlgset(
-		name: String
-		mask: String
-		visualization: CaseVisualization
-		puzzle: Puzzle
-		score: Int
-	): Algset!
-	deleteSubset(id: ID!): Subset!
-	updateSubset(id: ID!, name: String, is_public: Boolean, mask: String, visualization: CaseVisualization): Subset!
-	createSubset(
-		name: String
-		mask: String
-		visualization: CaseVisualization
-		puzzle: Puzzle
-		algset: Algset
-		parent: Subset
-		code: String
-	): Subset!
-	deleteAlgcase(id: ID!): Algcase!
-	updateAlgcase(
-		id: ID!
-		name: String
-	): Algcase!
-	createAlgcase(
-		name: String
-		mask: String
-		puzzle: Puzzle
-		algset: Algset
-		subset: Subset
-	): Algcase!
-	deleteAlg(id: ID!): Alg!
-	updateAlg(id: ID!): Alg!
-	createAlg(sequence: String): Alg!
-	deleteAlgAlgcaseLink(id: ID!): AlgAlgcaseLink!
-	updateAlgAlgcaseLink(id: ID!): AlgAlgcaseLink!
-	createAlgAlgcaseLink(
-		alg: Alg
-		algcase: Algcase
-	): AlgAlgcaseLink!
-	deleteUserAlgTagLink(id: ID!): UserAlgTagLink!
-	updateUserAlgTagLink(id: ID!): UserAlgTagLink!
-	createUserAlgTagLink(
-		user: User
-		alg: Alg
-		tag: Tag
-	): UserAlgTagLink!
-	deleteAlgTagLink(id: ID!): AlgTagLink!
-	createAlgTagLink(
-		alg: Alg
-		tag: Tag
-	): AlgTagLink!
-	deleteTag(id: ID!): Tag!
-	createTag(name: String): Tag!
-	upsertUserAlgVoteLink(alg: ID!, vote_value: Integer!): UserAlgVoteLink!
+  login(username: String!, password: String!): User!
+  addPuzzle(): Puzzle!
+  addAlgSet(puzzle_id: ID!): AlgSet!
+  addCase(algset_id: ID!): Case!
+  addAlg(case_id: ID!): Alg!
+  voteAlg(upvote: Boolean!): Alg!
+  updateUser(user_id: ID!, is_public: Boolean): User!
+  favoriteAlg(alg_id: ID!): Alg!
 }
 
 type User {
@@ -398,6 +267,7 @@ type UserAlgTagVotePaginator {
 }
 
 type Tag {
+<<<<<<< HEAD
 	id: ID!
 	name: String!
 	created_at: Int!
@@ -439,3 +309,24 @@ enum CaseVisualization {
 	V_3D
 	V_PG3D
 }
+=======
+  id: ID!
+  name: String!
+}
+
+type userAlgTagLink {
+  id: ID!
+  user: User!
+  tag: Tag!
+  alg: Alg!
+}
+
+type Alg {
+  id: ID!
+  sequence: String!
+  case: Case!
+  up_votes: Int!
+  total_votes: Int!
+  current_user_vote: Boolean
+}
+>>>>>>> origin/master
