@@ -36,6 +36,7 @@ initializeJomql(app, schema, {
     "https://alpha.algdb.net",
     "https://ref.algdb.net",
     "http://localhost:3000",
+    "https://algdb-ref-client.web.app",
   ],
   lookupValue: true,
   jomqlPath: "/jomql",
