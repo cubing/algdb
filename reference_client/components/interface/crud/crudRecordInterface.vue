@@ -14,6 +14,9 @@
     >
       <template v-slot:top>
         <v-toolbar flat color="accent">
+          <v-icon v-if="isChildComponent" left
+            >mdi-subdirectory-arrow-right</v-icon
+          >
           <v-icon left>mdi-domain</v-icon>
           <v-toolbar-title
             >{{ capitalizedType }}s

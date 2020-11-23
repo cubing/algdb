@@ -23,6 +23,14 @@ export default {
       type: Object,
       default: () => ({}),
     },
+    groupBy: {
+      type: Array,
+      required: false,
+    },
+    isChildComponent: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   data() {
@@ -178,6 +186,7 @@ export default {
               ? this.options.sortDesc
               : this.options.sortDesc.map((ele) => !ele),
           filterBy: this.validFilterParams,
+          ...(this.groupBy && { groupBy: this.groupBy }),
         }
       )
 

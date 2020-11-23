@@ -9,17 +9,18 @@ Example Requests:
 
 **Login Using WCA Code**
 
-`POST https://api.algdb.net/jql`
+`POST https://api.algdb.net/jomql`
 
 ```
 {
 	"action": "socialLogin",
 	"query": {
-		"token": null,
-		"type": null,
+		"token": true,
+		"type": true,
 		"__args": {
 			"provider": "wca",
-			"code": "<CODE FROM WCA RESPONSE HERE>"
+			"code": "<CODE FROM WCA RESPONSE HERE>",
+			"redirect_uri": "http://localhost:3000/wca-redirect"
 		}
 	}
 }
@@ -27,21 +28,21 @@ Example Requests:
 
 **Get Current User Info (AUTH)**
 
-`POST https://api.algdb.net/jql`
+`POST https://api.algdb.net/jomql`
 
 ```
 {
 	"action": "getCurrentUser",
 	"query": {
-		"id": null,
-		"wca_id": null,
-		"email": null,
-		"avatar": null,
-		"country": null,
-		"is_public": null,
+		"id": true,
+		"wca_id": true,
+		"email": true,
+		"avatar": true,
+		"country": true,
+		"is_public": true,
 		"role": {
-			"id": null,
-			"name": null
+			"id": true,
+			"name": true
 		}
 	}
 }
@@ -49,21 +50,21 @@ Example Requests:
 
 **Update User by ID (ADMIN) (AUTH)**
 
-`POST https://api.algdb.net/jql`
+`POST https://api.algdb.net/jomql`
 
 ```
 {
 	"action": "updateUser",
 	"query": {
-		"id": null,
-		"wca_id": null,
-		"email": null,
-		"avatar": null,
-		"country": null,
-		"is_public": null,
+		"id": true,
+		"wca_id": true,
+		"email": true,
+		"avatar": true,
+		"country": true,
+		"is_public": true,
 		"role": {
-			"id": null,
-			"name": null
+			"id": true,
+			"name": true
 		},
 		"__args": {
 			"id": 1,
@@ -76,14 +77,14 @@ Example Requests:
 
 **Add Puzzle (ADMIN) (AUTH)**
 
-`POST https://api.algdb.net/jql`
+`POST https://api.algdb.net/jomql`
 
 ```
 {
 	"action": "createPuzzle",
 	"query": {
-		"id": null,
-		"name": null,
+		"id": true,
+		"name": true,
 		"__args": {
 			"id": 1,
 			"name": "3x3x3"
@@ -94,20 +95,20 @@ Example Requests:
 
 **List All Puzzles (showing totals/counts)**
 
-`POST https://api.algdb.net/jql`
+`POST https://api.algdb.net/jomql`
 
 ```
 {
 	"action": "getMultiplePuzzle",
 	"query": {
 		"paginatorInfo": {
-			"count": null,
-			"total": null
+			"count": true,
+			"total": true
 		},
 		"data": {
-			"id": null,
-			"name": null,
-			"created_at": null
+			"id": true,
+			"name": true,
+			"created_at": true
 		}
 	}
 }

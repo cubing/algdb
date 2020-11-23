@@ -18,6 +18,9 @@
     >
       <template v-slot:top>
         <v-toolbar flat color="accent">
+          <v-icon v-if="isChildComponent" left
+            >mdi-subdirectory-arrow-right</v-icon
+          >
           <v-icon left>mdi-domain</v-icon>
           <v-toolbar-title
             >{{ capitalizedType }}s
@@ -98,11 +101,13 @@
         >
       </template>
       <template v-slot:expanded-item="{ headers, item }">
-        <td :colspan="headers.length">
+        <td :colspan="headers.length" class="pr-0">
           <CrudRecordInterface
             class="py-2"
             :record-info="algRecordInfo"
             :filters="subFilter"
+            :group-by="childGroupBy"
+            is-child-component
             @filters-updated="handleFiltersUpdated"
           ></CrudRecordInterface>
         </td>
@@ -156,20 +161,8 @@ export default {
   data() {
     return {
       algRecordInfo,
+      childGroupBy: ['id'],
     }
-  },
-
-  computed: {
-    // override
-    subFilter() {
-      return this.expandedItems.length
-        ? {
-            [this.recordInfo.type.toLowerCase()]: this.expandedItems[0].id,
-            parent: null,
-            ...this.additionalSubFilter,
-          }
-        : {}
-    },
   },
 }
 </script>

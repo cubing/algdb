@@ -2,50 +2,40 @@ type Query {
   getCurrentUser: User
   getUser(id: ID!): User!
   getMultipleUser(
-    id: String
     first: Int
     after: ID
-    search: String
     sortBy: [String]
     sortDesc: [Boolean]
     filterBy: UserFilterInput
   ): UserPaginator!
   getPuzzle(id: ID, code: String): Puzzle!
   getMultiplePuzzle(
-    id: String
     first: Int
     after: ID
-    search: String
     sortBy: [String]
     sortDesc: [Boolean]
     filterBy: PuzzleFilterInput
   ): PuzzlePaginator!
   getAlgset(id: ID, code: String, puzzle_code: String): Algset!
   getMultipleAlgset(
-    id: String
     first: Int
     after: ID
-    search: String
     sortBy: [String]
     sortDesc: [Boolean]
     filterBy: AlgsetFilterInput
   ): AlgsetPaginator!
   getAlgcase(id: ID!): Algcase!
   getMultipleAlgcase(
-    id: String
     first: Int
     after: ID
-    search: String
     sortBy: [String]
     sortDesc: [Boolean]
     filterBy: AlgcaseFilterInput
   ): AlgcasePaginator!
   getAlg(id: ID!): Alg!
   getMultipleAlg(
-    id: String
     first: Int
     after: ID
-    search: String
     sortBy: [String]
     sortDesc: [Boolean]
     groupBy: [String]
@@ -53,10 +43,8 @@ type Query {
   ): AlgPaginator!
   getTag(id: ID!): Tag!
   getMultipleTag(
-    id: String
     first: Int
     after: ID
-    search: String
     sortBy: [String]
     sortDesc: [Boolean]
     filterBy: TagFilterInput
@@ -135,6 +123,7 @@ type UserPaginator {
   data: [User]!
 }
 type UserFilterInput {
+  search: String
   created_by: String
 }
 type Puzzle {
@@ -146,14 +135,11 @@ type Puzzle {
   created_by: User!
   is_public: Boolean!
   algsets(
-    id: String
     first: Int
     after: ID
-    search: String
+    filterBy: Algset
     sortBy: [String]
     sortDesc: [Boolean]
-    created_by: String
-    is_public: Boolean
   ): AlgsetPaginator!
 }
 type PuzzlePaginator {
@@ -161,6 +147,8 @@ type PuzzlePaginator {
   data: [Puzzle]!
 }
 type PuzzleFilterInput {
+  id: ID
+  search: String
   created_by: String
   is_public: Boolean
   code: String
@@ -178,13 +166,11 @@ type Algset {
   puzzle: Puzzle!
   parent: Algset
   algcases(
-    id: String
     first: Int
     after: ID
-    search: String
+    filterBy: AlgcaseFilterInput
     sortBy: [String]
     sortDesc: [Boolean]
-    created_by: String
   ): AlgcasePaginator!
   score: Int!
 }
@@ -193,6 +179,8 @@ type AlgsetPaginator {
   data: [Algset]!
 }
 type AlgsetFilterInput {
+  id: ID
+  search: String
   created_by: String
   parent: String
   puzzle: String
@@ -208,10 +196,8 @@ type Algcase {
   created_by: User!
   algset: Algset!
   algs(
-    id: String
     first: Int
     after: ID
-    search: String
     sortBy: [String]
     sortDesc: [Boolean]
     created_by: String
@@ -226,6 +212,8 @@ type AlgcasePaginator {
   data: [Algcase]!
 }
 type AlgcaseFilterInput {
+  id: ID
+  search: String
   created_by: String
   algset: String
 }
@@ -243,6 +231,8 @@ type AlgPaginator {
   data: [Alg]!
 }
 type AlgFilterInput {
+  id: ID
+  search: String
   created_by: String
   algcase_name: String
   algcase: ID
@@ -314,6 +304,8 @@ type TagPaginator {
   data: [Tag]!
 }
 type TagFilterInput {
+  id: ID
+  search: String
   created_by: String
 }
 type Auth {

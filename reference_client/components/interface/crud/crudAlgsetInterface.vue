@@ -18,6 +18,9 @@
     >
       <template v-slot:top>
         <v-toolbar flat color="accent">
+          <v-icon v-if="isChildComponent" left
+            >mdi-subdirectory-arrow-right</v-icon
+          >
           <v-btn v-if="parentPath.length > 0" icon @click="goToParent()">
             <v-icon>mdi-arrow-left</v-icon></v-btn
           >
@@ -90,6 +93,9 @@
         {{ generateTimeStringFromUnix(props.item.updated_at) }}
       </template>
       <template v-slot:item.null="props">
+        <v-icon small @click.stop="goToChild(props.item.id)"
+          >mdi-arrow-right-circle</v-icon
+        >
         <v-icon small @click.stop="openDialog('viewRecord', props.item)"
           >mdi-eye</v-icon
         >
@@ -101,11 +107,12 @@
         >
       </template>
       <template v-slot:expanded-item="{ headers, item }">
-        <td :colspan="headers.length">
+        <td :colspan="headers.length" class="pr-0">
           <CrudAlgcaseInterface
             class="py-2"
             :record-info="algcaseRecordInfo"
             :filters="subFilter"
+            is-child-component
             @filters-updated="handleFiltersUpdated"
           ></CrudAlgcaseInterface>
         </td>
@@ -165,8 +172,12 @@ export default {
 
   methods: {
     handleRowClick(item) {
+      this.goToChild(item.id)
+    },
+
+    goToChild(id) {
       this.parentPath.push(this.filterInputs.parent)
-      this.filterInputs.parent = item.id
+      this.filterInputs.parent = id
       this.updateFilters()
     },
 

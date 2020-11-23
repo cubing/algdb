@@ -155,7 +155,7 @@ export const algsetRecordInfo = {
       text: 'Action',
       sortable: false,
       value: null,
-      width: '90px',
+      width: '110px',
     },
   ],
 }
