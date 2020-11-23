@@ -50,6 +50,7 @@ export default {
         const data = await executeJomql('socialLogin', LOGIN_MUTATION, {
           provider: 'wca',
           code: this.$route.query.code,
+          redirect_uri: window.location.href,
         })
 
         await authService.handleLogin(this, data)

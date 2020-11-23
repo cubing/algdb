@@ -71,7 +71,7 @@ export class AuthService extends Service {
   }
 
   async socialLogin(req, args, query) {
-    if (!args.provider || !args.code) {
+    if (!args.provider || !args.code || !args.redirect_uri) {
       throw errorHelper.missingParamsError();
     }
 
@@ -90,7 +90,7 @@ export class AuthService extends Service {
       client_id: env.wca.client_id,
       client_secret: env.wca.client_secret,
       code: args.code,
-      redirect_uri: env.wca.redirect_uri,
+      redirect_uri: args.redirect_uri,
     });
 
     //hit the /me route to get the user info
