@@ -1,288 +1,445 @@
 type Query {
+  getCurrentUser: User
   getUser(id: ID!): User!
-  getUsers(): [User]!
-  getPuzzles(): [Puzzle]!
+  getMultipleUser(
+    id: String
+    first: Int
+    after: ID
+    search: String
+    sortBy: [String]
+    sortDesc: [Boolean]
+    filterBy: UserFilterInput
+  ): UserPaginator!
+  getPuzzle(id: ID, code: String): Puzzle!
+  getMultiplePuzzle(
+    id: String
+    first: Int
+    after: ID
+    search: String
+    sortBy: [String]
+    sortDesc: [Boolean]
+    filterBy: PuzzleFilterInput
+  ): PuzzlePaginator!
+  getAlgset(id: ID, code: String, puzzle_code: String): Algset!
+  getMultipleAlgset(
+    id: String
+    first: Int
+    after: ID
+    search: String
+    sortBy: [String]
+    sortDesc: [Boolean]
+    filterBy: AlgsetFilterInput
+  ): AlgsetPaginator!
+  getSubset(
+    id: ID
+    code: String
+    algset_code: String
+    puzzle_code: String
+  ): Subset!
+  getMultipleSubset(
+    id: String
+    first: Int
+    after: ID
+    search: String
+    sortBy: [String]
+    sortDesc: [Boolean]
+    filterBy: SubsetFilterInput
+  ): SubsetPaginator!
+  getAlgcase(id: ID!): Algcase!
+  getMultipleAlgcase(
+    id: String
+    first: Int
+    after: ID
+    search: String
+    sortBy: [String]
+    sortDesc: [Boolean]
+    filterBy: AlgcaseFilterInput
+  ): AlgcasePaginator!
+  getAlg(id: ID!): Alg!
+  getMultipleAlg(
+    id: String
+    first: Int
+    after: ID
+    search: String
+    sortBy: [String]
+    sortDesc: [Boolean]
+    groupBy: [String]
+    filterBy: AlgFilterInput
+  ): AlgPaginator!
+  getTag(id: ID!): Tag!
+  getMultipleTag(
+    id: String
+    first: Int
+    after: ID
+    search: String
+    sortBy: [String]
+    sortDesc: [Boolean]
+    filterBy: TagFilterInput
+  ): TagPaginator!
 }
 
 type Mutation {
-  login(username: String!, password: String!): User!
-  addPuzzle(): Puzzle!
-  addAlgSet(puzzle_id: ID!): AlgSet!
-  addCase(algset_id: ID!): Case!
-  addAlg(case_id: ID!): Alg!
-  voteAlg(upvote: Boolean!): Alg!
-  updateUser(user_id: ID!, is_public: Boolean): User!
-  favoriteAlg(alg_id: ID!): Alg!
+  deleteUser(id: ID!): User!
+  updateUser(
+    id: ID!
+    name: String
+    avatar: String
+    country: String
+    is_public: Boolean
+    role: UserRole
+  ): User!
+  loginUser(email: String!, password: String!): Auth!
+  socialLogin(provider: String!, code: String!): Auth!
+  deletePuzzle(id: ID!): Puzzle!
+  updatePuzzle(id: ID!, name: String, is_public: Boolean, code: String): Puzzle!
+  createPuzzle(name: String!, code: String!): Puzzle!
+  deleteAlgset(id: ID!): Algset!
+  updateAlgset(
+    id: ID!
+    name: String
+    is_public: Boolean
+    mask: String
+    visualization: CaseVisualization
+  ): Algset!
+  createAlgset(
+    name: String
+    mask: String
+    visualization: CaseVisualization
+    puzzle: Puzzle
+    score: Int
+  ): Algset!
+  deleteSubset(id: ID!): Subset!
+  updateSubset(
+    id: ID!
+    name: String
+    is_public: Boolean
+    mask: String
+    visualization: CaseVisualization
+  ): Subset!
+  createSubset(
+    name: String
+    mask: String
+    visualization: CaseVisualization
+    puzzle: Puzzle
+    algset: Algset
+    parent: Subset
+    code: String
+  ): Subset!
+  deleteAlgcase(id: ID!): Algcase!
+  updateAlgcase(id: ID!, name: String): Algcase!
+  createAlgcase(
+    name: String
+    mask: String
+    puzzle: Puzzle
+    algset: Algset
+    subset: Subset
+  ): Algcase!
+  deleteAlg(id: ID!): Alg!
+  updateAlg(id: ID!): Alg!
+  createAlg(sequence: String): Alg!
+  deleteAlgAlgcaseLink(id: ID!): AlgAlgcaseLink!
+  updateAlgAlgcaseLink(id: ID!): AlgAlgcaseLink!
+  createAlgAlgcaseLink(alg: Alg, algcase: Algcase): AlgAlgcaseLink!
+  deleteUserAlgTagLink(id: ID!): UserAlgTagLink!
+  updateUserAlgTagLink(id: ID!): UserAlgTagLink!
+  createUserAlgTagLink(user: User, alg: Alg, tag: Tag): UserAlgTagLink!
+  deleteAlgTagLink(id: ID!): AlgTagLink!
+  createAlgTagLink(alg: Alg, tag: Tag): AlgTagLink!
+  deleteTag(id: ID!): Tag!
+  createTag(name: String): Tag!
+  upsertUserAlgVoteLink(alg: ID!, vote_value: Integer!): UserAlgVoteLink!
 }
 
 type User {
-	id: ID!
-	wca_id: String
-	email: String!
-	name: String
-	avatar: String
-	country: String
-	is_public: Boolean!
-	created_at: Int!
-	updated_at: Int
-	created_by: User!
-	role: UserRoleEnum!
+  id: ID!
+  wca_id: String
+  email: String!
+  name: String
+  avatar: String
+  country: String
+  is_public: Boolean!
+  created_at: Int!
+  updated_at: Int
+  created_by: User!
+  role: UserRoleEnum!
 }
 type UserPaginator {
-	paginatorInfo: PaginatorInfo!
-	data: [User]!
+  paginatorInfo: PaginatorInfo!
+  data: [User]!
 }
 type UserFilterInput {
-	created_by: String
+  created_by: String
 }
 type Puzzle {
-	id: ID!
-	name: String!
-	code: String!
-	created_at: Int!
-	updated_at: Int
-	created_by: User!
-	is_public: Boolean!
-	algsets(
-		id: String
-		first: Int
-		after: ID
-		search: String
-		sortBy: [String]
-		sortDesc: [Boolean]
-		created_by: String
-		is_public: Boolean
-	): AlgsetPaginator!
+  id: ID!
+  name: String!
+  code: String!
+  created_at: Int!
+  updated_at: Int
+  created_by: User!
+  is_public: Boolean!
+  algsets(
+    id: String
+    first: Int
+    after: ID
+    search: String
+    sortBy: [String]
+    sortDesc: [Boolean]
+    created_by: String
+    is_public: Boolean
+  ): AlgsetPaginator!
 }
 type PuzzlePaginator {
-	paginatorInfo: PaginatorInfo!
-	data: [Puzzle]!
+  paginatorInfo: PaginatorInfo!
+  data: [Puzzle]!
 }
 type PuzzleFilterInput {
-	created_by: String
-	is_public: Boolean
-	code: String
+  created_by: String
+  is_public: Boolean
+  code: String
 }
 type Algset {
-	id: ID!
-	name: String!
-	code: String!
-	mask: String
-	visualization: CaseVisualizationEnum!
-	created_at: Int!
-	updated_at: Int
-	created_by: User!
-	is_public: Boolean!
-	puzzle: Puzzle!
-	algcases(
-		id: String
-		first: Int
-		after: ID
-		search: String
-		sortBy: [String]
-		sortDesc: [Boolean]
-		created_by: String
-		subset: String
-	): AlgcasePaginator!
-	subsets(
-		id: String
-		first: Int
-		after: ID
-		search: String
-		sortBy: [String]
-		sortDesc: [Boolean]
-		created_by: String
-		is_public: Boolean
-		puzzle: String
-		parent: String
-	): SubsetPaginator!
-	score: Int!
+  id: ID!
+  name: String!
+  code: String!
+  mask: String
+  visualization: CaseVisualizationEnum!
+  created_at: Int!
+  updated_at: Int
+  created_by: User!
+  is_public: Boolean!
+  puzzle: Puzzle!
+  algcases(
+    id: String
+    first: Int
+    after: ID
+    search: String
+    sortBy: [String]
+    sortDesc: [Boolean]
+    created_by: String
+    subset: String
+  ): AlgcasePaginator!
+  subsets(
+    id: String
+    first: Int
+    after: ID
+    search: String
+    sortBy: [String]
+    sortDesc: [Boolean]
+    created_by: String
+    is_public: Boolean
+    puzzle: String
+    parent: String
+  ): SubsetPaginator!
+  score: Int!
 }
 type AlgsetPaginator {
-	paginatorInfo: PaginatorInfo!
-	data: [Algset]!
+  paginatorInfo: PaginatorInfo!
+  data: [Algset]!
 }
 type AlgsetFilterInput {
-	created_by: String
-	puzzle: String
-	puzzle_code: String
-	is_public: Boolean
-	code: String
+  created_by: String
+  puzzle: String
+  puzzle_code: String
+  is_public: Boolean
+  code: String
 }
 type Subset {
-	id: ID!
-	name: String!
-	code: String!
-	mask: String
-	visualization: CaseVisualizationEnum!
-	created_at: Int!
-	updated_at: Int
-	created_by: User!
-	is_public: Boolean!
-	puzzle: Puzzle!
-	algset: Algset!
-	parent: Subset
-	algcases(
-		id: String
-		first: Int
-		after: ID
-		search: String
-		sortBy: [String]
-		sortDesc: [Boolean]
-		created_by: String
-		algset: String
-	): AlgcasePaginator!
-	subsets(
-		id: String
-		first: Int
-		after: ID
-		search: String
-		sortBy: [String]
-		sortDesc: [Boolean]
-		created_by: String
-		is_public: Boolean
-		puzzle: String
-		algset: String
-	): SubsetPaginator!
+  id: ID!
+  name: String!
+  code: String!
+  mask: String
+  visualization: CaseVisualizationEnum!
+  created_at: Int!
+  updated_at: Int
+  created_by: User!
+  is_public: Boolean!
+  puzzle: Puzzle!
+  algset: Algset!
+  parent: Subset
+  algcases(
+    id: String
+    first: Int
+    after: ID
+    search: String
+    sortBy: [String]
+    sortDesc: [Boolean]
+    created_by: String
+    algset: String
+  ): AlgcasePaginator!
+  subsets(
+    id: String
+    first: Int
+    after: ID
+    search: String
+    sortBy: [String]
+    sortDesc: [Boolean]
+    created_by: String
+    is_public: Boolean
+    puzzle: String
+    algset: String
+  ): SubsetPaginator!
 }
 type SubsetPaginator {
-	paginatorInfo: PaginatorInfo!
-	data: [Subset]!
+  paginatorInfo: PaginatorInfo!
+  data: [Subset]!
 }
 type SubsetFilterInput {
-	created_by: String
-	puzzle: String
-	puzzle_code: String
-	algset: String
-	algset_code: String
-	parent: String
-	code: String
-	is_public: Boolean
+  created_by: String
+  puzzle: String
+  puzzle_code: String
+  algset: String
+  algset_code: String
+  parent: String
+  code: String
+  is_public: Boolean
 }
 type Algcase {
-	id: ID!
-	name: String!
-	created_at: Int!
-	updated_at: Int
-	created_by: User!
-	puzzle: Puzzle!
-	algset: Algset!
-	subset: Subset!
-	algs(
-		id: String
-		first: Int
-		after: ID
-		search: String
-		sortBy: [String]
-		sortDesc: [Boolean]
-		created_by: String
-		algcase_name: String
-		subset_name: String
-		algset_name: String
-		puzzle_name: String
-		tag_name: [String]
-	): AlgPaginator!
+  id: ID!
+  name: String!
+  created_at: Int!
+  updated_at: Int
+  created_by: User!
+  puzzle: Puzzle!
+  algset: Algset!
+  subset: Subset!
+  algs(
+    id: String
+    first: Int
+    after: ID
+    search: String
+    sortBy: [String]
+    sortDesc: [Boolean]
+    created_by: String
+    algcase_name: String
+    subset_name: String
+    algset_name: String
+    puzzle_name: String
+    tag_name: [String]
+  ): AlgPaginator!
 }
 type AlgcasePaginator {
-	paginatorInfo: PaginatorInfo!
-	data: [Algcase]!
+  paginatorInfo: PaginatorInfo!
+  data: [Algcase]!
 }
 type AlgcaseFilterInput {
-	created_by: String
-	algset: String
-	subset: String
+  created_by: String
+  algset: String
+  subset: String
 }
 type Alg {
-	id: ID!
-	sequence: String!
-	created_at: Int!
-	updated_at: Int
-	created_by: User!
-	score: Int!
-	current_user_vote: UserAlgVoteLink
+  id: ID!
+  sequence: String!
+  created_at: Int!
+  updated_at: Int
+  created_by: User!
+  score: Int!
+  current_user_vote: UserAlgVoteLink
 }
 type AlgPaginator {
-	paginatorInfo: PaginatorInfo!
-	data: [Alg]!
+  paginatorInfo: PaginatorInfo!
+  data: [Alg]!
 }
 type AlgFilterInput {
-	created_by: String
-	algcase_name: String
-	algcase: ID
-	subset_name: String
-	algset_name: String
-	puzzle_name: String
-	tag_name: [String]
+  created_by: String
+  algcase_name: String
+  algcase: ID
+  subset_name: String
+  algset_name: String
+  puzzle_name: String
+  tag_name: [String]
 }
 type AlgAlgcaseLink {
-	id: ID!
-	alg: Alg!
-	algcase: Algcase!
-	created_at: Int!
-	updated_at: Int
-	created_by: User!
+  id: ID!
+  alg: Alg!
+  algcase: Algcase!
+  created_at: Int!
+  updated_at: Int
+  created_by: User!
 }
 type AlgAlgcaseLinkPaginator {
-	paginatorInfo: PaginatorInfo!
-	data: [AlgAlgcaseLink]!
+  paginatorInfo: PaginatorInfo!
+  data: [AlgAlgcaseLink]!
 }
 type AlgTagLink {
-	id: ID!
-	alg: Alg!
-	tag: Tag!
-	created_at: Int!
-	updated_at: Int
-	created_by: User!
+  id: ID!
+  alg: Alg!
+  tag: Tag!
+  created_at: Int!
+  updated_at: Int
+  created_by: User!
 }
 type AlgTagLinkPaginator {
-	paginatorInfo: PaginatorInfo!
-	data: [AlgTagLink]!
+  paginatorInfo: PaginatorInfo!
+  data: [AlgTagLink]!
 }
 type UserAlgTagLink {
-	id: ID!
-	user: User!
-	alg: Alg!
-	tag: String!
-	created_at: Int!
-	updated_at: Int
-	created_by: User!
+  id: ID!
+  user: User!
+  alg: Alg!
+  tag: String!
+  created_at: Int!
+  updated_at: Int
+  created_by: User!
 }
 type UserAlgTagLinkPaginator {
-	paginatorInfo: PaginatorInfo!
-	data: [UserAlgTagLink]!
+  paginatorInfo: PaginatorInfo!
+  data: [UserAlgTagLink]!
 }
 
 type UserAlgVoteLink {
-	id: ID!
-	user: User!
-	alg: Alg!
-	vote_value: Integer!
-	created_at: Int!
-	updated_at: Int
-	created_by: User!
+  id: ID!
+  user: User!
+  alg: Alg!
+  vote_value: Integer!
+  created_at: Int!
+  updated_at: Int
+  created_by: User!
 }
 type UserAlgTagVotePaginator {
-	paginatorInfo: PaginatorInfo!
-	data: [UserAlgVoteLink]!
+  paginatorInfo: PaginatorInfo!
+  data: [UserAlgVoteLink]!
 }
 
 type Tag {
   id: ID!
   name: String!
+  created_at: Int!
+  updated_at: Int
+  created_by: User!
 }
-
-type userAlgTagLink {
-  id: ID!
+type TagPaginator {
+  paginatorInfo: PaginatorInfo!
+  data: [Tag]!
+}
+type TagFilterInput {
+  created_by: String
+}
+type Auth {
+  type: String!
+  token: String!
+  expiration: Int!
   user: User!
-  tag: Tag!
-  alg: Alg!
 }
-
-type Alg {
+type PaginatorInfo {
+  total: Int!
+  count: Int!
+}
+type UserRoleEnum {
   id: ID!
-  sequence: String!
-  case: Case!
-  up_votes: Int!
-  total_votes: Int!
-  current_user_vote: Boolean
+  name: UserRole!
+}
+type CaseVisualizationEnum {
+  id: ID!
+  name: CaseVisualization!
+}
+enum UserRole {
+  NORMAL
+  MODERATOR
+  ADMIN
+}
+enum CaseVisualization {
+  V_2D
+  V_3D
+  V_PG3D
 }
