@@ -26,6 +26,7 @@ export const puzzleRecordInfo = {
       text: 'Public',
       addable: true,
       editable: true,
+      getOptions: getBooleanOptions,
     },
   },
   headers: [

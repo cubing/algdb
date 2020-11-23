@@ -25,7 +25,7 @@ jobs:
         env:
           API_URL: https://api.algdb.net
           VER: "0.0.1"
-          WCA_AUTH_URL: https://staging.worldcubeassociation.org/oauth/authorize?client_id=example-application-id&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fwca-redirect&response_type=code&scope=public+dob+email+manage_competitions
+          WCA_AUTH_URL: https://staging.worldcubeassociation.org/oauth/authorize?client_id=example-application-id&redirect_uri=https%3A%2F%2Falgdb-ref-client.web.app%2Fwca-redirect&response_type=code&scope=public+dob+email+manage_competitions
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
         with:
