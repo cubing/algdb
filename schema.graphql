@@ -30,21 +30,6 @@ type Query {
     sortDesc: [Boolean]
     filterBy: AlgsetFilterInput
   ): AlgsetPaginator!
-  getSubset(
-    id: ID
-    code: String
-    algset_code: String
-    puzzle_code: String
-  ): Subset!
-  getMultipleSubset(
-    id: String
-    first: Int
-    after: ID
-    search: String
-    sortBy: [String]
-    sortDesc: [Boolean]
-    filterBy: SubsetFilterInput
-  ): SubsetPaginator!
   getAlgcase(id: ID!): Algcase!
   getMultipleAlgcase(
     id: String
@@ -108,23 +93,6 @@ type Mutation {
     puzzle: Puzzle
     score: Int
   ): Algset!
-  deleteSubset(id: ID!): Subset!
-  updateSubset(
-    id: ID!
-    name: String
-    is_public: Boolean
-    mask: String
-    visualization: CaseVisualization
-  ): Subset!
-  createSubset(
-    name: String
-    mask: String
-    visualization: CaseVisualization
-    puzzle: Puzzle
-    algset: Algset
-    parent: Subset
-    code: String
-  ): Subset!
   deleteAlgcase(id: ID!): Algcase!
   updateAlgcase(id: ID!, name: String): Algcase!
   createAlgcase(
@@ -132,7 +100,6 @@ type Mutation {
     mask: String
     puzzle: Puzzle
     algset: Algset
-    subset: Subset
   ): Algcase!
   deleteAlg(id: ID!): Alg!
   updateAlg(id: ID!): Alg!
@@ -203,12 +170,13 @@ type Algset {
   name: String!
   code: String!
   mask: String
-  visualization: CaseVisualizationEnum!
+  visualization: CaseVisualization!
   created_at: Int!
   updated_at: Int
   created_by: User!
   is_public: Boolean!
   puzzle: Puzzle!
+  parent: Algset
   algcases(
     id: String
     first: Int
@@ -217,20 +185,7 @@ type Algset {
     sortBy: [String]
     sortDesc: [Boolean]
     created_by: String
-    subset: String
   ): AlgcasePaginator!
-  subsets(
-    id: String
-    first: Int
-    after: ID
-    search: String
-    sortBy: [String]
-    sortDesc: [Boolean]
-    created_by: String
-    is_public: Boolean
-    puzzle: String
-    parent: String
-  ): SubsetPaginator!
   score: Int!
 }
 type AlgsetPaginator {
@@ -239,60 +194,11 @@ type AlgsetPaginator {
 }
 type AlgsetFilterInput {
   created_by: String
-  puzzle: String
-  puzzle_code: String
-  is_public: Boolean
-  code: String
-}
-type Subset {
-  id: ID!
-  name: String!
-  code: String!
-  mask: String
-  visualization: CaseVisualizationEnum!
-  created_at: Int!
-  updated_at: Int
-  created_by: User!
-  is_public: Boolean!
-  puzzle: Puzzle!
-  algset: Algset!
-  parent: Subset
-  algcases(
-    id: String
-    first: Int
-    after: ID
-    search: String
-    sortBy: [String]
-    sortDesc: [Boolean]
-    created_by: String
-    algset: String
-  ): AlgcasePaginator!
-  subsets(
-    id: String
-    first: Int
-    after: ID
-    search: String
-    sortBy: [String]
-    sortDesc: [Boolean]
-    created_by: String
-    is_public: Boolean
-    puzzle: String
-    algset: String
-  ): SubsetPaginator!
-}
-type SubsetPaginator {
-  paginatorInfo: PaginatorInfo!
-  data: [Subset]!
-}
-type SubsetFilterInput {
-  created_by: String
-  puzzle: String
-  puzzle_code: String
-  algset: String
-  algset_code: String
   parent: String
-  code: String
+  puzzle: String
+  puzzle_code: String
   is_public: Boolean
+  code: String
 }
 type Algcase {
   id: ID!
@@ -300,9 +206,7 @@ type Algcase {
   created_at: Int!
   updated_at: Int
   created_by: User!
-  puzzle: Puzzle!
   algset: Algset!
-  subset: Subset!
   algs(
     id: String
     first: Int
@@ -312,7 +216,6 @@ type Algcase {
     sortDesc: [Boolean]
     created_by: String
     algcase_name: String
-    subset_name: String
     algset_name: String
     puzzle_name: String
     tag_name: [String]
@@ -325,7 +228,6 @@ type AlgcasePaginator {
 type AlgcaseFilterInput {
   created_by: String
   algset: String
-  subset: String
 }
 type Alg {
   id: ID!
@@ -344,7 +246,6 @@ type AlgFilterInput {
   created_by: String
   algcase_name: String
   algcase: ID
-  subset_name: String
   algset_name: String
   puzzle_name: String
   tag_name: [String]
@@ -428,10 +329,6 @@ type PaginatorInfo {
 type UserRoleEnum {
   id: ID!
   name: UserRole!
-}
-type CaseVisualizationEnum {
-  id: ID!
-  name: CaseVisualization!
 }
 enum UserRole {
   NORMAL
