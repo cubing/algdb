@@ -18,18 +18,10 @@ export type Query = {
   getMultiplePuzzle: PuzzlePaginator;
   getAlgset: Algset;
   getMultipleAlgset: AlgsetPaginator;
-  getSubset: Subset;
-  getMultipleSubset: SubsetPaginator;
   getAlgcase: Algcase;
   getMultipleAlgcase: AlgcasePaginator;
   getAlg: Alg;
   getMultipleAlg: AlgPaginator;
-  getAlgAlgcaseLink: AlgAlgcaseLink;
-  getMultipleAlgAlgcaseLink: AlgAlgcaseLinkPaginator;
-  getAlgTagLink: AlgTagLink;
-  getMultipleAlgTagLink: AlgTagLinkPaginator;
-  getUserAlgTagLink: UserAlgTagLink;
-  getMultipleUserAlgTagLink: UserAlgTagLinkPaginator;
   getTag: Tag;
   getMultipleTag: TagPaginator;
 };
@@ -41,13 +33,11 @@ export type QueryGetUserArgs = {
 
 
 export type QueryGetMultipleUserArgs = {
-  id?: Maybe<Scalars['String']>;
   first?: Maybe<Scalars['Int']>;
   after?: Maybe<Scalars['ID']>;
-  search?: Maybe<Scalars['String']>;
   sortBy?: Maybe<Array<Maybe<Scalars['String']>>>;
   sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
-  created_by?: Maybe<Scalars['String']>;
+  filterBy?: Maybe<UserFilterInput>;
 };
 
 
@@ -58,15 +48,11 @@ export type QueryGetPuzzleArgs = {
 
 
 export type QueryGetMultiplePuzzleArgs = {
-  id?: Maybe<Scalars['String']>;
   first?: Maybe<Scalars['Int']>;
   after?: Maybe<Scalars['ID']>;
-  search?: Maybe<Scalars['String']>;
   sortBy?: Maybe<Array<Maybe<Scalars['String']>>>;
   sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
-  created_by?: Maybe<Scalars['String']>;
-  is_public?: Maybe<Scalars['Boolean']>;
-  code?: Maybe<Scalars['String']>;
+  filterBy?: Maybe<PuzzleFilterInput>;
 };
 
 
@@ -78,43 +64,11 @@ export type QueryGetAlgsetArgs = {
 
 
 export type QueryGetMultipleAlgsetArgs = {
-  id?: Maybe<Scalars['String']>;
   first?: Maybe<Scalars['Int']>;
   after?: Maybe<Scalars['ID']>;
-  search?: Maybe<Scalars['String']>;
   sortBy?: Maybe<Array<Maybe<Scalars['String']>>>;
   sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
-  created_by?: Maybe<Scalars['String']>;
-  puzzle?: Maybe<Scalars['String']>;
-  puzzle_code?: Maybe<Scalars['String']>;
-  is_public?: Maybe<Scalars['Boolean']>;
-  code?: Maybe<Scalars['String']>;
-};
-
-
-export type QueryGetSubsetArgs = {
-  id?: Maybe<Scalars['ID']>;
-  code?: Maybe<Scalars['String']>;
-  algset_code?: Maybe<Scalars['String']>;
-  puzzle_code?: Maybe<Scalars['String']>;
-};
-
-
-export type QueryGetMultipleSubsetArgs = {
-  id?: Maybe<Scalars['String']>;
-  first?: Maybe<Scalars['Int']>;
-  after?: Maybe<Scalars['ID']>;
-  search?: Maybe<Scalars['String']>;
-  sortBy?: Maybe<Array<Maybe<Scalars['String']>>>;
-  sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
-  created_by?: Maybe<Scalars['String']>;
-  puzzle?: Maybe<Scalars['String']>;
-  puzzle_code?: Maybe<Scalars['String']>;
-  algset?: Maybe<Scalars['String']>;
-  algset_code?: Maybe<Scalars['String']>;
-  parent?: Maybe<Scalars['String']>;
-  code?: Maybe<Scalars['String']>;
-  is_public?: Maybe<Scalars['Boolean']>;
+  filterBy?: Maybe<AlgsetFilterInput>;
 };
 
 
@@ -124,15 +78,11 @@ export type QueryGetAlgcaseArgs = {
 
 
 export type QueryGetMultipleAlgcaseArgs = {
-  id?: Maybe<Scalars['String']>;
   first?: Maybe<Scalars['Int']>;
   after?: Maybe<Scalars['ID']>;
-  search?: Maybe<Scalars['String']>;
   sortBy?: Maybe<Array<Maybe<Scalars['String']>>>;
   sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
-  created_by?: Maybe<Scalars['String']>;
-  algset?: Maybe<Scalars['String']>;
-  subset?: Maybe<Scalars['String']>;
+  filterBy?: Maybe<AlgcaseFilterInput>;
 };
 
 
@@ -142,87 +92,12 @@ export type QueryGetAlgArgs = {
 
 
 export type QueryGetMultipleAlgArgs = {
-  id?: Maybe<Scalars['String']>;
   first?: Maybe<Scalars['Int']>;
   after?: Maybe<Scalars['ID']>;
-  search?: Maybe<Scalars['String']>;
   sortBy?: Maybe<Array<Maybe<Scalars['String']>>>;
   sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
   groupBy?: Maybe<Array<Maybe<Scalars['String']>>>;
-  created_by?: Maybe<Scalars['String']>;
-  algcase_name?: Maybe<Scalars['String']>;
-  algcase?: Maybe<Scalars['ID']>;
-  subset_name?: Maybe<Scalars['String']>;
-  algset_name?: Maybe<Scalars['String']>;
-  puzzle_name?: Maybe<Scalars['String']>;
-  tag_name?: Maybe<Array<Maybe<Scalars['String']>>>;
-};
-
-
-export type QueryGetAlgAlgcaseLinkArgs = {
-  id: Scalars['ID'];
-};
-
-
-export type QueryGetMultipleAlgAlgcaseLinkArgs = {
-  id?: Maybe<Scalars['String']>;
-  first?: Maybe<Scalars['Int']>;
-  after?: Maybe<Scalars['ID']>;
-  search?: Maybe<Scalars['String']>;
-  sortBy?: Maybe<Array<Maybe<Scalars['String']>>>;
-  sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
-  created_by?: Maybe<Scalars['String']>;
-  alg?: Maybe<Scalars['String']>;
-  algcase?: Maybe<Scalars['String']>;
-  algcase_name?: Maybe<Scalars['String']>;
-  algcase_subset?: Maybe<Scalars['String']>;
-  algcase_subset_name?: Maybe<Scalars['String']>;
-  algcase_algset?: Maybe<Scalars['String']>;
-  algcase_algset_name?: Maybe<Scalars['String']>;
-  algcase_puzzle?: Maybe<Scalars['String']>;
-  algcase_puzzle_name?: Maybe<Scalars['String']>;
-  tag_name?: Maybe<Scalars['String']>;
-  subset?: Maybe<Scalars['String']>;
-  algset?: Maybe<Scalars['String']>;
-  puzzle?: Maybe<Scalars['String']>;
-};
-
-
-export type QueryGetAlgTagLinkArgs = {
-  id: Scalars['ID'];
-};
-
-
-export type QueryGetMultipleAlgTagLinkArgs = {
-  id?: Maybe<Scalars['String']>;
-  first?: Maybe<Scalars['Int']>;
-  after?: Maybe<Scalars['ID']>;
-  search?: Maybe<Scalars['String']>;
-  sortBy?: Maybe<Array<Maybe<Scalars['String']>>>;
-  sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
-  created_by?: Maybe<Scalars['String']>;
-  alg?: Maybe<Scalars['String']>;
-  tag?: Maybe<Scalars['String']>;
-  tag_name?: Maybe<Scalars['String']>;
-};
-
-
-export type QueryGetUserAlgTagLinkArgs = {
-  id: Scalars['ID'];
-};
-
-
-export type QueryGetMultipleUserAlgTagLinkArgs = {
-  id?: Maybe<Scalars['String']>;
-  first?: Maybe<Scalars['Int']>;
-  after?: Maybe<Scalars['ID']>;
-  search?: Maybe<Scalars['String']>;
-  sortBy?: Maybe<Array<Maybe<Scalars['String']>>>;
-  sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
-  created_by?: Maybe<Scalars['String']>;
-  alg?: Maybe<Scalars['String']>;
-  user?: Maybe<Scalars['String']>;
-  tag?: Maybe<Scalars['String']>;
+  filterBy?: Maybe<AlgFilterInput>;
 };
 
 
@@ -232,13 +107,11 @@ export type QueryGetTagArgs = {
 
 
 export type QueryGetMultipleTagArgs = {
-  id?: Maybe<Scalars['String']>;
   first?: Maybe<Scalars['Int']>;
   after?: Maybe<Scalars['ID']>;
-  search?: Maybe<Scalars['String']>;
   sortBy?: Maybe<Array<Maybe<Scalars['String']>>>;
   sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
-  created_by?: Maybe<Scalars['String']>;
+  filterBy?: Maybe<TagFilterInput>;
 };
 
 export type Mutation = {
@@ -253,9 +126,6 @@ export type Mutation = {
   deleteAlgset: Algset;
   updateAlgset: Algset;
   createAlgset: Algset;
-  deleteSubset: Subset;
-  updateSubset: Subset;
-  createSubset: Subset;
   deleteAlgcase: Algcase;
   updateAlgcase: Algcase;
   createAlgcase: Algcase;
@@ -272,6 +142,7 @@ export type Mutation = {
   createAlgTagLink: AlgTagLink;
   deleteTag: Tag;
   createTag: Tag;
+  upsertUserAlgVoteLink: UserAlgVoteLink;
 };
 
 
@@ -344,31 +215,6 @@ export type MutationCreateAlgsetArgs = {
 };
 
 
-export type MutationDeleteSubsetArgs = {
-  id: Scalars['ID'];
-};
-
-
-export type MutationUpdateSubsetArgs = {
-  id: Scalars['ID'];
-  name?: Maybe<Scalars['String']>;
-  is_public?: Maybe<Scalars['Boolean']>;
-  mask?: Maybe<Scalars['String']>;
-  visualization?: Maybe<CaseVisualization>;
-};
-
-
-export type MutationCreateSubsetArgs = {
-  name?: Maybe<Scalars['String']>;
-  mask?: Maybe<Scalars['String']>;
-  visualization?: Maybe<CaseVisualization>;
-  puzzle?: Maybe<Puzzle>;
-  algset?: Maybe<Algset>;
-  parent?: Maybe<Subset>;
-  code?: Maybe<Scalars['String']>;
-};
-
-
 export type MutationDeleteAlgcaseArgs = {
   id: Scalars['ID'];
 };
@@ -385,7 +231,6 @@ export type MutationCreateAlgcaseArgs = {
   mask?: Maybe<Scalars['String']>;
   puzzle?: Maybe<Puzzle>;
   algset?: Maybe<Algset>;
-  subset?: Maybe<Subset>;
 };
 
 
@@ -457,6 +302,12 @@ export type MutationCreateTagArgs = {
   name?: Maybe<Scalars['String']>;
 };
 
+
+export type MutationUpsertUserAlgVoteLinkArgs = {
+  alg: Scalars['ID'];
+  vote_value: Scalars['Int'];
+};
+
 export type User = {
   __typename?: 'User';
   id: Scalars['ID'];
@@ -478,6 +329,12 @@ export type UserPaginator = {
   data: Array<Maybe<User>>;
 };
 
+export type UserFilterInput = {
+  __typename?: 'UserFilterInput';
+  search?: Maybe<Scalars['String']>;
+  created_by?: Maybe<Scalars['String']>;
+};
+
 export type Puzzle = {
   __typename?: 'Puzzle';
   id: Scalars['ID'];
@@ -492,14 +349,11 @@ export type Puzzle = {
 
 
 export type PuzzleAlgsetsArgs = {
-  id?: Maybe<Scalars['String']>;
   first?: Maybe<Scalars['Int']>;
   after?: Maybe<Scalars['ID']>;
-  search?: Maybe<Scalars['String']>;
+  filterBy?: Maybe<Algset>;
   sortBy?: Maybe<Array<Maybe<Scalars['String']>>>;
   sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
-  created_by?: Maybe<Scalars['String']>;
-  is_public?: Maybe<Scalars['Boolean']>;
 };
 
 export type PuzzlePaginator = {
@@ -508,47 +362,39 @@ export type PuzzlePaginator = {
   data: Array<Maybe<Puzzle>>;
 };
 
+export type PuzzleFilterInput = {
+  __typename?: 'PuzzleFilterInput';
+  id?: Maybe<Scalars['ID']>;
+  search?: Maybe<Scalars['String']>;
+  created_by?: Maybe<Scalars['String']>;
+  is_public?: Maybe<Scalars['Boolean']>;
+  code?: Maybe<Scalars['String']>;
+};
+
 export type Algset = {
   __typename?: 'Algset';
   id: Scalars['ID'];
   name: Scalars['String'];
   code: Scalars['String'];
   mask?: Maybe<Scalars['String']>;
-  visualization: CaseVisualizationEnum;
+  visualization: CaseVisualization;
   created_at: Scalars['Int'];
   updated_at?: Maybe<Scalars['Int']>;
   created_by: User;
   is_public: Scalars['Boolean'];
   puzzle: Puzzle;
+  parent?: Maybe<Algset>;
   algcases: AlgcasePaginator;
-  subsets: SubsetPaginator;
   score: Scalars['Int'];
 };
 
 
 export type AlgsetAlgcasesArgs = {
-  id?: Maybe<Scalars['String']>;
   first?: Maybe<Scalars['Int']>;
   after?: Maybe<Scalars['ID']>;
-  search?: Maybe<Scalars['String']>;
+  filterBy?: Maybe<AlgcaseFilterInput>;
   sortBy?: Maybe<Array<Maybe<Scalars['String']>>>;
   sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
-  created_by?: Maybe<Scalars['String']>;
-  subset?: Maybe<Scalars['String']>;
-};
-
-
-export type AlgsetSubsetsArgs = {
-  id?: Maybe<Scalars['String']>;
-  first?: Maybe<Scalars['Int']>;
-  after?: Maybe<Scalars['ID']>;
-  search?: Maybe<Scalars['String']>;
-  sortBy?: Maybe<Array<Maybe<Scalars['String']>>>;
-  sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
-  created_by?: Maybe<Scalars['String']>;
-  is_public?: Maybe<Scalars['Boolean']>;
-  puzzle?: Maybe<Scalars['String']>;
-  parent?: Maybe<Scalars['String']>;
 };
 
 export type AlgsetPaginator = {
@@ -557,54 +403,16 @@ export type AlgsetPaginator = {
   data: Array<Maybe<Algset>>;
 };
 
-export type Subset = {
-  __typename?: 'Subset';
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  code: Scalars['String'];
-  mask?: Maybe<Scalars['String']>;
-  visualization: CaseVisualizationEnum;
-  created_at: Scalars['Int'];
-  updated_at?: Maybe<Scalars['Int']>;
-  created_by: User;
-  is_public: Scalars['Boolean'];
-  puzzle: Puzzle;
-  algset: Algset;
-  parent?: Maybe<Subset>;
-  algcases: AlgcasePaginator;
-  subsets: SubsetPaginator;
-};
-
-
-export type SubsetAlgcasesArgs = {
-  id?: Maybe<Scalars['String']>;
-  first?: Maybe<Scalars['Int']>;
-  after?: Maybe<Scalars['ID']>;
+export type AlgsetFilterInput = {
+  __typename?: 'AlgsetFilterInput';
+  id?: Maybe<Scalars['ID']>;
   search?: Maybe<Scalars['String']>;
-  sortBy?: Maybe<Array<Maybe<Scalars['String']>>>;
-  sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
   created_by?: Maybe<Scalars['String']>;
-  algset?: Maybe<Scalars['String']>;
-};
-
-
-export type SubsetSubsetsArgs = {
-  id?: Maybe<Scalars['String']>;
-  first?: Maybe<Scalars['Int']>;
-  after?: Maybe<Scalars['ID']>;
-  search?: Maybe<Scalars['String']>;
-  sortBy?: Maybe<Array<Maybe<Scalars['String']>>>;
-  sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
-  created_by?: Maybe<Scalars['String']>;
-  is_public?: Maybe<Scalars['Boolean']>;
+  parent?: Maybe<Scalars['String']>;
   puzzle?: Maybe<Scalars['String']>;
-  algset?: Maybe<Scalars['String']>;
-};
-
-export type SubsetPaginator = {
-  __typename?: 'SubsetPaginator';
-  paginatorInfo: PaginatorInfo;
-  data: Array<Maybe<Subset>>;
+  puzzle_code?: Maybe<Scalars['String']>;
+  is_public?: Maybe<Scalars['Boolean']>;
+  code?: Maybe<Scalars['String']>;
 };
 
 export type Algcase = {
@@ -614,23 +422,18 @@ export type Algcase = {
   created_at: Scalars['Int'];
   updated_at?: Maybe<Scalars['Int']>;
   created_by: User;
-  puzzle: Puzzle;
   algset: Algset;
-  subset: Subset;
   algs: AlgPaginator;
 };
 
 
 export type AlgcaseAlgsArgs = {
-  id?: Maybe<Scalars['String']>;
   first?: Maybe<Scalars['Int']>;
   after?: Maybe<Scalars['ID']>;
-  search?: Maybe<Scalars['String']>;
   sortBy?: Maybe<Array<Maybe<Scalars['String']>>>;
   sortDesc?: Maybe<Array<Maybe<Scalars['Boolean']>>>;
   created_by?: Maybe<Scalars['String']>;
   algcase_name?: Maybe<Scalars['String']>;
-  subset_name?: Maybe<Scalars['String']>;
   algset_name?: Maybe<Scalars['String']>;
   puzzle_name?: Maybe<Scalars['String']>;
   tag_name?: Maybe<Array<Maybe<Scalars['String']>>>;
@@ -642,6 +445,14 @@ export type AlgcasePaginator = {
   data: Array<Maybe<Algcase>>;
 };
 
+export type AlgcaseFilterInput = {
+  __typename?: 'AlgcaseFilterInput';
+  id?: Maybe<Scalars['ID']>;
+  search?: Maybe<Scalars['String']>;
+  created_by?: Maybe<Scalars['String']>;
+  algset?: Maybe<Scalars['String']>;
+};
+
 export type Alg = {
   __typename?: 'Alg';
   id: Scalars['ID'];
@@ -649,12 +460,26 @@ export type Alg = {
   created_at: Scalars['Int'];
   updated_at?: Maybe<Scalars['Int']>;
   created_by: User;
+  score: Scalars['Int'];
+  current_user_vote?: Maybe<UserAlgVoteLink>;
 };
 
 export type AlgPaginator = {
   __typename?: 'AlgPaginator';
   paginatorInfo: PaginatorInfo;
   data: Array<Maybe<Alg>>;
+};
+
+export type AlgFilterInput = {
+  __typename?: 'AlgFilterInput';
+  id?: Maybe<Scalars['ID']>;
+  search?: Maybe<Scalars['String']>;
+  created_by?: Maybe<Scalars['String']>;
+  algcase_name?: Maybe<Scalars['String']>;
+  algcase?: Maybe<Scalars['ID']>;
+  algset_name?: Maybe<Scalars['String']>;
+  puzzle_name?: Maybe<Scalars['String']>;
+  tag_name?: Maybe<Array<Maybe<Scalars['String']>>>;
 };
 
 export type AlgAlgcaseLink = {
@@ -706,6 +531,23 @@ export type UserAlgTagLinkPaginator = {
   data: Array<Maybe<UserAlgTagLink>>;
 };
 
+export type UserAlgVoteLink = {
+  __typename?: 'UserAlgVoteLink';
+  id: Scalars['ID'];
+  user: User;
+  alg: Alg;
+  vote_value: Scalars['Int'];
+  created_at: Scalars['Int'];
+  updated_at?: Maybe<Scalars['Int']>;
+  created_by: User;
+};
+
+export type UserAlgTagVotePaginator = {
+  __typename?: 'UserAlgTagVotePaginator';
+  paginatorInfo: PaginatorInfo;
+  data: Array<Maybe<UserAlgVoteLink>>;
+};
+
 export type Tag = {
   __typename?: 'Tag';
   id: Scalars['ID'];
@@ -719,6 +561,13 @@ export type TagPaginator = {
   __typename?: 'TagPaginator';
   paginatorInfo: PaginatorInfo;
   data: Array<Maybe<Tag>>;
+};
+
+export type TagFilterInput = {
+  __typename?: 'TagFilterInput';
+  id?: Maybe<Scalars['ID']>;
+  search?: Maybe<Scalars['String']>;
+  created_by?: Maybe<Scalars['String']>;
 };
 
 export type Auth = {
@@ -739,12 +588,6 @@ export type UserRoleEnum = {
   __typename?: 'UserRoleEnum';
   id: Scalars['ID'];
   name: UserRole;
-};
-
-export type CaseVisualizationEnum = {
-  __typename?: 'CaseVisualizationEnum';
-  id: Scalars['ID'];
-  name: CaseVisualization;
 };
 
 export enum UserRole {

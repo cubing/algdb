@@ -102,7 +102,7 @@ type Mutation {
   createAlgTagLink(alg: Alg, tag: Tag): AlgTagLink!
   deleteTag(id: ID!): Tag!
   createTag(name: String): Tag!
-  upsertUserAlgVoteLink(alg: ID!, vote_value: Integer!): UserAlgVoteLink!
+  upsertUserAlgVoteLink(alg: ID!, vote_value: Int!): UserAlgVoteLink!
 }
 
 type User {
@@ -282,7 +282,7 @@ type UserAlgVoteLink {
   id: ID!
   user: User!
   alg: Alg!
-  vote_value: Integer!
+  vote_value: Int!
   created_at: Int!
   updated_at: Int
   created_by: User!
