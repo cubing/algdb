@@ -12,6 +12,7 @@
       :expanded.sync="expandedItems"
       show-expand
       single-expand
+      :dense="dense"
       @update:options="handleUpdateOptions"
       @item-expanded="handleItemExpanded"
       @click:row=""
@@ -46,7 +47,7 @@
         <v-container class="pb-0">
           <v-row>
             <v-col
-              v-for="(item, i) in recordInfo.filters"
+              v-for="(item, i) in visibleFilters"
               :key="i"
               cols="3"
               class="py-0"
@@ -104,9 +105,11 @@
         <td :colspan="headers.length" class="pr-0">
           <CrudAlgsetInterface
             class="py-2"
-            :record-info="algsetRecordInfo"
+            :record-info="subRecordInfo"
             :filters="subFilter"
+            :hidden-filters="hiddenSubFilters"
             is-child-component
+            :dense="dense"
             @filters-updated="handleFiltersUpdated"
           ></CrudAlgsetInterface>
         </td>
@@ -159,18 +162,17 @@ export default {
 
   data() {
     return {
-      algsetRecordInfo,
+      subRecordInfo: algsetRecordInfo,
     }
   },
 
   computed: {
     // override
-    subFilter() {
+    hiddenSubFilters() {
       return this.expandedItems.length
         ? {
             [this.recordInfo.type.toLowerCase()]: this.expandedItems[0].id,
-            parent: null,
-            ...this.additionalSubFilter,
+            parent: 'null', // 'null' will be changed to null
           }
         : {}
     },

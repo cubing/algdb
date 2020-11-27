@@ -1,19 +1,28 @@
+import sharedService from '~/services/shared.js'
+
 export default {
+  computed: {
+    capitalizedType() {
+      return sharedService.capitalizeString(this.recordInfo.type)
+    },
+  },
+
   methods: {
     handleFiltersUpdated(filterInputs) {
-      const validFilters = {}
-      // only going to include non-empty filter values. will allow null and 0
-      for (const prop in filterInputs) {
-        if (filterInputs[prop] !== '') validFilters[prop] = filterInputs[prop]
-      }
-
+      // going to assume filterInputs is valid (should be)
       this.$router.push({
         path: this.$route.path,
         query: {
           ...this.$route.query,
-          ...validFilters,
+          ...filterInputs,
         },
       })
     },
+  },
+
+  head() {
+    return {
+      title: 'Manage ' + this.capitalizedType + 's',
+    }
   },
 }

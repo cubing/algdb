@@ -1,6 +1,8 @@
 import {
   getCaseVisualizations,
   getBooleanOptions,
+  getPuzzles,
+  getNullOptions,
 } from '~/services/dropdown.js'
 
 export const puzzleRecordInfo = {
@@ -16,16 +18,19 @@ export const puzzleRecordInfo = {
       text: 'Name',
       addable: true,
       editable: true,
+      viewable: true,
     },
     code: {
       text: 'Code',
       addable: true,
       editable: true,
+      viewable: true,
     },
     is_public: {
       text: 'Public',
       addable: true,
       editable: true,
+      viewable: true,
       getOptions: getBooleanOptions,
     },
   },
@@ -76,10 +81,12 @@ export const algsetRecordInfo = {
     puzzle: {
       label: 'Puzzle',
       icon: null,
+      getOptions: getPuzzles,
     },
     parent: {
       label: 'Parent Algset',
       icon: null,
+      getOptions: getNullOptions,
     },
   },
   inputs: {
@@ -87,39 +94,46 @@ export const algsetRecordInfo = {
       text: 'Name',
       addable: true,
       editable: true,
+      viewable: true,
     },
     code: {
       text: 'Code',
       addable: true,
       editable: true,
+      viewable: true,
     },
     mask: {
       text: 'Mask',
       addable: true,
       editable: true,
+      viewable: true,
     },
     visualization: {
       text: 'Visualization',
       addable: true,
       editable: true,
+      viewable: true,
       getOptions: getCaseVisualizations,
     },
     is_public: {
       text: 'Public',
       addable: true,
       editable: true,
+      viewable: true,
       getOptions: getBooleanOptions,
     },
     puzzle: {
       text: 'Puzzle ID',
       addable: true,
       editable: true,
+      viewable: true,
       readonly: true,
     },
     parent: {
       text: 'Parent Algset ID',
       addable: true,
       editable: true,
+      viewable: true,
       readonly: true,
     },
   },
@@ -177,6 +191,7 @@ export const algcaseRecordInfo = {
       text: 'Name',
       addable: true,
       editable: true,
+      viewable: true,
     },
     algset: {
       text: 'Algset ID',
@@ -222,6 +237,11 @@ export const algRecordInfo = {
       label: 'Search',
       icon: 'mdi-magnify',
     },
+    puzzle: {
+      label: 'Puzzle',
+      icon: null,
+      getOptions: getPuzzles,
+    },
     algcase: {
       label: 'Algcase',
       icon: null,
@@ -232,11 +252,13 @@ export const algRecordInfo = {
       text: 'Sequence',
       addable: true,
       editable: true,
+      viewable: true,
     },
     algcase: {
       text: 'Algcase ID',
       addable: true,
-      editable: true,
+      editable: false,
+      viewable: false,
       readonly: true,
     },
   },

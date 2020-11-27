@@ -9,6 +9,7 @@
       loading-text="Loading... Please wait"
       :server-items-length="recordsTotal"
       :footer-props="footerOptions"
+      :dense="dense"
       @update:options="handleUpdateOptions"
       @click:row=""
     >
@@ -42,7 +43,7 @@
         <v-container class="pb-0">
           <v-row>
             <v-col
-              v-for="(item, i) in recordInfo.filters"
+              v-for="(item, i) in visibleFilters"
               :key="i"
               cols="3"
               class="py-0"

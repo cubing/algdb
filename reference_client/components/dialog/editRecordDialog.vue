@@ -19,7 +19,7 @@
 
       <v-card-text style="max-height: 600px">
         <v-container
-          v-if="loading.loadRecord"
+          v-if="loading.loadRecord || loading.loadDropdowns"
           class="text-center"
           style="height: 250px"
           fill-height

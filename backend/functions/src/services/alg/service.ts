@@ -55,6 +55,12 @@ export class AlgService extends PaginatedService {
         { field: "id", table: "algAlgcaseLink", foreignField: "alg" },
       ],
     },
+    puzzle: {
+      field: "algcase.algset.puzzle",
+      joinFields: [
+        { field: "id", table: "algAlgcaseLink", foreignField: "alg" },
+      ],
+    },
     puzzle_name: {
       field: "algcase.puzzle.name",
       joinFields: [

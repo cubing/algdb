@@ -17,8 +17,8 @@
 
 <script>
 import crudPageMixin from '~/mixins/crudPage.js'
-import CrudRecordInterface from '~/components/interface/crud/crudPuzzleInterface.vue'
-import { puzzleRecordInfo } from '~/services/type'
+import CrudRecordInterface from '~/components/interface/crud/crudAlgsetInterface.vue'
+import { algsetRecordInfo } from '~/services/type'
 
 export default {
   components: {
@@ -29,7 +29,7 @@ export default {
 
   data() {
     return {
-      recordInfo: puzzleRecordInfo,
+      recordInfo: algsetRecordInfo,
     }
   },
 }

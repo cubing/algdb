@@ -35,6 +35,7 @@ export default {
       loading: {
         editRecord: false,
         loadRecord: false,
+        loadDropdowns: false,
       },
     }
   },
@@ -61,7 +62,9 @@ export default {
       const returnObject = {}
       for (const prop in this.recordInfo.inputs) {
         if (
-          this.recordInfo.inputs[prop][this.addMode ? 'addable' : 'editable']
+          this.recordInfo.inputs[prop][
+            this.addMode ? 'addable' : this.viewMode ? 'viewable' : 'editable'
+          ]
         ) {
           returnObject[prop] = this.recordInfo.inputs[prop]
         }
@@ -117,7 +120,7 @@ export default {
           'get' + this.capitalizedType,
           {
             id: true,
-            ...Object.keys(this.recordInfo.inputs).reduce((total, item) => {
+            ...Object.keys(this.validInputs).reduce((total, item) => {
               total[item] = true
               return total
             }, {}),
@@ -127,41 +130,42 @@ export default {
           }
         )
 
-        this.inputs = Object.keys(this.recordInfo.inputs).reduce(
-          (total, item) => {
-            this.$set(total, item, data[item])
-            return total
-          },
-          {}
-        )
+        this.inputs = Object.keys(this.validInputs).reduce((total, item) => {
+          this.$set(total, item, data[item])
+          return total
+        }, {})
       } catch (err) {
         sharedService.handleError(err, this.$root)
       }
       this.loading.loadRecord = false
     },
 
+    async loadDropdowns() {
+      this.loading.loadDropdowns = true
+      for (const prop in this.recordInfo.inputs) {
+        // only set it if not already set
+        if (
+          this.recordInfo.inputs[prop].getOptions &&
+          !this.inputOptions[prop]
+        ) {
+          const data = await this.recordInfo.inputs[prop].getOptions()
+          this.$set(this.inputOptions, prop, data)
+        }
+      }
+      this.loading.loadDropdowns = false
+    },
+
     reset() {
       if (!this.status) return
 
-      // load dropdowns
-      for (const prop in this.recordInfo.inputs) {
-        if (this.recordInfo.inputs[prop].getOptions) {
-          this.recordInfo.inputs[prop]
-            .getOptions()
-            .then((res) => this.$set(this.inputOptions, prop, res))
-        }
-      }
+      this.loadDropdowns()
 
       if (this.addMode) {
         this.inputs = {
           ...Object.keys(this.recordInfo.inputs).reduce((total, item) => {
-            this.$set(
-              total,
-              item,
-              this.recordInfo.inputs[item].default
-                ? this.recordInfo.inputs[item].default()
-                : null
-            )
+            total[item] = this.recordInfo.inputs[item].default
+              ? this.recordInfo.inputs[item].default()
+              : null
             return total
           }, {}),
           ...this.selectedItem,

@@ -196,8 +196,10 @@ export default {
           action: 'mdi-silverware-fork-knife',
           active: true,
           items: [
-            { title: 'Puzzles', to: 'puzzles', roles: [undefined, 2, 3] },
-            // { title: 'Generate Order', to: 'generate-order', roles: [3] },
+            { title: 'Puzzles', to: 'puzzles', roles: [undefined, 1, 2, 3] },
+            { title: 'Algsets', to: 'algsets', roles: [undefined, 1, 2, 3] },
+            { title: 'Algcases', to: 'algcases', roles: [undefined, 1, 2, 3] },
+            { title: 'Algs', to: 'algs', roles: [undefined, 1, 2, 3] },
           ],
           title: 'Features',
         },

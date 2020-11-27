@@ -12,6 +12,7 @@
       :expanded.sync="expandedItems"
       show-expand
       single-expand
+      :dense="dense"
       @update:options="handleUpdateOptions"
       @item-expanded="handleItemExpanded"
       @click:row=""
@@ -46,7 +47,7 @@
         <v-container class="pb-0">
           <v-row>
             <v-col
-              v-for="(item, i) in recordInfo.filters"
+              v-for="(item, i) in visibleFilters"
               :key="i"
               cols="3"
               class="py-0"
@@ -104,10 +105,12 @@
         <td :colspan="headers.length" class="pr-0">
           <CrudRecordInterface
             class="py-2"
-            :record-info="algRecordInfo"
+            :record-info="subRecordInfo"
             :filters="subFilter"
+            :hidden-filters="hiddenSubFilters"
             :group-by="childGroupBy"
             is-child-component
+            :dense="dense"
             @filters-updated="handleFiltersUpdated"
           ></CrudRecordInterface>
         </td>
@@ -160,7 +163,7 @@ export default {
 
   data() {
     return {
-      algRecordInfo,
+      subRecordInfo: algRecordInfo,
       childGroupBy: ['id'],
     }
   },

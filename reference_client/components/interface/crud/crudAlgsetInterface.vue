@@ -12,6 +12,7 @@
       :expanded.sync="expandedItems"
       show-expand
       single-expand
+      :dense="dense"
       @update:options="handleUpdateOptions"
       @item-expanded="handleItemExpanded"
       @click:row="handleRowClick"
@@ -49,7 +50,7 @@
         <v-container class="pb-0">
           <v-row>
             <v-col
-              v-for="(item, i) in recordInfo.filters"
+              v-for="(item, i) in visibleFilters"
               :key="i"
               cols="3"
               class="py-0"
@@ -110,9 +111,11 @@
         <td :colspan="headers.length" class="pr-0">
           <CrudAlgcaseInterface
             class="py-2"
-            :record-info="algcaseRecordInfo"
+            :record-info="subRecordInfo"
             :filters="subFilter"
+            :hidden-filters="hiddenSubFilters"
             is-child-component
+            :dense="dense"
             @filters-updated="handleFiltersUpdated"
           ></CrudAlgcaseInterface>
         </td>
@@ -165,10 +168,12 @@ export default {
 
   data() {
     return {
-      algcaseRecordInfo,
+      subRecordInfo: algcaseRecordInfo,
       parentPath: [],
     }
   },
+
+  computed: {},
 
   methods: {
     handleRowClick(item) {

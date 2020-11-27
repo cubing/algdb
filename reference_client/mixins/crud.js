@@ -23,11 +23,19 @@ export default {
       type: Object,
       default: () => ({}),
     },
+    hiddenFilters: {
+      type: Object,
+      default: () => ({}),
+    },
     groupBy: {
       type: Array,
       required: false,
     },
     isChildComponent: {
+      type: Boolean,
+      default: false,
+    },
+    dense: {
       type: Boolean,
       default: false,
     },
@@ -81,15 +89,34 @@ export default {
     capitalizedType() {
       return sharedService.capitalizeString(this.recordInfo.type)
     },
-    validFilterParams() {
+    visibleFilters() {
+      if (this.hiddenFilters.length < 1) return this.recordInfo.filters
+
       const retObject = {}
+
       for (const prop in this.recordInfo.filters) {
-        if (prop in this.filters && this.filters[prop] !== '') {
-          this.$set(retObject, prop, this.filters[prop])
+        if (!(prop in this.hiddenFilters)) {
+          retObject[prop] = this.recordInfo.filters[prop]
         }
       }
 
-      return retObject
+      return { ...retObject }
+    },
+    validFilterParams() {
+      const retObject = {}
+      for (const prop in this.recordInfo.filters) {
+        // allow 0 or truthy only
+        if (
+          prop in this.filters &&
+          (this.filters[prop] === 0 || this.filters[prop])
+        ) {
+          // convert 'null' into null (only way to get null on RHS)
+          retObject[prop] =
+            this.filters[prop] === 'null' ? null : this.filters[prop]
+        }
+      }
+
+      return { ...retObject }
     },
   },
 
@@ -113,7 +140,17 @@ export default {
     generateTimeStringFromUnix: sharedService.generateTimeStringFromUnix,
 
     updateFilters() {
-      this.$emit('filters-updated', this.filterInputs)
+      const validatedFilterObject = Object.keys(this.filterInputs).reduce(
+        (total, key) => {
+          // convert '' to null
+          total[key] =
+            this.filterInputs[key] === '' ? null : this.filterInputs[key]
+          return total
+        },
+        {}
+      )
+      this.$emit('filters-updated', validatedFilterObject)
+      this.filterChanged = false
     },
 
     openAddRecordDialog() {
@@ -263,11 +300,5 @@ export default {
 
       this.loadData()
     },
-  },
-
-  head() {
-    return {
-      title: 'Manage ' + this.capitalizedType + 's',
-    }
   },
 }
