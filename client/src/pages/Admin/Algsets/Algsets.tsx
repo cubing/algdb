@@ -102,7 +102,7 @@ export default function Algsets(): ReactElement {
     (event: MouseEvent) => {
       onOpen();
       setEditingAlgsetName(algset.name)
-      setEditingAlgsetVisualization(algset.visualization.name)
+      setEditingAlgsetVisualization(algset.visualization)
       setEditingAlgsetPublic(algset.is_public)
       setEditingAlgsetMask(algset.mask)
       setEditingAlgsetId(algset.id)

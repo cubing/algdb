@@ -58,27 +58,27 @@ const query = (puzzleCode: string, algsetCode: string, subsetCode : string) => (
 export default function AlgsetPage(): ReactElement {
   const { puzzleCode, algsetCode, subsetCode } = useParams()
 
-  const { isLoading, data, error } = useJqlQuery<Maybe<Algset>, Error>(
-    subsetCode ? 'getSubset' : 'getAlgset',
-    subsetCode ? 'getSubset' : 'getAlgset',
+  const algset = useJqlQuery<Maybe<Algset>, Error>(
+    'getAlgset',
+    'getAlgset',
     query(puzzleCode, algsetCode, subsetCode),
   )
 
-  if (isLoading) {
+  if (algset.isLoading) {
     return (<Spinner />)
   }
 
-  if (error) {
-    return (<>{error.message}</>)
+  if (algset.error) {
+    return (<>{algset.error.message}</>)
   }
 
-  const algCases = data?.algcases?.data || [];
-  const subsets = data?.subsets?.data || [];
+  const algCases = algset.data?.algcases?.data || [];
+  const subsets: Algset[] = []; // TODO: query for them separate
 
   return (
     <Flex justify="center" align="center" direction="column">
       <Heading fontSize="4em" textAlign="left">
-        {data?.name}
+        {algset.data?.name}
       </Heading>
 
       <Tabs w="100%">
@@ -107,7 +107,10 @@ export default function AlgsetPage(): ReactElement {
                     <td>{subset.code}</td>
                     <td>{subset.name}</td>
                     <td>{subset.algcases.paginatorInfo.count}</td>
-                    <td>{subset.subsets.paginatorInfo.count}</td>
+                    <td>
+                      { /* subset.subsets.paginatorInfo.count */ }
+                      0
+                    </td>
                     <td><Link to={`/admin/puzzles/${puzzleCode}/${algsetCode}-${subset.code}`}>Manage</Link></td>
                   </tr>
                 ) : false)}
