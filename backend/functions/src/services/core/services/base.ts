@@ -57,9 +57,17 @@ export abstract class Service {
 
     let allowed: Boolean;
 
-    if (this.accessControl && operation in this.accessControl) {
-      allowed = await this.accessControl[operation](req, args, query);
+    if (this.accessControl) {
+      // use the requested operation or "*" as fallback
+      const validatedOperation =
+        operation in this.accessControl ? operation : "*";
+
+      // if operation not in the accessControl object, deny
+      allowed = this.accessControl[validatedOperation]
+        ? await this.accessControl[validatedOperation](req, args, query)
+        : false;
     } else {
+      // allow by default if no accessControl object
       allowed = true;
     }
 

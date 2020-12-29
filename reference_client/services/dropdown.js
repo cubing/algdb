@@ -1,11 +1,12 @@
 import { executeJomql } from '~/services/jomql.js'
 
 function memoize(memoizedFn) {
-  let cache
+  const cache = {}
 
   return function () {
-    cache = cache || memoizedFn()
-    return cache
+    const args = JSON.stringify(arguments)
+    cache[args] = cache[args] || memoizedFn(...arguments)
+    return cache[args]
   }
 }
 

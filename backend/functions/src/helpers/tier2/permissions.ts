@@ -92,8 +92,9 @@ export function generateUserRoleGuard(allowedRoles: Array<any>) {
       );
 
       if (!userRecords[0]) return false;
-
-      return allowedRoles.includes(userRecords[0].role);
+      return allowedRoles.includes(
+        UserRole.enum[UserRole.enum[userRecords[0].role]]
+      );
     } catch (err) {
       return false;
     }

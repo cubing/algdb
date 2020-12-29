@@ -32,6 +32,13 @@ export default {
       inputs: {},
 
       inputOptions: {},
+
+      // inputs that are used for scaffolding
+      miscInputs: null,
+      originalMiscInputs: {},
+
+      miscOptions: {},
+
       loading: {
         editRecord: false,
         loadRecord: false,
@@ -75,8 +82,12 @@ export default {
 
   watch: {
     status() {
-      this.reset()
+      this.reset(true)
     },
+  },
+
+  created() {
+    this.miscInputs = JSON.parse(JSON.stringify(this.originalMiscInputs))
   },
 
   methods: {
@@ -152,14 +163,28 @@ export default {
           this.$set(this.inputOptions, prop, data)
         }
       }
+
+      // load any other misc dropdowns
+      this.loadMiscDropdowns && this.loadMiscDropdowns()
+
       this.loading.loadDropdowns = false
     },
 
-    reset() {
+    reset(hardReset = false) {
       if (!this.status) return
 
+      // duplicate misc inputs, if any
+      this.miscInputs = JSON.parse(JSON.stringify(this.originalMiscInputs))
+
+      // load dropdowns in this.inputOptions
       this.loadDropdowns()
 
+      // clear misc inputs
+      for (const prop in this.miscInputs) {
+        this.miscInputs[prop] = null
+      }
+
+      // initialize inputs
       if (this.addMode) {
         this.inputs = {
           ...Object.keys(this.recordInfo.inputs).reduce((total, item) => {
@@ -172,6 +197,9 @@ export default {
         }
       } else {
         this.loadRecord()
+      }
+
+      if (hardReset) {
       }
     },
   },
