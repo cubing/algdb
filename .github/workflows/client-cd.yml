@@ -3,11 +3,11 @@ on:
   workflow_dispatch:
     inputs:
       logLevel:
-        description: 'Log level'
+        description: "Log level"
         required: true
-        default: 'warning'
+        default: "warning"
       tags:
-        description: 'Test scenario tags'
+        description: "Test scenario tags"
 defaults:
   run:
     working-directory: client
@@ -49,3 +49,4 @@ jobs:
           args: deploy --only hosting
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_CI_TOKEN }}
+          PROJECT_PATH: ./client
