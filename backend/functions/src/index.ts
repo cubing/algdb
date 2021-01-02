@@ -1,50 +1,80 @@
 import * as functions from "firebase-functions";
 import * as express from "express";
 import * as admin from "firebase-admin";
-admin.initializeApp();
+admin.initializeApp({
+  serviceAccountId: "cubicle-admin@appspot.gserviceaccount.com",
+});
 
 import { initializeJomql } from "jomql";
 import * as schema from "./schema";
 import { env, isDev } from "./config";
+import { initializePool } from "./utils/mysql2";
 
-import { initializePusher } from "./helpers/tier1/pusher";
-import { handleWebhook, handlePusherAuth } from "./helpers/tier2/subscription";
-
-import { validateToken } from "./helpers/tier1/auth";
+import { initializePusher } from "./utils/pusher";
+import { handlePusherAuth } from "./helpers/pusher";
+import { validateToken } from "./helpers/auth";
 
 const app = express();
 
-//extract the user ID from all requests.
+const allowedOrigins = [
+  "https://alpha.algdb.net",
+  "https://ref.algdb.net",
+  "http://localhost:3000",
+  "https://algdb-ref-client.web.app",
+];
+
+// extract the user ID from all requests.
 app.use(async function (req: any, res, next) {
   try {
     if (req.headers.authorization) {
       req.user = await validateToken(req.headers.authorization);
     }
+
+    // handle origins
+    const origin =
+      Array.isArray(allowedOrigins) && allowedOrigins.length
+        ? allowedOrigins.includes(req.headers.origin!)
+          ? req.headers.origin
+          : allowedOrigins[0]
+        : "*";
+
+    res.header("Access-Control-Allow-Origin", origin);
+    if (origin !== "*") {
+      res.header("Vary", "Origin");
+    }
+
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control"
+    );
+    res.header(
+      "Access-Control-Allow-Methods",
+      "PUT, POST, GET, DELETE, OPTIONS"
+    );
   } catch (err) {
-    //console.log(err);
+    console.log(err);
   }
   next();
 });
 
-// initialize pusher
-// env.pusher && initializePusher(env.pusher);
-
-initializeJomql(app, schema, {
-  mysqlEnv: env.mysql,
-  debug: !!isDev,
-  allowedOrigins: [
-    "https://alpha.algdb.net",
-    "https://ref.algdb.net",
-    "http://localhost:3000",
-    "https://algdb-ref-client.web.app",
-  ],
-  lookupValue: true,
-  jomqlPath: "/jomql",
-  allowSync: false,
+app.options("*", function (req, res, next) {
+  res.header("Access-Control-Max-Age", "86400");
+  res.sendStatus(200);
 });
 
-app.post("/pusher/auth", handlePusherAuth);
+// initialize pusher
+env.pusher && initializePusher(env.pusher);
 
-app.post("/pusher/webhook", handleWebhook);
+//initialize mysql
+env.mysql && initializePool(env.mysql, isDev);
+
+initializeJomql(app, {
+  schema: schema,
+  debug: !!isDev,
+  lookupValue: true,
+  jomqlPath: "/jomql",
+});
 
 export const api = functions.https.onRequest(app);
+
+app.post("/pusher/auth", handlePusherAuth);
