@@ -3,11 +3,7 @@ import {
   generateEnumScalarDefinition,
 } from "../core/generators/scalarDefinition";
 import { userRoleKenum } from "../kenums";
-import {
-  productStatusEnum,
-  filterOperatorEnum,
-  caseVisualizationEnum,
-} from "../enums";
+import { filterOperatorEnum, caseVisualizationEnum } from "../enums";
 
 export { imageUrl } from "./imageUrl";
 export { unixTimestamp } from "./unixTimestamp";
@@ -16,10 +12,6 @@ export { id } from "./id";
 export const userRole = generateKenumScalarDefinition(
   "userRole",
   userRoleKenum
-);
-export const productStatus = generateEnumScalarDefinition(
-  "productStatus",
-  productStatusEnum
 );
 
 export const filterOperator = generateEnumScalarDefinition(
