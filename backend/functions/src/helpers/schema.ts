@@ -4,8 +4,6 @@ import {
   RootResolverObject,
   ArgDefinition,
   BaseScalars,
-} from "jomql";
-import {
   TypeDefinition,
   TypeDefinitionField,
   isInputTypeDefinition,

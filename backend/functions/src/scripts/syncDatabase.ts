@@ -1,6 +1,6 @@
 import * as schema from "../schema";
 import { Schema } from "jomql";
-import { typeDef } from "../schema/helpers/subscription";
+import { typeDef as subscriptionTypeDef } from "../schema/helpers/subscription";
 import { MysqlEnv } from "../types";
 import { env } from "../config";
 import { initializeSequelize, getSequelizeInstance } from "../utils/sequelize";
@@ -9,7 +9,7 @@ syncDatabase(env.mysql, schema);
 
 function syncDatabase(
   mysqlEnv: MysqlEnv,
-  schema: Schema,
+  currentSchema: Schema,
   initSubscriptions = true,
   force = false
 ) {
@@ -17,7 +17,7 @@ function syncDatabase(
   initializeSequelize(mysqlEnv);
   const sequelize = getSequelizeInstance();
 
-  schema.typeDefs.forEach((typeDef, typeKey) => {
+  currentSchema.typeDefs.forEach((typeDef, typeKey) => {
     const definition = {};
 
     for (const prop in typeDef) {
@@ -38,7 +38,7 @@ function syncDatabase(
 
   if (initSubscriptions)
     // define the jql subscription table
-    sequelize.define("jqlSubscription", typeDef, {
+    sequelize.define("jqlSubscription", subscriptionTypeDef, {
       timestamps: false,
       freezeTableName: true,
     });

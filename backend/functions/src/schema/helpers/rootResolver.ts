@@ -1,6 +1,5 @@
 import { RootResolver, RootResolverObject } from "jomql";
-import { NormalService } from "../core/services";
-import { PaginatedService } from "../core/services/paginated";
+import { NormalService, PaginatedService } from "../core/services";
 import { generatePaginatorPivotResolverObject } from "../helpers/typeDef";
 import { isObject, capitalizeString } from "../helpers/shared";
 import * as Scalars from "../scalars";
@@ -133,8 +132,8 @@ export function generateRootResolvers(
             },
             argsValidator: (args, fieldPath) => {
               // check if at least 1 valid update field provided
-              const { id, ...updateArgs } = args;
-              if (Object.keys(updateArgs).length < 1)
+              const { id, ...updateFields } = args;
+              if (Object.keys(updateFields).length < 1)
                 throw new Error(`No valid fields to update at '${fieldPath}'`);
             },
           },
