@@ -6,8 +6,10 @@ import Algcase from "./types/algcase/rootResolver";
 import Alg from "./types/alg/rootResolver";
 import AlgAlgcaseLink from "./links/algAlgcaseLink/rootResolver";
 import { generateBlankRootResolver } from "./helpers/rootResolver";
-import { generateKenumRootResolver } from "./core/generators";
-import { generateEnumRootResolver } from "./core/generators";
+import {
+  generateKenumRootResolver,
+  generateEnumRootResolver,
+} from "./core/generators";
 import { CaseVisualization, UserRole, FilterOperator } from "./services";
 
 const rootResolversArray = [

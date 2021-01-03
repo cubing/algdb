@@ -31,11 +31,12 @@ app.use(async function (req: any, res, next) {
     }
 
     // handle origins
-    const origin = Array.isArray(allowedOrigins)
-      ? allowedOrigins.includes(req.headers.origin!)
-        ? req.headers.origin
-        : allowedOrigins[0]
-      : "*";
+    const origin =
+      Array.isArray(allowedOrigins) && allowedOrigins.length
+        ? allowedOrigins.includes(req.headers.origin)
+          ? req.headers.origin
+          : allowedOrigins[0]
+        : "*";
 
     res.header("Access-Control-Allow-Origin", origin);
     if (origin !== "*") {
