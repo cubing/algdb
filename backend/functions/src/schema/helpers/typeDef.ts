@@ -354,6 +354,7 @@ export function generateCreatedAtField() {
     name: "created_at",
     allowNull: false,
     defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+    customOptions: { addable: false, updateable: false }, // not addable or updateable
   });
 }
 
@@ -371,7 +372,7 @@ export function generateIdField() {
     allowNull: false,
     isArray: false,
     sqlType: DataTypes.INTEGER,
-    type: BaseScalars.number,
+    type: Scalars.id,
     sqlDefinition: { autoIncrement: true, primaryKey: true },
     customOptions: { addable: false, updateable: false }, // not addable or updateable
   });
@@ -382,6 +383,7 @@ export function generateCreatedByField(service: NormalService) {
     name: "created_by",
     allowNull: false,
     service,
+    customOptions: { addable: false, updateable: false }, // not addable or updateable
   });
 }
 

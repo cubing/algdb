@@ -18,7 +18,9 @@ type Edge<T> = {
 };
 
 export type Queryize<T> = {
-  [P in keyof T]?: T[P] extends Primitive
+  [P in keyof T]?: T[P] extends never
+    ? never
+    : T[P] extends Primitive
     ? true
     : P extends args
     ? T[P]
@@ -47,7 +49,6 @@ export type Scalars = {
   jsonAsString: string;
   id: number;
   userRole: "NONE" | "NORMAL" | "ADMIN";
-  productStatus: "AWAITING_CONTENT" | "READY_FOR_IMPORT" | "DONE";
   filterOperator: "eq" | "neq" | "gt" | "lt" | "in" | "nin" | "regex" | "like";
   caseVisualization: "V_2D" | "V_3D" | "V_PG3D";
   userSortBy: "id" | "created_at" | "updated_at";
@@ -67,7 +68,7 @@ export type Scalars = {
   algGroupBy: "id";
 };
 export type InputType = {
-  getUser: { id?: Scalars["number"] };
+  getUser: { id?: Scalars["id"] };
   userFilterByObject: {
     field: Scalars["userFilterBy"];
     operator?: Scalars["filterOperator"];
@@ -84,7 +85,7 @@ export type InputType = {
     groupBy?: Scalars["userGroupBy"][];
     search?: Scalars["string"];
   };
-  getPuzzle: { id?: Scalars["number"]; code?: Scalars["string"] };
+  getPuzzle: { id?: Scalars["id"]; code?: Scalars["string"] };
   puzzleFilterByObject: {
     field: Scalars["puzzleFilterBy"];
     operator?: Scalars["filterOperator"];
@@ -101,7 +102,7 @@ export type InputType = {
     groupBy?: Scalars["puzzleGroupBy"][];
     search?: Scalars["string"];
   };
-  getAlgset: { id?: Scalars["number"]; code?: Scalars["string"] };
+  getAlgset: { id?: Scalars["id"]; code?: Scalars["string"] };
   algsetFilterByObject: {
     field: Scalars["algsetFilterBy"];
     operator?: Scalars["filterOperator"];
@@ -118,7 +119,7 @@ export type InputType = {
     groupBy?: Scalars["algsetGroupBy"][];
     search?: Scalars["string"];
   };
-  getAlgcase: { id?: Scalars["number"] };
+  getAlgcase: { id?: Scalars["id"] };
   algcaseFilterByObject: {
     field: Scalars["algcaseFilterBy"];
     operator?: Scalars["filterOperator"];
@@ -135,7 +136,7 @@ export type InputType = {
     groupBy?: Scalars["algcaseGroupBy"][];
     search?: Scalars["string"];
   };
-  getAlg: { id?: Scalars["number"] };
+  getAlg: { id?: Scalars["id"] };
   algFilterByObject: {
     field: Scalars["algFilterBy"];
     operator?: Scalars["filterOperator"];
@@ -161,8 +162,6 @@ export type InputType = {
     name?: Scalars["string"];
     avatar?: Scalars["string"];
     role?: Scalars["userRole"];
-    created_at?: Scalars["unixTimestamp"];
-    created_by?: User;
   };
   updateUser: {
     id: Scalars["id"];
@@ -170,8 +169,6 @@ export type InputType = {
     name?: Scalars["string"];
     avatar?: Scalars["string"];
     role?: Scalars["userRole"];
-    created_at?: Scalars["unixTimestamp"];
-    created_by?: User;
   };
   socialLogin: {
     provider: Scalars["string"];
@@ -183,16 +180,12 @@ export type InputType = {
     name?: Scalars["string"];
     code?: Scalars["string"];
     is_public?: Scalars["boolean"];
-    created_at?: Scalars["unixTimestamp"];
-    created_by?: User;
   };
   updatePuzzle: {
     id: Scalars["id"];
     name?: Scalars["string"];
     code?: Scalars["string"];
     is_public?: Scalars["boolean"];
-    created_at?: Scalars["unixTimestamp"];
-    created_by?: User;
   };
   deleteAlgset: { id: Scalars["id"] };
   createAlgset: {
@@ -204,8 +197,6 @@ export type InputType = {
     visualization?: Scalars["caseVisualization"];
     score?: Scalars["number"];
     is_public?: Scalars["boolean"];
-    created_at?: Scalars["unixTimestamp"];
-    created_by?: User;
   };
   updateAlgset: {
     id: Scalars["id"];
@@ -217,51 +208,33 @@ export type InputType = {
     visualization?: Scalars["caseVisualization"];
     score?: Scalars["number"];
     is_public?: Scalars["boolean"];
-    created_at?: Scalars["unixTimestamp"];
-    created_by?: User;
   };
   deleteAlgcase: { id: Scalars["id"] };
-  createAlgcase: {
-    name?: Scalars["string"];
-    algset?: Algset;
-    created_at?: Scalars["unixTimestamp"];
-    created_by?: User;
-  };
+  createAlgcase: { name?: Scalars["string"]; algset?: Algset };
   updateAlgcase: {
     id: Scalars["id"];
     name?: Scalars["string"];
     algset?: Algset;
-    created_at?: Scalars["unixTimestamp"];
-    created_by?: User;
   };
   deleteAlg: { id: Scalars["id"] };
   createAlg: {
     sequence?: Scalars["string"];
     is_approved?: Scalars["boolean"];
     score?: Scalars["number"];
-    created_at?: Scalars["unixTimestamp"];
-    created_by?: User;
   };
   updateAlg: {
     id: Scalars["id"];
     sequence?: Scalars["string"];
     is_approved?: Scalars["boolean"];
     score?: Scalars["number"];
-    created_at?: Scalars["unixTimestamp"];
-    created_by?: User;
   };
   deleteAlgAlgcaseLink: { id: Scalars["id"] };
-  createAlgAlgcaseLink: {
-    alg?: Alg;
-    algcase?: Algcase;
-    created_at?: Scalars["unixTimestamp"];
-    created_by?: User;
-  };
+  createAlgAlgcaseLink: { alg?: Alg; algcase?: Algcase };
 };
 export type User = {
-  id: Scalars["number"];
-  provider: Scalars["string"];
-  provider_id: Scalars["string"];
+  id: Scalars["id"];
+  provider: never;
+  provider_id: never;
   wca_id: Scalars["string"] | null;
   email: Scalars["string"];
   name: Scalars["string"];
@@ -278,7 +251,7 @@ export type UserPaginator = {
   __args: Root["getUserPaginator"]["Args"];
 };
 export type Puzzle = {
-  id: Scalars["number"];
+  id: Scalars["id"];
   name: Scalars["string"];
   code: Scalars["string"];
   is_public: Scalars["boolean"];
@@ -293,7 +266,7 @@ export type PuzzlePaginator = {
   __args: Root["getPuzzlePaginator"]["Args"];
 };
 export type Algset = {
-  id: Scalars["number"];
+  id: Scalars["id"];
   name: Scalars["string"];
   code: Scalars["string"];
   parent: Algset | null;
@@ -313,7 +286,7 @@ export type AlgsetPaginator = {
   __args: Root["getAlgsetPaginator"]["Args"];
 };
 export type Algcase = {
-  id: Scalars["number"];
+  id: Scalars["id"];
   name: Scalars["string"];
   algset: Algset;
   created_at: Scalars["unixTimestamp"];
@@ -327,7 +300,7 @@ export type AlgcasePaginator = {
   __args: Root["getAlgcasePaginator"]["Args"];
 };
 export type AlgAlgcaseLink = {
-  id: Scalars["number"];
+  id: Scalars["id"];
   alg: Alg;
   algcase: Algcase;
   created_at: Scalars["unixTimestamp"];
@@ -335,7 +308,7 @@ export type AlgAlgcaseLink = {
   created_by: User;
 };
 export type Alg = {
-  id: Scalars["number"];
+  id: Scalars["id"];
   sequence: Scalars["string"];
   is_approved: Scalars["boolean"];
   score: Scalars["number"];

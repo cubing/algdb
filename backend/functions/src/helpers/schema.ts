@@ -5,7 +5,6 @@ import {
   ArgDefinition,
   BaseScalars,
   TypeDefinition,
-  TypeDefinitionField,
   isInputTypeDefinition,
 } from "jomql";
 import { generatePaginatorInfoTypeDef } from "../schema/core/generators";
@@ -27,7 +26,47 @@ type tsTypeFieldFinalValue = {
 
 export class TsSchemaGenerator {
   schema: Schema;
-  schemaStr: string = "";
+  scaffoldStr: string = `
+// scaffolding
+export type GetQuery<K extends keyof Root> = Record<
+  K,
+  Queryize<Argize<Root[K]["Query"], Root[K]["Args"]>>
+>;
+
+export type GetResponse<K extends keyof Root> = Omit<Root[K]["Response"], args>;
+
+type Primitive = string | number | boolean | undefined | null;
+
+type args = "__args";
+
+type ElementType<T extends any[]> = T[number];
+
+type Edge<T> = {
+  node: T;
+  cursor: string;
+};
+
+type Queryize<T> = {
+  [P in keyof T]?: T[P] extends never
+    ? never
+    : T[P] extends Primitive
+    ? true
+    : P extends args
+    ? T[P]
+    : T[P] extends any[] // strips the array from any array types
+    ? Queryize<ElementType<T[P]>>
+    : Queryize<T[P]>;
+};
+
+type Argize<T, Args> = Args extends undefined
+  ? T
+  : Omit<T, args> & { __args?: Args };
+
+type FilterObject<T> = {
+  field: T;
+  operator?: string;
+  value: unknown;
+};\n\n`;
   typeDocumentRoot: Map<string, tsTypeFields | string> = new Map();
   scalarTsTypeFields: tsTypeFields = new Map();
   inputTypeTsTypeFields: tsTypeFields = new Map();
@@ -38,46 +77,6 @@ export class TsSchemaGenerator {
   }
 
   buildSchema() {
-    this.schemaStr = `
-// scaffolding
-export type Primitive = string | number | boolean | undefined | null;
-
-export type args = "__args";
-
-type ElementType<T extends any[]> = T[number];
-
-export type GetQuery<K extends keyof Root> = Record<
-  K,
-  Queryize<Argize<Root[K]["Query"], Root[K]["Args"]>>
->;
-
-export type GetResponse<K extends keyof Root> = Omit<Root[K]["Response"], args>;
-
-type Edge<T> = {
-  node: T;
-  cursor: string;
-};
-
-export type Queryize<T> = {
-  [P in keyof T]?: T[P] extends Primitive
-    ? true
-    : P extends args
-    ? T[P]
-    : T[P] extends any[] // strips the array from any array types
-    ? Queryize<ElementType<T[P]>>
-    : Queryize<T[P]>;
-};
-
-export type Argize<T, Args> = Args extends undefined
-  ? T
-  : Omit<T, args> & { __args?: Args };
-
-type FilterObject<T> = {
-  field: T;
-  operator?: string;
-  value: unknown;
-};\n\n`;
-
     // base scalars
     Object.entries(BaseScalars).forEach(([field, fieldDef]) => {
       if (isScalarDefinition(fieldDef)) {
@@ -218,12 +217,16 @@ type FilterObject<T> = {
     }
   }
 
-  processTypeDefinition(typeDef: TypeDefinition | RootResolverObject) {
+  processTypeDefinition(typeDef: TypeDefinition) {
     const mainTypeFields: tsTypeFields = new Map();
     Object.entries(typeDef).forEach(([field, fieldDef]) => {
       const type = fieldDef.type;
       let typename;
-      if (isScalarDefinition(type)) {
+
+      // if field is hidden, set the typename to never
+      if (fieldDef.hidden) {
+        typename = "never";
+      } else if (isScalarDefinition(type)) {
         // if it is a scalarDefinition, look up in scalar Definition table
 
         // if not exists, add it
@@ -337,7 +340,7 @@ type FilterObject<T> = {
     };
   }
 
-  outputSchema() {
+  outputSchema(htmlMode = false) {
     // build final TS document
     let typesStr: string = "";
 
@@ -350,7 +353,8 @@ type FilterObject<T> = {
         `\n`;
     });
 
-    return this.schemaStr + typesStr;
+    const finalStr = this.scaffoldStr + typesStr;
+    return htmlMode ? `<pre>${finalStr}</pre>` : finalStr;
   }
 
   buildTsDocument(tsTypeField: tsTypeFields) {

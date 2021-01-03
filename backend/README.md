@@ -1,6 +1,6 @@
 # algdb backend
 
-The schema of the backend can be found [here](https://github.com/cubing/algdb/blob/main/schema.graphql)
+The schema of the backend can be found [here](https://github.com/cubing/algdb/blob/main/backend/functions/schema.ts)
 
 Example Requests:
 
@@ -13,8 +13,7 @@ Example Requests:
 
 ```
 {
-	"action": "socialLogin",
-	"query": {
+	"socialLogin": {
 		"token": true,
 		"type": true,
 		"__args": {
@@ -32,18 +31,14 @@ Example Requests:
 
 ```
 {
-	"action": "getCurrentUser",
-	"query": {
+	"getCurrentUser": {
 		"id": true,
 		"wca_id": true,
 		"email": true,
 		"avatar": true,
 		"country": true,
 		"is_public": true,
-		"role": {
-			"id": true,
-			"name": true
-		}
+		"role": true
 	}
 }
 ```
@@ -54,22 +49,18 @@ Example Requests:
 
 ```
 {
-	"action": "updateUser",
-	"query": {
+	"updateUser": {
 		"id": true,
 		"wca_id": true,
 		"email": true,
 		"avatar": true,
 		"country": true,
 		"is_public": true,
-		"role": {
-			"id": true,
-			"name": true
-		},
+		"role": true,
 		"__args": {
 			"id": 1,
 			"name": "John Doe",
-			"role": "MODERATOR"
+			"role": "NORMAL"
 		}
 	}
 }
@@ -81,13 +72,13 @@ Example Requests:
 
 ```
 {
-	"action": "createPuzzle",
-	"query": {
+	"createPuzzle": {
 		"id": true,
 		"name": true,
 		"__args": {
 			"id": 1,
-			"name": "3x3x3"
+			"name": "3x3x3",
+			"code": "333"
 		}
 	}
 }
@@ -99,17 +90,50 @@ Example Requests:
 
 ```
 {
-	"action": "getMultiplePuzzle",
-	"query": {
+	"getPuzzlePaginator": {
 		"paginatorInfo": {
 			"count": true,
-			"total": true
+			"total": true,
+			"startCursor": true,
+			"endCursor": true
 		},
-		"data": {
-			"id": true,
-			"name": true,
-			"created_at": true
+		"edges": {
+			"node": {
+				"id": true,
+				"name": true,
+				"created_at": true
+			},
+			"cursor": true
 		}
 	}
 }
+```
+
+# Setting up with TypeScript IntelliSense
+
+**Example TypeScript Implementation with jomql**
+
+```
+import { Root, GetQuery, GetResponse } from "../types";
+
+async function executeJomql<Key extends keyof Root>(query: GetQuery<Key>): Promise<GetResponse<Key>> {
+
+  const { data } = await callJomqlEndpoint(query);
+
+  return data.data;
+}
+
+const queryResult = await executeJomql<"getCurrentUser">({
+	"getCurrentUser": {
+		"id": true,
+		"wca_id": true,
+		"email": true,
+		"avatar": true,
+		"country": true,
+		"is_public": true,
+		"role": true
+	}
+});
+
+console.log(queryResult.role)
 ```
