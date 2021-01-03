@@ -104,6 +104,9 @@ Example Requests:
 				"created_at": true
 			},
 			"cursor": true
+		},
+		"__args": {
+			"first": 2
 		}
 	}
 }
