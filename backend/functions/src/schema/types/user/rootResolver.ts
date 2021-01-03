@@ -17,17 +17,6 @@ rootResolvers.query.getCurrentUser = {
   // always allow user to get own user
 };
 
-// syncs the user's email with their firebase email
-rootResolvers.mutation.syncCurrentUser = {
-  method: "get",
-  allowNull: false,
-  isArray: false,
-  route: "/syncCurrentUser",
-  type: User.typename,
-  resolver: (req, args, query) =>
-    User.syncRecord(req, { ...args, id: req.user?.id }, query),
-};
-
 export default generateRootResolvers(
   User,
   {

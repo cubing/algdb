@@ -147,6 +147,7 @@ export function generateRootResolvers(
           if (service.typeDef[field].customOptions?.addable) {
             createArgs[field] = {
               type: service.typeDef[field].type,
+              required: !service.typeDef[field].allowNull,
             };
           }
         }

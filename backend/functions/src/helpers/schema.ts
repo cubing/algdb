@@ -46,17 +46,21 @@ type Edge<T> = {
   cursor: string;
 };
 
-type Queryize<T> = {
-  [P in keyof T]?: T[P] extends never
-    ? never
-    : T[P] extends Primitive
-    ? true
-    : P extends args
-    ? T[P]
-    : T[P] extends any[] // strips the array from any array types
-    ? Queryize<ElementType<T[P]>>
-    : Queryize<T[P]>;
-};
+type ExtractId<T> = "id" extends keyof T ? Pick<T, "id"> : T;
+
+type Queryize<T> = T extends Primitive
+  ? true
+  : {
+      [P in keyof T]?: T[P] extends never
+        ? never
+        : T[P] extends Primitive
+        ? true
+        : P extends args
+        ? T[P]
+        : T[P] extends any[] // strips the array from any array types
+        ? Queryize<ElementType<T[P]>>
+        : Queryize<T[P]>
+  }
 
 type Argize<T, Args> = Args extends undefined
   ? T
@@ -309,7 +313,7 @@ type FilterObject<T> = {
         argTypename = `Scalars['${argType.name}']`;
       } else {
         // string field,
-        argTypename = capitalizeString(argType);
+        argTypename = `${capitalizeString(argType)}[args]`;
       }
 
       // if argName is a getX rootResolver and X is a known type, add as arg field on type X

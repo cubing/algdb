@@ -1,10 +1,4 @@
 // scaffolding
-export type Primitive = string | number | boolean | undefined | null;
-
-export type args = "__args";
-
-type ElementType<T extends any[]> = T[number];
-
 export type GetQuery<K extends keyof Root> = Record<
   K,
   Queryize<Argize<Root[K]["Query"], Root[K]["Args"]>>
@@ -12,24 +6,34 @@ export type GetQuery<K extends keyof Root> = Record<
 
 export type GetResponse<K extends keyof Root> = Omit<Root[K]["Response"], args>;
 
+type Primitive = string | number | boolean | undefined | null;
+
+type args = "__args";
+
+type ElementType<T extends any[]> = T[number];
+
 type Edge<T> = {
   node: T;
   cursor: string;
 };
 
-export type Queryize<T> = {
-  [P in keyof T]?: T[P] extends never
-    ? never
-    : T[P] extends Primitive
-    ? true
-    : P extends args
-    ? T[P]
-    : T[P] extends any[] // strips the array from any array types
-    ? Queryize<ElementType<T[P]>>
-    : Queryize<T[P]>;
-};
+type ExtractId<T> = "id" extends keyof T ? Pick<T, "id"> : T;
 
-export type Argize<T, Args> = Args extends undefined
+type Queryize<T> = T extends Primitive
+  ? true
+  : {
+      [P in keyof T]?: T[P] extends never
+        ? never
+        : T[P] extends Primitive
+        ? true
+        : P extends args
+        ? T[P]
+        : T[P] extends any[] // strips the array from any array types
+        ? Queryize<ElementType<T[P]>>
+        : Queryize<T[P]>;
+    };
+
+type Argize<T, Args> = Args extends undefined
   ? T
   : Omit<T, args> & { __args?: Args };
 
@@ -155,13 +159,13 @@ export type InputType = {
   };
   deleteUser: { id: Scalars["id"] };
   createUser: {
-    provider?: Scalars["string"];
-    provider_id?: Scalars["string"];
+    provider: Scalars["string"];
+    provider_id: Scalars["string"];
     wca_id?: Scalars["string"];
-    email?: Scalars["string"];
-    name?: Scalars["string"];
+    email: Scalars["string"];
+    name: Scalars["string"];
     avatar?: Scalars["string"];
-    role?: Scalars["userRole"];
+    role: Scalars["userRole"];
   };
   updateUser: {
     id: Scalars["id"];
@@ -177,9 +181,9 @@ export type InputType = {
   };
   deletePuzzle: { id: Scalars["id"] };
   createPuzzle: {
-    name?: Scalars["string"];
-    code?: Scalars["string"];
-    is_public?: Scalars["boolean"];
+    name: Scalars["string"];
+    code: Scalars["string"];
+    is_public: Scalars["boolean"];
   };
   updatePuzzle: {
     id: Scalars["id"];
@@ -189,38 +193,38 @@ export type InputType = {
   };
   deleteAlgset: { id: Scalars["id"] };
   createAlgset: {
-    name?: Scalars["string"];
-    code?: Scalars["string"];
-    parent?: Algset;
-    puzzle?: Puzzle;
+    name: Scalars["string"];
+    code: Scalars["string"];
+    parent?: Algset[args];
+    puzzle: Puzzle[args];
     mask?: Scalars["string"];
-    visualization?: Scalars["caseVisualization"];
-    score?: Scalars["number"];
-    is_public?: Scalars["boolean"];
+    visualization: Scalars["caseVisualization"];
+    score: Scalars["number"];
+    is_public: Scalars["boolean"];
   };
   updateAlgset: {
     id: Scalars["id"];
     name?: Scalars["string"];
     code?: Scalars["string"];
-    parent?: Algset;
-    puzzle?: Puzzle;
+    parent?: Algset[args];
+    puzzle?: Puzzle[args];
     mask?: Scalars["string"];
     visualization?: Scalars["caseVisualization"];
     score?: Scalars["number"];
     is_public?: Scalars["boolean"];
   };
   deleteAlgcase: { id: Scalars["id"] };
-  createAlgcase: { name?: Scalars["string"]; algset?: Algset };
+  createAlgcase: { name: Scalars["string"]; algset: Algset[args] };
   updateAlgcase: {
     id: Scalars["id"];
     name?: Scalars["string"];
-    algset?: Algset;
+    algset?: Algset[args];
   };
   deleteAlg: { id: Scalars["id"] };
   createAlg: {
-    sequence?: Scalars["string"];
-    is_approved?: Scalars["boolean"];
-    score?: Scalars["number"];
+    sequence: Scalars["string"];
+    is_approved: Scalars["boolean"];
+    score: Scalars["number"];
   };
   updateAlg: {
     id: Scalars["id"];
@@ -229,7 +233,7 @@ export type InputType = {
     score?: Scalars["number"];
   };
   deleteAlgAlgcaseLink: { id: Scalars["id"] };
-  createAlgAlgcaseLink: { alg?: Alg; algcase?: Algcase };
+  createAlgAlgcaseLink: { alg: Alg[args]; algcase: Algcase[args] };
 };
 export type User = {
   id: Scalars["id"];
@@ -380,7 +384,6 @@ export type Root = {
     Response: Scalars["caseVisualization"];
     Args: undefined;
   };
-  syncCurrentUser: { Query: User; Response: User; Args: undefined };
   deleteUser: { Query: User; Response: User; Args: InputType["deleteUser"] };
   createUser: { Query: User; Response: User; Args: InputType["createUser"] };
   updateUser: { Query: User; Response: User; Args: InputType["updateUser"] };
