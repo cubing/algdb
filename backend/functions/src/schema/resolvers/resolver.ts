@@ -86,7 +86,7 @@ export async function addTableRow(
         throw new Error(`Field not addable: '${field}'`);
       }
 
-      // if finalValue is null, see if that is allowed
+      // if finalValue is null, see if that is allowed -- also a failsafe
       validateResultFields(args[field], typeDef[field], [field]);
 
       // if it is a mysql field, add to mysqlFields
@@ -196,7 +196,7 @@ export async function updateTableRow(
         throw new Error(`Field not updateable: '${field}'`);
       }
 
-      // if finalValue is null, see if that is allowed
+      // if finalValue is null, see if that is allowed -- also a failsafe
       validateResultFields(args[field], typeDef[field], [field]);
 
       // if it is a mysql field, add to mysqlFields
@@ -377,6 +377,5 @@ function generateSqlQuerySelectObject(
 }
 
 export function countTableRows(typename: string, whereObject: SqlWhereObject) {
-  // validation of whereArray must happen in the application logic
   return mysqlHelper.countTableRows(typename, whereObject);
 }
