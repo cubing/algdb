@@ -79,7 +79,7 @@ initializeJomql(app, {
 app.get("/schema.ts", function (req, res, next) {
   const tsSchemaGenerator = new TsSchemaGenerator(schema);
   tsSchemaGenerator.buildSchema();
-  res.send(tsSchemaGenerator.outputSchema(true));
+  res.send(tsSchemaGenerator.outputSchema());
 });
 
 export const api = functions.https.onRequest(app);
