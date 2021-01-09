@@ -13,7 +13,7 @@ import { initializePool } from "./utils/mysql2";
 import { initializePusher } from "./utils/pusher";
 import { handlePusherAuth } from "./helpers/pusher";
 import { validateToken } from "./helpers/auth";
-import { TsSchemaGenerator } from "./helpers/schema";
+import { CustomSchemaGenerator } from "./helpers/schema";
 
 const app = express();
 
@@ -77,8 +77,9 @@ initializeJomql(app, {
 });
 
 app.get("/schema.ts", function (req, res, next) {
-  const tsSchemaGenerator = new TsSchemaGenerator(schema);
+  const tsSchemaGenerator = new CustomSchemaGenerator(schema);
   tsSchemaGenerator.buildSchema();
+  tsSchemaGenerator.processSchema();
   res.send(tsSchemaGenerator.outputSchema());
 });
 

@@ -2,6 +2,7 @@ import { NormalService, SimpleService } from ".";
 import * as Resolver from "../../resolvers/resolver";
 import { itemNotFoundError } from "../../helpers/error";
 import { generatePaginatorInfoTypeDef } from "../generators";
+import { typeDefs } from "../../typeDefs";
 
 export class PaginatorInfoService extends SimpleService {
   constructor(service: NormalService) {
@@ -13,6 +14,9 @@ export class PaginatorInfoService extends SimpleService {
       },
     };
 
+    // register the typeDef if not exists
+    if (!typeDefs.has(this.typename)) typeDefs.set(this.typename, this.typeDef);
+
     this.getRecord = async (req, args, query) => {
       const selectQuery = query || Object.assign({}, this.presets.default);
 
@@ -22,7 +26,7 @@ export class PaginatorInfoService extends SimpleService {
         selectQuery,
         {},
         args,
-        this.typeDef
+        this.typeDef // must pass the specific typeDef for this Paginator
       );
 
       if (results.length < 1) {

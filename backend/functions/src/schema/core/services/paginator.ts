@@ -41,8 +41,7 @@ export class PaginatorService extends SimpleService {
         {
           ...args,
           data,
-        },
-        this.typeDef
+        }
       );
 
       if (results.length < 1) {

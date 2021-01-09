@@ -7,7 +7,7 @@ import {
   InputTypeDefinition,
 } from "jomql";
 import * as Resolver from "../resolvers/resolver";
-import { deepAssign, isObject } from "./shared";
+import { deepAssign, isObject, capitalizeString } from "./shared";
 import { DataTypes, Sequelize, DataType } from "sequelize";
 import { BaseService, NormalService, PaginatedService } from "../core/services";
 
@@ -24,7 +24,7 @@ export function generateStandardField(params: {
   allowNull: boolean;
   isArray?: boolean;
   hidden?: boolean;
-  defaultValue?: any;
+  defaultValue?: unknown;
   sqlType: DataType;
   type: ScalarDefinition | string;
   sqlDefinition?: object;
@@ -49,12 +49,13 @@ export function generateStandardField(params: {
     type: type,
     isArray: isArray,
     allowNull: allowNull,
+    required: defaultValue === undefined && !allowNull,
     customOptions: <TypeDefCustomOptions>{
       mysqlOptions: {
         sqlDefinition: {
           type: sqlType,
           allowNull: allowNull,
-          ...(defaultValue && { defaultValue: defaultValue }),
+          ...(!!defaultValue && { defaultValue: defaultValue }),
           ...sqlDefinition,
         },
         ...mysqlOptions,
@@ -74,7 +75,7 @@ export function generateStandardField(params: {
 export function generateStringField(params: {
   name?: string;
   allowNull: boolean;
-  defaultValue?: any;
+  defaultValue?: unknown;
   hidden?: boolean;
   type?: ScalarDefinition;
   sqlDefinition?: object;
@@ -109,7 +110,7 @@ export function generateStringField(params: {
 export function generateDateField(params: {
   name?: string;
   allowNull: boolean;
-  defaultValue?: any;
+  defaultValue?: unknown;
   hidden?: boolean;
   sqlDefinition?: object;
   customOptions?: object;
@@ -138,7 +139,7 @@ export function generateDateField(params: {
 export function generateTextField(params: {
   name?: string;
   allowNull: boolean;
-  defaultValue?: any;
+  defaultValue?: unknown;
   hidden?: boolean;
   sqlDefinition?: object;
   customOptions?: object;
@@ -167,7 +168,7 @@ export function generateJsonAsStringField(params: {
   name?: string;
   allowNull: boolean;
   hidden?: boolean;
-  defaultValue?: any;
+  defaultValue?: unknown;
   sqlDefinition?: object;
   customOptions?: object;
 }) {
@@ -184,7 +185,7 @@ export function generateJsonAsStringField(params: {
     allowNull: allowNull,
     defaultValue,
     hidden,
-    isArray: true,
+    isArray: false,
     sqlType: DataTypes.TEXT,
     type: Scalars.jsonAsString,
     sqlDefinition,
@@ -195,7 +196,7 @@ export function generateJsonAsStringField(params: {
 export function generateIntegerField(params: {
   name?: string;
   allowNull: boolean;
-  defaultValue?: any;
+  defaultValue?: unknown;
   hidden?: boolean;
   sqlDefinition?: object;
   customOptions?: object;
@@ -224,7 +225,7 @@ export function generateIntegerField(params: {
 export function generateFloatField(params: {
   name?: string;
   allowNull: boolean;
-  defaultValue?: any;
+  defaultValue?: unknown;
   hidden?: boolean;
   sqlDefinition?: object;
   customOptions?: object;
@@ -253,7 +254,7 @@ export function generateFloatField(params: {
 export function generateDecimalField(params: {
   name?: string;
   allowNull: boolean;
-  defaultValue?: any;
+  defaultValue?: unknown;
   hidden?: boolean;
   sqlDefinition?: object;
   customOptions?: object;
@@ -282,7 +283,7 @@ export function generateDecimalField(params: {
 export function generateBooleanField(params: {
   name?: string;
   allowNull: boolean;
-  defaultValue?: any;
+  defaultValue?: unknown;
   hidden?: boolean;
   sqlDefinition?: object;
   customOptions?: object;
@@ -314,7 +315,7 @@ export function generateEnumField(params: {
   scalarDefinition: ScalarDefinition;
   allowNull: boolean;
   hidden?: boolean;
-  defaultValue?: any;
+  defaultValue?: unknown;
   sqlDefinition?: object;
   customOptions?: object;
 }) {
@@ -473,7 +474,7 @@ export function generatePaginatorPivotResolverObject(params: {
   };
 
   const filterByScalarDefinition: ScalarDefinition = {
-    name: pivotService.typename + "FilterBy",
+    name: pivotService.typename + "FilterByFields",
     types: Object.keys(pivotService.filterFieldsMap).map((ele) => `"${ele}"`),
     parseValue: (value: unknown, typename) => {
       // must be string
@@ -549,7 +550,9 @@ export function generatePaginatorPivotResolverObject(params: {
     isArray: false,
     allowNull: false,
     args: {
+      required: true,
       type: {
+        name: "get" + capitalizeString(pivotService.paginator.typename),
         fields: {
           first: { type: BaseScalars.number },
           last: { type: BaseScalars.number },
@@ -561,54 +564,56 @@ export function generatePaginatorPivotResolverObject(params: {
           groupBy: { type: groupByScalarDefinition, isArray: true },
           search: { type: BaseScalars.string },
         },
-      },
-      argsValidator: (args, fieldPath) => {
-        // check for invalid first/last, before/after combos
-        // after
-        const fieldString = ["root"].concat(...fieldPath).join(".");
-        const errorMessageSuffix = ` for args on field '${fieldString}'`;
+        inputsValidator: (args, fieldPath) => {
+          // check for invalid first/last, before/after combos
+          // after
+          const fieldString = ["root"].concat(...fieldPath).join(".");
+          const errorMessageSuffix = ` for args on field '${fieldString}'`;
 
-        if (!isObject(args)) {
-          throw new Error("Args required" + errorMessageSuffix);
-        }
+          if (!isObject(args)) {
+            throw new Error("Args required" + errorMessageSuffix);
+          }
 
-        if ("after" in args) {
-          if (!("first" in args))
+          if ("after" in args) {
+            if (!("first" in args))
+              throw new Error(
+                "Cannot use after without first" + errorMessageSuffix
+              );
+            if ("last" in args || "before" in args)
+              throw new Error(
+                "Cannot use after with last/before" + errorMessageSuffix
+              );
+          }
+
+          // first
+          if ("first" in args) {
+            if ("last" in args || "before" in args)
+              throw new Error(
+                "Cannot use after with last/before" + errorMessageSuffix
+              );
+          }
+
+          // before
+          if ("before" in args) {
+            if (!("last" in args))
+              throw new Error(
+                "Cannot use before without last" + errorMessageSuffix
+              );
+          }
+
+          // last
+          if ("last" in args) {
+            if (!("before" in args))
+              throw new Error(
+                "Cannot use before without last" + errorMessageSuffix
+              );
+          }
+
+          if (!("first" in args) && !("last" in args))
             throw new Error(
-              "Cannot use after without first" + errorMessageSuffix
+              "One of first or last required" + errorMessageSuffix
             );
-          if ("last" in args || "before" in args)
-            throw new Error(
-              "Cannot use after with last/before" + errorMessageSuffix
-            );
-        }
-
-        // first
-        if ("first" in args) {
-          if ("last" in args || "before" in args)
-            throw new Error(
-              "Cannot use after with last/before" + errorMessageSuffix
-            );
-        }
-
-        // before
-        if ("before" in args) {
-          if (!("last" in args))
-            throw new Error(
-              "Cannot use before without last" + errorMessageSuffix
-            );
-        }
-
-        // last
-        if ("last" in args) {
-          if (!("before" in args))
-            throw new Error(
-              "Cannot use before without last" + errorMessageSuffix
-            );
-        }
-
-        if (!("first" in args) && !("last" in args))
-          throw new Error("One of first or last required" + errorMessageSuffix);
+        },
       },
     },
     resolver: resolverFunction,

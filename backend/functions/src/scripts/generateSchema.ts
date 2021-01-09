@@ -1,9 +1,10 @@
 import * as schema from "../schema";
 import * as fs from "fs";
-import { TsSchemaGenerator } from "../helpers/schema";
+import { CustomSchemaGenerator } from "../helpers/schema";
 
-const tsSchemaGenerator = new TsSchemaGenerator(schema);
+const tsSchemaGenerator = new CustomSchemaGenerator(schema);
 tsSchemaGenerator.buildSchema();
+tsSchemaGenerator.processSchema();
 
 fs.writeFile("schema.ts", tsSchemaGenerator.outputSchema(), function (err) {
   if (err) console.log(err);

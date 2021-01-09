@@ -1,3 +1,7 @@
+// build the typeDef Map first
+const typeDefs: Map<string, TypeDefinition> = new Map();
+export { typeDefs };
+
 import * as allServices from "./services";
 import { TypeDefinition } from "jomql";
 import {
@@ -23,9 +27,6 @@ allServices.Algcase.typeDef = algcase;
 allServices.Alg.typeDef = alg;
 allServices.AlgAlgcaseLink.typeDef = algAlgcaseLink;
 
-// build the typeDef Map
-const typeDefs: Map<string, TypeDefinition> = new Map();
-
 for (const serviceName in allServices) {
   const service = allServices[serviceName];
 
@@ -41,5 +42,3 @@ for (const serviceName in allServices) {
     typeDefs.set(service.paginator.typename, service.paginator.typeDef);
   }
 }
-
-export { typeDefs };

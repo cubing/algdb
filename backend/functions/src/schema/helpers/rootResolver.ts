@@ -1,8 +1,8 @@
-import { RootResolver, RootResolverObject } from "jomql";
+import { InputTypeDefinition, RootResolver, RootResolverObject } from "jomql";
 import { NormalService, PaginatedService } from "../core/services";
 import { generatePaginatorPivotResolverObject } from "../helpers/typeDef";
 import { isObject, capitalizeString } from "../helpers/shared";
-import * as Scalars from "../scalars";
+import { inputDefs } from "../inputDefs";
 
 export function generateBlankRootResolver(): RootResolver {
   return {
@@ -21,16 +21,51 @@ export function generateRootResolvers(
 
   const updatedRootResolvers = rootResolvers ?? generateBlankRootResolver();
 
+  // build unique key map and ArgDefinition here
+  const uniqueKeyMap = {};
+  Object.entries(service.uniqueKeyMap).forEach(([uniqueKeyName, entry]) => {
+    entry.forEach((key) => {
+      uniqueKeyMap[key] = { type: service.typeDef[key].type };
+    });
+  });
+  const lookupRecordInputDefinition: InputTypeDefinition = {
+    fields: uniqueKeyMap,
+    inputsValidator: (args, fieldPath) => {
+      // check if a valid combination of key args exist
+      let validKeyCombination = false;
+      if (isObject(args)) {
+        const argsArray = Object.keys(args);
+        for (const keyName in service.uniqueKeyMap) {
+          if (
+            service.uniqueKeyMap[keyName].every((ele) =>
+              argsArray.includes(ele)
+            ) &&
+            argsArray.every((ele) =>
+              service.uniqueKeyMap[keyName].includes(ele)
+            )
+          ) {
+            validKeyCombination = true;
+            break;
+          }
+        }
+      }
+
+      if (!validKeyCombination) {
+        const fieldString = ["root"].concat(...fieldPath).join(".");
+        throw new Error(
+          `Invalid combination of args on field '${fieldString}'`
+        );
+      }
+    },
+  };
+
+  // register the record lookup definition under getX
+  inputDefs.set("get" + capitalizedClass, lookupRecordInputDefinition);
+
   params.methods.forEach((method) => {
     const capitalizedMethod = capitalizeString(method);
     switch (method) {
       case "get":
-        const uniqueKeyMap = {};
-        for (const keyName in service.uniqueKeyMap) {
-          service.uniqueKeyMap[keyName].forEach((key) => {
-            uniqueKeyMap[key] = { type: service.typeDef[key].type };
-          });
-        }
         updatedRootResolvers.query[method + capitalizedClass] = {
           method: "get",
           route: "/" + service.typename + "/:id",
@@ -38,38 +73,9 @@ export function generateRootResolvers(
           isArray: false,
           allowNull: false,
           args: {
-            type: {
-              fields: uniqueKeyMap,
-            },
-            argsValidator: (args, fieldPath) => {
-              // check if a valid combination of key args exist
-              let validKeyCombination = false;
-              if (isObject(args)) {
-                const argsArray = Object.keys(args);
-                for (const keyName in service.uniqueKeyMap) {
-                  if (
-                    service.uniqueKeyMap[keyName].every((ele) =>
-                      argsArray.includes(ele)
-                    ) &&
-                    argsArray.every((ele) =>
-                      service.uniqueKeyMap[keyName].includes(ele)
-                    )
-                  ) {
-                    validKeyCombination = true;
-                    break;
-                  }
-                }
-              }
-
-              if (!validKeyCombination) {
-                const fieldString = ["root"].concat(...fieldPath).join(".");
-                throw new Error(
-                  `Invalid combination of args on field '${fieldString}'`
-                );
-              }
-            },
+            required: true,
+            type: lookupRecordInputDefinition,
           },
-
           resolver: (req, query, args) => service.getRecord(req, query, args),
         };
         break;
@@ -98,9 +104,8 @@ export function generateRootResolvers(
           isArray: false,
           allowNull: false,
           args: {
-            type: {
-              fields: { id: { type: Scalars.id, required: true } },
-            },
+            required: true,
+            type: lookupRecordInputDefinition,
           },
           resolver: (req, query, args) =>
             service.deleteRecord(req, query, args),
@@ -108,15 +113,20 @@ export function generateRootResolvers(
         break;
       case "update":
         const updateArgs = {};
-        for (const field in service.typeDef) {
-          if (service.typeDef[field].customOptions?.updateable) {
-            updateArgs[field] = {
-              type: service.typeDef[field].type,
+        Object.entries(service.typeDef).forEach(([key, typeDefField]) => {
+          const type = typeDefField.type;
+          if (typeDefField.customOptions?.updateable) {
+            // generate the argDefinition for the string type
+            updateArgs[key] = {
+              type:
+                typeof type === "string"
+                  ? "get" + capitalizeString(type)
+                  : type,
               required: false,
-              isArray: service.typeDef[field].isArray,
+              isArray: typeDefField.isArray,
             };
           }
-        }
+        });
         updatedRootResolvers.mutation[method + capitalizedClass] = {
           method: "put",
           route: "/" + service.typename + "/:id",
@@ -124,17 +134,27 @@ export function generateRootResolvers(
           isArray: false,
           allowNull: false,
           args: {
+            required: true,
             type: {
               fields: {
-                id: { type: Scalars.id, required: true },
-                ...updateArgs,
+                item: {
+                  type: "get" + capitalizedClass,
+                },
+                fields: {
+                  type: {
+                    name: "update" + capitalizedClass + "Fields",
+                    fields: updateArgs,
+                    inputsValidator: (args, fieldPath) => {
+                      // check if at least 1 valid update field provided
+                      const { id, ...updateFields } = args;
+                      if (Object.keys(updateFields).length < 1)
+                        throw new Error(
+                          `No valid fields to update at '${fieldPath}'`
+                        );
+                    },
+                  },
+                },
               },
-            },
-            argsValidator: (args, fieldPath) => {
-              // check if at least 1 valid update field provided
-              const { id, ...updateFields } = args;
-              if (Object.keys(updateFields).length < 1)
-                throw new Error(`No valid fields to update at '${fieldPath}'`);
             },
           },
           resolver: (req, query, args) =>
@@ -143,14 +163,20 @@ export function generateRootResolvers(
         break;
       case "create":
         const createArgs = {};
-        for (const field in service.typeDef) {
-          if (service.typeDef[field].customOptions?.addable) {
-            createArgs[field] = {
-              type: service.typeDef[field].type,
-              required: !service.typeDef[field].allowNull,
+        Object.entries(service.typeDef).forEach(([key, typeDefField]) => {
+          const type = typeDefField.type;
+          if (typeDefField.customOptions?.addable) {
+            // generate the argDefinition for the string type
+            createArgs[key] = {
+              type:
+                typeof type === "string"
+                  ? "get" + capitalizeString(type)
+                  : type,
+              required: typeDefField.required,
+              isArray: typeDefField.isArray,
             };
           }
-        }
+        });
         updatedRootResolvers.mutation[method + capitalizedClass] = {
           method: "post",
           route: "/" + service.typename,
@@ -158,6 +184,7 @@ export function generateRootResolvers(
           isArray: false,
           allowNull: false,
           args: {
+            required: true,
             type: {
               fields: createArgs,
             },

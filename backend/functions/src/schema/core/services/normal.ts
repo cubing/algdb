@@ -1,6 +1,6 @@
 import * as errorHelper from "../../helpers/error";
 import { BaseService } from ".";
-
+import * as mysqlHelper from "../../helpers/mysql";
 import {
   handleJqlSubscription,
   handleJqlSubscriptionTriggerIterative,
@@ -19,7 +19,7 @@ import {
   SqlSortFieldObject,
 } from "../../../types";
 
-import { btoa } from "../../helpers/shared";
+import { btoa, isObject } from "../../helpers/shared";
 
 export type JoinFieldObject = {
   field?: string;
@@ -157,9 +157,9 @@ export class NormalService extends BaseService {
     };
 
     whereObject.fields.push(
-      ...Object.entries(args).map((tuple) => ({
-        field: tuple[0],
-        value: tuple[1],
+      ...Object.entries(args).map(([field, value]) => ({
+        field,
+        value,
       }))
     );
 
@@ -290,11 +290,11 @@ export class NormalService extends BaseService {
         whereAndObject.fields.push({
           field: "id",
           value: parsedCursor.last_id,
-          operator: "lt",
+          operator: "gt",
         });
 
         // if operator is > and is null last value, must allow not null
-        if (operator === "lt") {
+        if (operator === "gt") {
           whereOrObject.fields.push({
             field: sortByField,
             value: null,
@@ -303,7 +303,7 @@ export class NormalService extends BaseService {
         }
       } else {
         // if operator is < and not null last value, must allow null
-        if (operator === "gt") {
+        if (operator === "lt") {
           whereOrObject.fields.push({
             field: sortByField,
             value: null,
@@ -446,6 +446,32 @@ export class NormalService extends BaseService {
       throw errorHelper.badPermissionsError();
     }
 
+    // convert any lookup/joined fields into IDs
+    for (const key in args) {
+      const type = this.typeDef[key].type;
+      if (typeof type === "string" && isObject(args[key])) {
+        // get record ID of type, replace object with the ID
+        const results = await mysqlHelper.fetchTableRows({
+          select: [{ field: "id" }],
+          from: type,
+          where: {
+            connective: "AND",
+            fields: Object.entries(args[key]).map(([field, value]) => ({
+              field,
+              value,
+            })),
+          },
+        });
+
+        if (results.length < 1) {
+          throw new Error(`${type} not found`);
+        }
+
+        // replace args[key] with the item ID
+        args[key] = results[0].id;
+      }
+    }
+
     const addResults = await Resolver.addTableRow(
       this.typename,
       req,
@@ -487,32 +513,65 @@ export class NormalService extends BaseService {
       throw errorHelper.badPermissionsError();
     }
 
-    //check if record exists
-    const recordExistCount = await Resolver.countTableRows(this.typename, {
-      fields: [{ field: "id", value: args.id }],
+    // check if record exists, get ID
+    const records = await mysqlHelper.fetchTableRows({
+      select: [{ field: "id" }],
+      from: this.typename,
+      where: {
+        connective: "AND",
+        fields: Object.entries(args.item).map(([field, value]) => ({
+          field,
+          value,
+        })),
+      },
     });
 
-    if (recordExistCount < 1) {
+    if (records.length < 1) {
       throw errorHelper.generateError("Item not found", 404);
     }
 
-    // separate id from updateArgs
-    const { id, ...updateArgs } = args;
+    const itemId = records[0].id;
+
+    // convert any lookup/joined fields into IDs
+    for (const key in args.fields) {
+      const type = this.typeDef[key].type;
+      if (typeof type === "string" && isObject(args.fields[key])) {
+        // get record ID of type, replace object with the ID
+        const results = await mysqlHelper.fetchTableRows({
+          select: [{ field: "id" }],
+          from: type,
+          where: {
+            connective: "AND",
+            fields: Object.entries(args.fields[key]).map(([field, value]) => ({
+              field,
+              value,
+            })),
+          },
+        });
+
+        if (results.length < 1) {
+          throw new Error(`${type} not found`);
+        }
+
+        // replace args[key] with the item ID
+        args.fields[key] = results[0].id;
+      }
+    }
 
     await Resolver.updateTableRow(
       this.typename,
       req,
-      updateArgs,
+      args.fields,
       {
         updated_at: "now()",
       },
-      { fields: [{ field: "id", value: args.id }] }
+      { fields: [{ field: "id", value: itemId }] }
     );
 
-    const returnData = this.getRecord(req, { id: args.id }, query);
+    const returnData = this.getRecord(req, { id: itemId }, query);
 
     handleJqlSubscriptionTrigger(req, this, this.typename + "Updated", {
-      id: args.id,
+      id: itemId,
     });
 
     // subscriptions will be checked against these args
@@ -525,7 +584,7 @@ export class NormalService extends BaseService {
       this,
       this.typename + "ListUpdated",
       subscriptionFilterableArgs,
-      { id: args.id }
+      { id: itemId }
     );
 
     return returnData;
@@ -537,11 +596,30 @@ export class NormalService extends BaseService {
       throw errorHelper.badPermissionsError();
     }
 
-    //first, fetch the requested query
-    const requestedResults = await this.getRecord(req, { id: args.id }, query);
+    // confirm existence of item and get ID
+    const results = await mysqlHelper.fetchTableRows({
+      select: [{ field: "id" }],
+      from: this.typename,
+      where: {
+        connective: "AND",
+        fields: Object.entries(args).map(([field, value]) => ({
+          field,
+          value,
+        })),
+      },
+    });
+
+    if (results.length < 1) {
+      throw new Error(`${this.typename} not found`);
+    }
+
+    const itemId = results[0].id;
+
+    // first, fetch the requested query, if any
+    const requestedResults = await this.getRecord(req, args, query);
 
     await handleJqlSubscriptionTrigger(req, this, this.typename + "Deleted", {
-      id: args.id,
+      id: itemId,
     });
 
     // subscriptions will be checked against these args
@@ -554,24 +632,24 @@ export class NormalService extends BaseService {
       this,
       this.typename + "ListUpdated",
       subscriptionFilterableArgs,
-      { id: args.id }
+      { id: itemId }
     );
 
     await Resolver.deleteTableRow(this.typename, req, args, {
-      fields: [{ field: "id", value: args.id }],
+      fields: [{ field: "id", value: itemId }],
     });
 
     //cleanup
 
     //also need to delete all subscriptions for this item
     await deleteJqlSubscription(req, this.typename + "Deleted", {
-      id: args.id,
+      id: itemId,
     });
 
     //also need to delete all permissions attached to this item
     if (this.permissionsLink) {
       await Resolver.deleteTableRow(this.permissionsLink.typename, req, args, {
-        fields: [{ field: this.typename, value: args.id }],
+        fields: [{ field: this.typename, value: itemId }],
       });
     }
 

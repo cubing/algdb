@@ -2,6 +2,7 @@ import { NormalService, SimpleService } from ".";
 import * as Resolver from "../../resolvers/resolver";
 import { itemNotFoundError } from "../../helpers/error";
 import { generateEdgeTypeDef } from "../generators";
+import { typeDefs } from "../../typeDefs";
 
 export class EdgeService extends SimpleService {
   constructor(service: NormalService) {
@@ -13,6 +14,9 @@ export class EdgeService extends SimpleService {
       },
     };
 
+    // register the typeDef
+    typeDefs.set(this.typename, this.typeDef);
+
     this.getRecord = async (req, args, query) => {
       const selectQuery = query || Object.assign({}, this.presets.default);
 
@@ -21,8 +25,7 @@ export class EdgeService extends SimpleService {
         req,
         selectQuery,
         {},
-        args,
-        this.typeDef
+        args
       );
 
       if (results.length < 1) {
