@@ -1,7 +1,7 @@
 // scaffolding
 export type GetQuery<K extends keyof Root> = Record<
   K,
-  Queryize<Argize<Root[K]["Query"], Root[K]["Args"]>>
+  Argize<Queryize<Root[K]["Query"]>, Root[K]["Args"]>
 >;
 
 export type GetResponse<K extends keyof Root> = Omit<Root[K]["Response"], args>;
@@ -12,32 +12,34 @@ type args = "__args";
 
 type ElementType<T extends any[]> = T[number];
 
-type Edge<T> = {
-  node: T;
-  cursor: string;
-};
-
-type ExtractId<T> = "id" extends keyof T ? Pick<T, "id"> : T;
-
-type Queryize<T> = T extends Primitive
+type Queryize<T> = T extends never
+  ? never
+  : T extends Primitive
   ? true
+  : T extends any[]
+  ? Queryize<ElementType<T>>
+  : args extends keyof T
+  ? Omit<
+      {
+        [P in keyof T]?: Queryize<T[P]>;
+      },
+      args
+    > &
+      (undefined extends T[args] ? { __args?: T[args] } : { __args: T[args] })
   : {
-      [P in keyof T]?: T[P] extends never
-        ? never
-        : T[P] extends Primitive
-        ? true
-        : P extends args
-        ? T[P]
-        : T[P] extends any[] // strips the array from any array types
-        ? Queryize<ElementType<T[P]>>
-        : Queryize<T[P]>;
+      [P in keyof T]?: Queryize<T[P]>;
     };
 
 type Argize<T, Args> = Args extends undefined
-  ? T
-  : Omit<T, args> & { __args?: Args };
+  ? Omit<T, args>
+  : Omit<T, args> & { __args: Args };
 
-type FilterObject<T> = {
+type Edge<T> = {
+  node: Omit<T, args>;
+  cursor: string;
+};
+
+type FilterByObject<T> = {
   field: T;
   operator?: string;
   value: unknown;
@@ -56,28 +58,24 @@ export type Scalars = {
   filterOperator: "eq" | "neq" | "gt" | "lt" | "in" | "nin" | "regex" | "like";
   caseVisualization: "V_2D" | "V_3D" | "V_PG3D";
   userSortBy: "id" | "created_at" | "updated_at";
-  userFilterBy: "id" | "created_by" | "created_by.name" | "role";
+  userFilterByFields: "id" | "created_by" | "created_by.name" | "role";
   userGroupBy: undefined;
   puzzleSortBy: "id" | "created_at";
-  puzzleFilterBy: "id" | "created_by" | "code" | "is_public";
+  puzzleFilterByFields: "id" | "created_by" | "code" | "is_public";
   puzzleGroupBy: undefined;
   algsetSortBy: "id" | "created_at";
-  algsetFilterBy: "id" | "created_by" | "code" | "is_public";
+  algsetFilterByFields: "id" | "created_by" | "code" | "is_public";
   algsetGroupBy: undefined;
   algcaseSortBy: "id" | "created_at";
-  algcaseFilterBy: "id" | "created_by" | "code" | "is_public";
+  algcaseFilterByFields: "id" | "created_by" | "code" | "is_public";
   algcaseGroupBy: undefined;
   algSortBy: "id" | "created_at";
-  algFilterBy: "id" | "algcase.name" | "algcase";
+  algFilterByFields: "id" | "algcase.name" | "algcase";
   algGroupBy: "id";
 };
 export type InputType = {
   getUser: { id?: Scalars["id"] };
-  userFilterByObject: {
-    field: Scalars["userFilterBy"];
-    operator?: Scalars["filterOperator"];
-    value: Scalars["unknown"];
-  };
+  userFilterByObject: FilterByObject<Scalars["userFilterByFields"]>;
   getUserPaginator: {
     first?: Scalars["number"];
     last?: Scalars["number"];
@@ -90,11 +88,7 @@ export type InputType = {
     search?: Scalars["string"];
   };
   getPuzzle: { id?: Scalars["id"]; code?: Scalars["string"] };
-  puzzleFilterByObject: {
-    field: Scalars["puzzleFilterBy"];
-    operator?: Scalars["filterOperator"];
-    value: Scalars["unknown"];
-  };
+  puzzleFilterByObject: FilterByObject<Scalars["puzzleFilterByFields"]>;
   getPuzzlePaginator: {
     first?: Scalars["number"];
     last?: Scalars["number"];
@@ -107,11 +101,7 @@ export type InputType = {
     search?: Scalars["string"];
   };
   getAlgset: { id?: Scalars["id"]; code?: Scalars["string"] };
-  algsetFilterByObject: {
-    field: Scalars["algsetFilterBy"];
-    operator?: Scalars["filterOperator"];
-    value: Scalars["unknown"];
-  };
+  algsetFilterByObject: FilterByObject<Scalars["algsetFilterByFields"]>;
   getAlgsetPaginator: {
     first?: Scalars["number"];
     last?: Scalars["number"];
@@ -124,11 +114,7 @@ export type InputType = {
     search?: Scalars["string"];
   };
   getAlgcase: { id?: Scalars["id"] };
-  algcaseFilterByObject: {
-    field: Scalars["algcaseFilterBy"];
-    operator?: Scalars["filterOperator"];
-    value: Scalars["unknown"];
-  };
+  algcaseFilterByObject: FilterByObject<Scalars["algcaseFilterByFields"]>;
   getAlgcasePaginator: {
     first?: Scalars["number"];
     last?: Scalars["number"];
@@ -141,11 +127,7 @@ export type InputType = {
     search?: Scalars["string"];
   };
   getAlg: { id?: Scalars["id"] };
-  algFilterByObject: {
-    field: Scalars["algFilterBy"];
-    operator?: Scalars["filterOperator"];
-    value: Scalars["unknown"];
-  };
+  algFilterByObject: FilterByObject<Scalars["algFilterByFields"]>;
   getAlgPaginator: {
     first?: Scalars["number"];
     last?: Scalars["number"];
@@ -157,7 +139,7 @@ export type InputType = {
     groupBy?: Scalars["algGroupBy"][];
     search?: Scalars["string"];
   };
-  deleteUser: { id: Scalars["id"] };
+  deleteUser: { id?: Scalars["id"] };
   createUser: {
     provider: Scalars["string"];
     provider_id: Scalars["string"];
@@ -165,76 +147,105 @@ export type InputType = {
     email: Scalars["string"];
     name: Scalars["string"];
     avatar?: Scalars["string"];
-    role: Scalars["userRole"];
+    role?: Scalars["userRole"];
   };
-  updateUser: {
-    id: Scalars["id"];
+  updateUserFields: {
     email?: Scalars["string"];
     name?: Scalars["string"];
     avatar?: Scalars["string"];
     role?: Scalars["userRole"];
+  };
+  updateUser: {
+    item?: InputType["getUser"];
+    fields?: InputType["updateUserFields"];
   };
   socialLogin: {
     provider: Scalars["string"];
     code: Scalars["string"];
     redirect_uri: Scalars["string"];
   };
-  deletePuzzle: { id: Scalars["id"] };
+  deletePuzzle: { id?: Scalars["id"]; code?: Scalars["string"] };
   createPuzzle: {
     name: Scalars["string"];
     code: Scalars["string"];
-    is_public: Scalars["boolean"];
+    is_public?: Scalars["boolean"];
   };
-  updatePuzzle: {
-    id: Scalars["id"];
+  updatePuzzleFields: {
     name?: Scalars["string"];
     code?: Scalars["string"];
     is_public?: Scalars["boolean"];
   };
-  deleteAlgset: { id: Scalars["id"] };
+  updatePuzzle: {
+    item?: InputType["getPuzzle"];
+    fields?: InputType["updatePuzzleFields"];
+  };
+  deleteAlgset: { id?: Scalars["id"]; code?: Scalars["string"] };
   createAlgset: {
     name: Scalars["string"];
     code: Scalars["string"];
-    parent?: Algset[args];
-    puzzle: Puzzle[args];
-    mask?: Scalars["string"];
-    visualization: Scalars["caseVisualization"];
-    score: Scalars["number"];
-    is_public: Scalars["boolean"];
-  };
-  updateAlgset: {
-    id: Scalars["id"];
-    name?: Scalars["string"];
-    code?: Scalars["string"];
-    parent?: Algset[args];
-    puzzle?: Puzzle[args];
+    parent?: InputType["getAlgset"];
+    puzzle: InputType["getPuzzle"];
     mask?: Scalars["string"];
     visualization?: Scalars["caseVisualization"];
     score?: Scalars["number"];
     is_public?: Scalars["boolean"];
   };
-  deleteAlgcase: { id: Scalars["id"] };
-  createAlgcase: { name: Scalars["string"]; algset: Algset[args] };
-  updateAlgcase: {
-    id: Scalars["id"];
+  updateAlgsetFields: {
     name?: Scalars["string"];
-    algset?: Algset[args];
+    code?: Scalars["string"];
+    parent?: InputType["getAlgset"];
+    puzzle?: InputType["getPuzzle"];
+    mask?: Scalars["string"];
+    visualization?: Scalars["caseVisualization"];
+    score?: Scalars["number"];
+    is_public?: Scalars["boolean"];
   };
-  deleteAlg: { id: Scalars["id"] };
+  updateAlgset: {
+    item?: InputType["getAlgset"];
+    fields?: InputType["updateAlgsetFields"];
+  };
+  deleteAlgcase: { id?: Scalars["id"] };
+  createAlgcase: { name: Scalars["string"]; algset: InputType["getAlgset"] };
+  updateAlgcaseFields: {
+    name?: Scalars["string"];
+    algset?: InputType["getAlgset"];
+  };
+  updateAlgcase: {
+    item?: InputType["getAlgcase"];
+    fields?: InputType["updateAlgcaseFields"];
+  };
+  deleteAlg: { id?: Scalars["id"] };
   createAlg: {
     sequence: Scalars["string"];
-    is_approved: Scalars["boolean"];
-    score: Scalars["number"];
+    is_approved?: Scalars["boolean"];
+    score?: Scalars["number"];
   };
-  updateAlg: {
-    id: Scalars["id"];
+  updateAlgFields: {
     sequence?: Scalars["string"];
     is_approved?: Scalars["boolean"];
     score?: Scalars["number"];
   };
-  deleteAlgAlgcaseLink: { id: Scalars["id"] };
-  createAlgAlgcaseLink: { alg: Alg[args]; algcase: Algcase[args] };
+  updateAlg: {
+    item?: InputType["getAlg"];
+    fields?: InputType["updateAlgFields"];
+  };
+  deleteAlgAlgcaseLink: { id?: Scalars["id"] };
+  createAlgAlgcaseLink: {
+    alg: InputType["getAlg"];
+    algcase: InputType["getAlgcase"];
+  };
 };
+export type PaginatorInfo = {
+  total: Scalars["number"];
+  count: Scalars["number"];
+  startCursor: Scalars["string"] | null;
+  endCursor: Scalars["string"] | null;
+};
+export type UserEdge = Edge<User>;
+export type PuzzleEdge = Edge<Puzzle>;
+export type AlgsetEdge = Edge<Algset>;
+export type AlgcaseEdge = Edge<Algcase>;
+export type AlgEdge = Edge<Alg>;
 export type User = {
   id: Scalars["id"];
   provider: never;
@@ -334,7 +345,7 @@ export type Auth = {
   user: User;
 };
 export type Root = {
-  getCurrentUser: { Query: User; Response: User; Args: undefined };
+  getCurrentUser: { Query: User; Response: User; Args?: undefined };
   getUser: { Query: User; Response: User; Args: InputType["getUser"] };
   getUserPaginator: {
     Query: UserPaginator;
@@ -372,22 +383,22 @@ export type Root = {
   getAllUserRole: {
     Query: Scalars["userRole"];
     Response: Scalars["userRole"];
-    Args: undefined;
+    Args?: undefined;
   };
   getAllFilterOperator: {
     Query: Scalars["filterOperator"];
     Response: Scalars["filterOperator"];
-    Args: undefined;
+    Args?: undefined;
   };
   getAllCaseVisualization: {
     Query: Scalars["caseVisualization"];
     Response: Scalars["caseVisualization"];
-    Args: undefined;
+    Args?: undefined;
   };
   deleteUser: { Query: User; Response: User; Args: InputType["deleteUser"] };
   createUser: { Query: User; Response: User; Args: InputType["createUser"] };
   updateUser: { Query: User; Response: User; Args: InputType["updateUser"] };
-  socialLogin: { Query: Auth; Response: Auth; Args: InputType["socialLogin"] };
+  socialLogin: { Query: Auth; Response: Auth; Args?: InputType["socialLogin"] };
   deletePuzzle: {
     Query: Puzzle;
     Response: Puzzle;
@@ -447,14 +458,3 @@ export type Root = {
     Args: InputType["createAlgAlgcaseLink"];
   };
 };
-export type PaginatorInfo = {
-  total: Scalars["number"];
-  count: Scalars["number"];
-  startCursor: Scalars["string"] | null;
-  endCursor: Scalars["string"] | null;
-};
-export type UserEdge = Edge<User>;
-export type PuzzleEdge = Edge<Puzzle>;
-export type AlgsetEdge = Edge<Algset>;
-export type AlgcaseEdge = Edge<Algcase>;
-export type AlgEdge = Edge<Alg>;
