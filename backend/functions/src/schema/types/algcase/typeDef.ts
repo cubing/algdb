@@ -6,7 +6,6 @@ import {
   generateUpdatedAtField,
   generateCreatedByField,
   generateStringField,
-  generateBooleanField,
   generateJoinableField,
 } from "../../helpers/typeDef";
 

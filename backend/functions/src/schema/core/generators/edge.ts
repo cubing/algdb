@@ -1,6 +1,6 @@
 import { BaseService } from "../services";
 
-import { BaseScalars } from "jomql";
+import * as Scalars from "../../scalars";
 
 import { atob } from "../../helpers/shared";
 
@@ -15,7 +15,7 @@ export function generateEdgeTypeDef(service: BaseService) {
       },
     },
     cursor: {
-      type: BaseScalars.string,
+      type: Scalars.string,
       isArray: false,
       allowNull: false,
       resolver: (req, args, query, typename, currentObject) => {

@@ -1,6 +1,6 @@
 import { AlgAlgcaseLink } from "../../services";
-import { generateRootResolvers } from "../../helpers/rootResolver";
+import { generateBaseRootResolvers } from "../../helpers/rootResolver";
 
-export default generateRootResolvers(AlgAlgcaseLink, {
-  methods: ["delete", "create"],
-});
+export default {
+  ...generateBaseRootResolvers(AlgAlgcaseLink, ["delete", "create"]),
+};

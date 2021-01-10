@@ -1,11 +1,11 @@
 import { NormalService } from "../services";
 
-import { BaseScalars } from "jomql";
+import * as Scalars from "../../scalars";
 
 export function generateAccessorInfoTypeDef(service: NormalService) {
   return {
     permissions: {
-      type: BaseScalars.string,
+      type: Scalars.string,
       isArray: false,
       allowNull: false,
       resolver: async (req, args, query, typename, currentObject) => {
@@ -13,7 +13,7 @@ export function generateAccessorInfoTypeDef(service: NormalService) {
       },
     },
     sufficientPermissions: {
-      type: BaseScalars.boolean,
+      type: Scalars.boolean,
       isArray: false,
       allowNull: false,
       resolver: async (req, args, query, typename, currentObject) => {

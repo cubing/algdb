@@ -7,7 +7,7 @@ import {
   validateResultFields,
 } from "jomql";
 
-import * as mysqlHelper from "../helpers/mysql";
+import * as mysqlHelper from "./mysql";
 import { typeDefs } from "../typeDefs";
 import {
   SqlQuerySelectObject,

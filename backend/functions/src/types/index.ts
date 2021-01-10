@@ -55,7 +55,7 @@ export type SqlGroupFieldObject = SqlFieldObject & {
 };
 
 export type SqlFieldObject = {
-  joinFields?: SqlJoinFieldObject[];
+  //joinFields?: SqlJoinFieldObject[];
 };
 
 export type SqlQueryObject = SqlParams & {

@@ -1,11 +1,11 @@
 import { SimpleService } from "../../core/services";
 
 import { handleJqlSubscriptionTriggerIterative } from "../../helpers/subscription";
-import * as Resolver from "../../resolvers/resolver";
+import * as Resolver from "../../helpers/resolver";
 import * as bcrypt from "bcryptjs";
 import * as errorHelper from "../../helpers/error";
 import { User } from "../../services";
-import { userRoleKenum } from "../../kenums";
+import { userRoleKenum } from "../../enums";
 import * as admin from "firebase-admin";
 import * as mysqlHelper from "../../helpers/mysql";
 import { env } from "../../../config";

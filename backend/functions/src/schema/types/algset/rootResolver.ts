@@ -1,6 +1,12 @@
 import { Algset } from "../../services";
-import { generateRootResolvers } from "../../helpers/rootResolver";
+import { generateBaseRootResolvers } from "../../helpers/rootResolver";
 
-export default generateRootResolvers(Algset, {
-  methods: ["get", "getMultiple", "delete", "create", "update"],
-});
+export default {
+  ...generateBaseRootResolvers(Algset, [
+    "get",
+    "getMultiple",
+    "delete",
+    "create",
+    "update",
+  ]),
+};

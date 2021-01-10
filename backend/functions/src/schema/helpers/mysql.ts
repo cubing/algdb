@@ -1,4 +1,5 @@
 import { typeDefs } from "../typeDefs";
+import { linkDefs } from "../links";
 import * as mysql from "../../utils/mysql2";
 import type {
   SqlQueryObject,
@@ -9,7 +10,7 @@ import type {
   SqlSortFieldObject,
   SqlWhereFieldObject,
 } from "../../types";
-import e = require("express");
+import { TypeDefinition } from "jomql";
 
 export type JoinsMap = {
   [x: string]: string[];
@@ -20,7 +21,8 @@ export type AssemblyFunction = (
   tableAlias: string,
   fieldname: string,
   fieldObject: any,
-  fieldIndex: number
+  fieldIndex: number,
+  currentTypeDef: TypeDefinition
 ) => string;
 
 export function fetchTableRows(sqlQuery: SqlQueryObject) {
@@ -294,14 +296,14 @@ export function processSelectArray(
     table,
     selectFieldsArray,
     previousJoins,
-    (tableName, tableAlias, fieldname, fieldObject, fieldIndex) => {
-      const currentTypeDef = typeDefs.get(tableName);
-      if (!currentTypeDef) throw new Error("Invalid typeDef for: " + tableName);
-      if (!(fieldname in currentTypeDef))
-        throw new Error(
-          "Field: " + fieldname + " does not exist in table: " + tableName
-        );
-
+    (
+      tableName,
+      tableAlias,
+      fieldname,
+      fieldObject,
+      fieldIndex,
+      currentTypeDef
+    ) => {
       const getter =
         currentTypeDef[fieldname].customOptions?.mysqlOptions?.getter;
 
@@ -352,18 +354,17 @@ export function processWhereObject(
       table,
       whereFieldObjects,
       previousJoins,
-      (tableName, tableAlias, fieldname, fieldObject, fieldIndex) => {
+      (
+        tableName,
+        tableAlias,
+        fieldname,
+        fieldObject,
+        fieldIndex,
+        currentTypeDef
+      ) => {
         // else, must be SqlWhereFieldObject
         const operator = fieldObject.operator ?? "eq";
         const placeholder = fieldname + subIndexString + "_" + subIndex;
-
-        const currentTypeDef = typeDefs.get(tableName);
-        if (!currentTypeDef)
-          throw new Error("Invalid typeDef for: " + tableName);
-        if (!(fieldname in currentTypeDef))
-          throw new Error(
-            "Field: " + fieldname + " does not exist in table: " + tableName
-          );
 
         const getter =
           currentTypeDef[fieldname].customOptions?.mysqlOptions?.getter;
@@ -486,7 +487,14 @@ export function processSortArray(
     table,
     sortFieldsArray,
     previousJoins,
-    (tableName, tableAlias, fieldname, fieldObject, fieldIndex) =>
+    (
+      tableName,
+      tableAlias,
+      fieldname,
+      fieldObject,
+      fieldIndex,
+      currentTypeDef
+    ) =>
       tableAlias + "." + fieldname + " " + (fieldObject.desc ? "DESC" : "ASC")
   );
 }
@@ -500,8 +508,14 @@ export function processGroupArray(
     table,
     groupFieldsArray,
     previousJoins,
-    (tableName, tableAlias, fieldname, fieldObject, fieldIndex) =>
-      tableName + "." + fieldname
+    (
+      tableName,
+      tableAlias,
+      fieldname,
+      fieldObject,
+      fieldIndex,
+      currentTypeDef
+    ) => tableName + "." + fieldname
   );
 }
 
@@ -532,6 +546,7 @@ export function processJoins(
     }[] = [];
 
     // if this exists, they must be processed first before processing the fieldPath
+    /*
     if (Array.isArray(fieldObject.joinFields)) {
       fieldObject.joinFields.forEach((joinFieldObject, joinFieldIndex) => {
         joinArray.push({
@@ -541,15 +556,30 @@ export function processJoins(
         });
       });
     }
+    */
 
     // process the "normal" fields
-    fieldPath.forEach((field, joinFieldIndex) => {
+    for (const field of fieldPath) {
+      // does the field exist on the currentTypeDef?
+      if (!(field in currentTypeDef)) {
+        // look in link fields and generate required joins
+        linkDefs.forEach((linkDef, linkName) => {
+          if (linkDef.types.has(field) && linkDef.types.has(tableName)) {
+            joinArray.unshift({
+              joinTableName: linkName,
+              field: "id",
+              foreignField: tableName,
+            });
+          }
+        });
+      }
+
       // going to assume the foreignKey is always "id"
       joinArray.push({
         field: field,
         foreignField: "id",
       });
-    });
+    }
 
     const cumulativeJoinFields: string[] = [];
     joinArray.forEach((ele, eleIndex) => {
@@ -557,7 +587,7 @@ export function processJoins(
       const cumulativeJoinFieldChain = cumulativeJoinFields.join(".");
       //if there's no next field, no more joins
       if (joinArray[eleIndex + 1]) {
-        // check for valid field in the typDef
+        // check for valid field in the typeDef
         if (!(ele.field in currentTypeDef!))
           throw new Error(
             "Field: " + ele.field + " does not exist in Table: " + tableName
@@ -611,8 +641,13 @@ export function processJoins(
             ele.foreignField;
         }
 
-        //shift the typeDef, tableAlias, and tableName
+        // shift the typeDef, tableAlias, and tableName
         currentTypeDef = typeDefs.get(joinTableName);
+        // check for typeDef existence
+        if (!currentTypeDef)
+          throw new Error(
+            "TypeDef for table: " + tableName + " does not exist"
+          );
         tableAlias = joinTableAlias;
         tableName = joinTableName;
       } else {
@@ -621,8 +656,23 @@ export function processJoins(
       }
     });
 
+    // check if field exists in the table
+    if (!(fieldname in currentTypeDef))
+      throw new Error(
+        "Field: " + fieldname + " does not exist in table: " + tableName
+      );
+
+    // to-do: if it does not exist, also check Links containing "alg", then
+
     statements.push(
-      assemblyFn(tableName, tableAlias, fieldname, fieldObject, fieldIndex)
+      assemblyFn(
+        tableName,
+        tableAlias,
+        fieldname,
+        fieldObject,
+        fieldIndex,
+        currentTypeDef
+      )
     );
   });
 

@@ -1,5 +1,5 @@
 import { NormalService, SimpleService } from ".";
-import * as Resolver from "../../resolvers/resolver";
+import * as Resolver from "../../helpers/resolver";
 import { itemNotFoundError } from "../../helpers/error";
 import { generateAccessorInfoTypeDef } from "../generators";
 

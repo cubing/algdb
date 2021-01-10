@@ -1,6 +1,12 @@
 import { Puzzle } from "../../services";
-import { generateRootResolvers } from "../../helpers/rootResolver";
+import { generateBaseRootResolvers } from "../../helpers/rootResolver";
 
-export default generateRootResolvers(Puzzle, {
-  methods: ["get", "getMultiple", "delete", "create", "update"],
-});
+export default {
+  ...generateBaseRootResolvers(Puzzle, [
+    "get",
+    "getMultiple",
+    "delete",
+    "create",
+    "update",
+  ]),
+};

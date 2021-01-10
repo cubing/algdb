@@ -1,6 +1,6 @@
 import { PaginatedService } from "../../core/services";
 import { generateUserRoleGuard } from "../../helpers/permissions";
-import { userRoleKenum } from "../../kenums";
+import { userRoleKenum } from "../../enums";
 
 export class PuzzleService extends PaginatedService {
   defaultTypename = "puzzle";

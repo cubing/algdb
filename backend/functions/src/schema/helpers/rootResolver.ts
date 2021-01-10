@@ -1,25 +1,30 @@
-import { InputTypeDefinition, RootResolver, RootResolverObject } from "jomql";
+import { InputTypeDefinition, RootResolverObject } from "jomql";
 import { NormalService, PaginatedService } from "../core/services";
 import { generatePaginatorPivotResolverObject } from "../helpers/typeDef";
 import { isObject, capitalizeString } from "../helpers/shared";
 import { inputDefs } from "../inputDefs";
+import { EnumService } from "../core/services";
+import { KenumService } from "../core/services";
+import * as Scalars from "../scalars";
 
-export function generateBlankRootResolver(): RootResolver {
-  return {
-    query: {},
-    mutation: {},
-    subscription: {},
-  };
-}
+type BaseRootResolverTypes =
+  | "get"
+  | "getMultiple"
+  | "delete"
+  | "create"
+  | "update"
+  | "created"
+  | "deleted"
+  | "updated"
+  | "listUpdated";
 
-export function generateRootResolvers(
+export function generateBaseRootResolvers(
   service: NormalService,
-  params: { methods: string[] },
-  rootResolvers?: RootResolver
+  methods: BaseRootResolverTypes[]
 ) {
   const capitalizedClass = capitalizeString(service.typename);
 
-  const updatedRootResolvers = rootResolvers ?? generateBlankRootResolver();
+  const rootResolvers = {};
 
   // build unique key map and ArgDefinition here
   const uniqueKeyMap = {};
@@ -62,11 +67,11 @@ export function generateRootResolvers(
   // register the record lookup definition under getX
   inputDefs.set("get" + capitalizedClass, lookupRecordInputDefinition);
 
-  params.methods.forEach((method) => {
+  methods.forEach((method) => {
     const capitalizedMethod = capitalizeString(method);
     switch (method) {
       case "get":
-        updatedRootResolvers.query[method + capitalizedClass] = {
+        rootResolvers[method + capitalizedClass] = {
           method: "get",
           route: "/" + service.typename + "/:id",
           type: service.typename,
@@ -81,7 +86,7 @@ export function generateRootResolvers(
         break;
       case "getMultiple":
         if (service instanceof PaginatedService) {
-          updatedRootResolvers.query[
+          rootResolvers[
             "get" + capitalizeString(service.paginator.typename)
           ] = <RootResolverObject>{
             method: "get",
@@ -97,7 +102,7 @@ export function generateRootResolvers(
         }
         break;
       case "delete":
-        updatedRootResolvers.mutation[method + capitalizedClass] = {
+        rootResolvers[method + capitalizedClass] = {
           method: "delete",
           route: "/" + service.typename + "/:id",
           type: service.typename,
@@ -127,7 +132,7 @@ export function generateRootResolvers(
             };
           }
         });
-        updatedRootResolvers.mutation[method + capitalizedClass] = {
+        rootResolvers[method + capitalizedClass] = {
           method: "put",
           route: "/" + service.typename + "/:id",
           type: service.typename,
@@ -177,7 +182,7 @@ export function generateRootResolvers(
             };
           }
         });
-        updatedRootResolvers.mutation[method + capitalizedClass] = {
+        rootResolvers[method + capitalizedClass] = {
           method: "post",
           route: "/" + service.typename,
           type: service.typename,
@@ -194,9 +199,7 @@ export function generateRootResolvers(
         };
         break;
       case "created":
-        updatedRootResolvers.subscription[
-          service.typename + capitalizedMethod
-        ] = {
+        rootResolvers[service.typename + capitalizedMethod] = {
           method: "post",
           route: "/subscribe/" + service.typename + capitalizedMethod,
           type: service.typename,
@@ -212,9 +215,7 @@ export function generateRootResolvers(
         };
         break;
       case "deleted":
-        updatedRootResolvers.subscription[
-          service.typename + capitalizedMethod
-        ] = {
+        rootResolvers[service.typename + capitalizedMethod] = {
           method: "post",
           route: "/subscribe/" + service.typename + capitalizedMethod,
           type: service.typename,
@@ -230,9 +231,7 @@ export function generateRootResolvers(
         };
         break;
       case "updated":
-        updatedRootResolvers.subscription[
-          service.typename + capitalizedMethod
-        ] = {
+        rootResolvers[service.typename + capitalizedMethod] = {
           method: "post",
           route: "/subscribe/" + service.typename + capitalizedMethod,
           type: service.typename,
@@ -248,9 +247,7 @@ export function generateRootResolvers(
         };
         break;
       case "listUpdated":
-        updatedRootResolvers.subscription[
-          service.typename + capitalizedMethod
-        ] = {
+        rootResolvers[service.typename + capitalizedMethod] = {
           method: "post",
           route: "/subscribe/" + service.typename + capitalizedMethod,
           type: service.typename,
@@ -270,5 +267,25 @@ export function generateRootResolvers(
     }
   });
 
-  return updatedRootResolvers;
+  return rootResolvers;
+}
+
+export function generateEnumRootResolver(
+  enumService: EnumService | KenumService
+) {
+  const capitalizedClass = capitalizeString(enumService.typename);
+
+  const rootResolvers = {
+    ["getAll" + capitalizedClass]: {
+      method: "get",
+      route: "/" + enumService.typename,
+      isArray: true,
+      allowNull: false,
+      type: Scalars[enumService.typename],
+      resolver: (req, args, query) =>
+        enumService.getAllRecords(req, args, query),
+    },
+  };
+
+  return rootResolvers;
 }

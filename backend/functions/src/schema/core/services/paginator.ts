@@ -1,6 +1,6 @@
 import { NormalService, SimpleService } from ".";
 
-import * as Resolver from "../../resolvers/resolver";
+import * as Resolver from "../../helpers/resolver";
 import { itemNotFoundError, badPermissionsError } from "../../helpers/error";
 import { generatePaginatorTypeDef } from "../generators";
 
@@ -19,6 +19,8 @@ export class PaginatorService extends SimpleService {
         },
       },
     };
+
+    this.initialize(this.typeDef);
 
     this.getRecord = async (req, args, query, admin = false) => {
       const selectQuery = query || Object.assign({}, this.presets.default);

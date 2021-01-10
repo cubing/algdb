@@ -1,23 +1,7 @@
 import { PaginatedService } from "../../core/services";
 
-import { User } from "../../services";
-
-import {
-  handleJqlSubscriptionTrigger,
-  handleJqlSubscriptionTriggerIterative,
-  deleteJqlSubscription,
-} from "../../helpers/subscription";
-import * as Resolver from "../../resolvers/resolver";
-import * as mysqlHelper from "../../helpers/mysql";
-
-import * as errorHelper from "../../helpers/error";
-import * as admin from "firebase-admin";
-
-import {
-  generateUserRoleGuard,
-  generateItemCreatedByUserGuard,
-} from "../../helpers/permissions";
-import { userRoleKenum } from "../../kenums";
+import { generateUserRoleGuard } from "../../helpers/permissions";
+import { userRoleKenum } from "../../enums";
 
 export class UserService extends PaginatedService {
   defaultTypename = "user";

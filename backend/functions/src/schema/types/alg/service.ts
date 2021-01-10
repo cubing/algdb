@@ -1,9 +1,9 @@
 import { PaginatedService } from "../../core/services";
 import { generateUserRoleGuard } from "../../helpers/permissions";
-import { userRoleKenum } from "../../kenums";
+import { userRoleKenum } from "../../enums";
 import { AlgAlgcaseLink, Algcase } from "../../services";
 import * as errorHelper from "../../helpers/error";
-import * as Resolver from "../../resolvers/resolver";
+import * as Resolver from "../../helpers/resolver";
 import * as mysqlHelper from "../../helpers/mysql";
 
 import { handleJqlSubscriptionTriggerIterative } from "../../helpers/subscription";
@@ -13,17 +13,12 @@ export class AlgService extends PaginatedService {
 
   filterFieldsMap = {
     id: {},
-    "algcase.name": {
-      joinFields: [
-        { field: "id", table: AlgAlgcaseLink.typename, foreignField: "alg" },
-      ],
-    },
+    "algcase.name": {},
     algcase: {
       field: "algcase",
-      joinFields: [
-        { field: "id", table: AlgAlgcaseLink.typename, foreignField: "alg" },
-      ],
     },
+    tag: {},
+    "tag.name": {},
   };
 
   uniqueKeyMap = {

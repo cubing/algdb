@@ -2,19 +2,16 @@ import { PaginatedService } from "../../core/services";
 import { generateUserRoleGuard } from "../../helpers/permissions";
 import { userRoleKenum } from "../../enums";
 
-export class AlgsetService extends PaginatedService {
-  defaultTypename = "algset";
+export class TagService extends PaginatedService {
+  defaultTypename = "tag";
 
   filterFieldsMap = {
     id: {},
-    created_by: {},
-    code: {},
-    is_public: {},
+    alg: {},
   };
 
   uniqueKeyMap = {
     primary: ["id"],
-    secondary: ["code"],
   };
 
   sortFieldsMap = {
@@ -23,10 +20,12 @@ export class AlgsetService extends PaginatedService {
   };
 
   searchFieldsMap = {
-    name: {},
+    sequence: {},
   };
 
-  groupByFieldsMap = {};
+  groupByFieldsMap = {
+    id: {},
+  };
 
   isFilterRequired = false;
 

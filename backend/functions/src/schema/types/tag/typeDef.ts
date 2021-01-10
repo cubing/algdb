@@ -1,24 +1,18 @@
-import { Alg, Algcase, User } from "../../services";
+import { User } from "../../services";
 import { TypeDefinition } from "jomql";
 import {
   generateIdField,
   generateCreatedAtField,
   generateUpdatedAtField,
   generateCreatedByField,
-  generateJoinableField,
+  generateStringField,
 } from "../../helpers/typeDef";
 
 export default <TypeDefinition>{
   ...generateIdField(),
-  alg: generateJoinableField({
+  name: generateStringField({
     allowNull: false,
-    service: Alg,
-    sqlDefinition: { unique: "compositeIndex" },
-  }),
-  algcase: generateJoinableField({
-    allowNull: false,
-    service: Algcase,
-    sqlDefinition: { unique: "compositeIndex" },
+    sqlDefinition: { unique: true },
   }),
   ...generateCreatedAtField(),
   ...generateUpdatedAtField(),

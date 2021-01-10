@@ -1,14 +1,28 @@
 import {
   generateKenumScalarDefinition,
   generateEnumScalarDefinition,
-} from "../core/generators/scalarDefinition";
-import { userRoleKenum } from "../kenums";
-import { filterOperatorEnum, caseVisualizationEnum } from "../enums";
+} from "../helpers/scalar";
+import {
+  filterOperatorEnum,
+  caseVisualizationEnum,
+  userRoleKenum,
+} from "../enums";
 
+import { BaseScalars } from "jomql";
+
+// base scalars
+export const string = BaseScalars.string;
+export const number = BaseScalars.number;
+export const boolean = BaseScalars.boolean;
+export const unknown = BaseScalars.unknown;
+
+// added scalars
 export { imageUrl } from "./imageUrl";
 export { unixTimestamp } from "./unixTimestamp";
 export { jsonAsString } from "./jsonAsString";
 export { id } from "./id";
+
+// generated scalars
 export const userRole = generateKenumScalarDefinition(
   "userRole",
   userRoleKenum

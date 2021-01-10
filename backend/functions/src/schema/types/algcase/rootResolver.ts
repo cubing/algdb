@@ -1,6 +1,12 @@
 import { Algcase } from "../../services";
-import { generateRootResolvers } from "../../helpers/rootResolver";
+import { generateBaseRootResolvers } from "../../helpers/rootResolver";
 
-export default generateRootResolvers(Algcase, {
-  methods: ["get", "getMultiple", "delete", "create", "update"],
-});
+export default {
+  ...generateBaseRootResolvers(Algcase, [
+    "get",
+    "getMultiple",
+    "delete",
+    "create",
+    "update",
+  ]),
+};

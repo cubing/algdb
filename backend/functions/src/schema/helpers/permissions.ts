@@ -1,6 +1,6 @@
 import * as mysqlHelper from "./mysql";
 import { User } from "../services";
-import { userRoleKenum } from "../kenums";
+import { userRoleKenum } from "../enums";
 import { BaseService } from "../core/services";
 
 export function generateItemCreatedByUserGuard(service: BaseService) {

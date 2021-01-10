@@ -1,6 +1,6 @@
 import { NormalService } from "../services";
 
-import { BaseScalars } from "jomql";
+import * as Scalars from "../../scalars";
 import { atob } from "../../helpers/shared";
 
 export function generatePaginatorInfoTypeDef(
@@ -8,7 +8,7 @@ export function generatePaginatorInfoTypeDef(
 ) {
   return {
     total: {
-      type: BaseScalars.number,
+      type: Scalars.number,
       isArray: false,
       allowNull: false,
       resolver: (req, args, query, typename, currentObject) => {
@@ -18,7 +18,7 @@ export function generatePaginatorInfoTypeDef(
       },
     },
     count: {
-      type: BaseScalars.number,
+      type: Scalars.number,
       isArray: false,
       allowNull: false,
       resolver: async (req, args, query, typename, currentObject) => {
@@ -27,7 +27,7 @@ export function generatePaginatorInfoTypeDef(
       },
     },
     startCursor: {
-      type: BaseScalars.string,
+      type: Scalars.string,
       isArray: false,
       allowNull: true,
       resolver: async (req, args, query, typename, currentObject) => {
@@ -43,7 +43,7 @@ export function generatePaginatorInfoTypeDef(
       },
     },
     endCursor: {
-      type: BaseScalars.string,
+      type: Scalars.string,
       isArray: false,
       allowNull: true,
       resolver: async (req, args, query, typename, currentObject) => {

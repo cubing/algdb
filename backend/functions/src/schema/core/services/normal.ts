@@ -8,12 +8,11 @@ import {
   deleteJqlSubscription,
 } from "../../helpers/subscription";
 
-import * as Resolver from "../../resolvers/resolver";
+import * as Resolver from "../../helpers/resolver";
 
 import { generateJomqlResolverTree, TypeDefinition } from "jomql";
 
 import {
-  SqlJoinFieldObject,
   SqlWhereObject,
   SqlQuerySelectObject,
   SqlSortFieldObject,
@@ -21,9 +20,11 @@ import {
 
 import { btoa, isObject } from "../../helpers/shared";
 
+import { typeDefs } from "../../typeDefs";
+
 export type JoinFieldObject = {
   field?: string;
-  joinFields?: SqlJoinFieldObject[];
+  // joinFields?: SqlJoinFieldObject[];
 };
 
 export type FieldMap = {
@@ -55,6 +56,18 @@ export class NormalService extends BaseService {
   searchFieldsMap: FieldMap = {};
 
   isFilterRequired: boolean = false;
+
+  constructor(typename?: string) {
+    super(typename);
+  }
+
+  // set typeDef
+  initialize(typeDef: TypeDefinition) {
+    this.typeDef = typeDef;
+
+    // register the typeDef
+    typeDefs.set(this.typename, this.typeDef);
+  }
 
   async subscribeToSingleItem(
     operationName: string,
@@ -217,7 +230,6 @@ export class NormalService extends BaseService {
         }
         whereObject.fields.push({
           field: this.filterFieldsMap[ele.field].field ?? ele.field,
-          joinFields: this.filterFieldsMap[ele.field].joinFields,
           operator: ele.operator,
           value: ele.value,
         });
@@ -234,7 +246,6 @@ export class NormalService extends BaseService {
       for (const prop in this.searchFieldsMap) {
         whereSubObject.fields.push({
           field: this.searchFieldsMap[prop].field ?? prop,
-          joinFields: this.searchFieldsMap[prop].joinFields,
           value: "%" + args.search + "%",
           operator: "like",
         });

@@ -9,3 +9,4 @@ export { KenumService } from "./kenum";
 export { AccessorService } from "./accessor";
 export { AccessorInfoService } from "./accessorInfo";
 export { EdgeService } from "./edge";
+export { LinkService } from "./link";

@@ -1,12 +1,10 @@
 import {
-  BaseScalars,
   TypeDefinition,
   TypeDefinitionField,
   ScalarDefinition,
-  isScalarDefinition,
   InputTypeDefinition,
 } from "jomql";
-import * as Resolver from "../resolvers/resolver";
+import * as Resolver from "./resolver";
 import { deepAssign, isObject, capitalizeString } from "./shared";
 import { DataTypes, Sequelize, DataType } from "sequelize";
 import { BaseService, NormalService, PaginatedService } from "../core/services";
@@ -99,7 +97,7 @@ export function generateStringField(params: {
     defaultValue,
     hidden,
     sqlType: DataTypes.STRING,
-    type: type ?? BaseScalars.string,
+    type: type ?? Scalars.string,
     sqlDefinition,
     customOptions,
     mysqlOptions,
@@ -158,7 +156,7 @@ export function generateTextField(params: {
     defaultValue,
     hidden,
     sqlType: DataTypes.TEXT,
-    type: BaseScalars.string,
+    type: Scalars.string,
     sqlDefinition,
     customOptions,
   });
@@ -216,7 +214,7 @@ export function generateIntegerField(params: {
     hidden,
     isArray: false,
     sqlType: DataTypes.INTEGER,
-    type: BaseScalars.number,
+    type: Scalars.number,
     sqlDefinition,
     customOptions,
   });
@@ -245,7 +243,7 @@ export function generateFloatField(params: {
     hidden,
     isArray: false,
     sqlType: DataTypes.FLOAT(11, 1),
-    type: BaseScalars.number,
+    type: Scalars.number,
     sqlDefinition,
     customOptions,
   });
@@ -274,7 +272,7 @@ export function generateDecimalField(params: {
     hidden,
     isArray: false,
     sqlType: DataTypes.DECIMAL(11, 2),
-    type: BaseScalars.number,
+    type: Scalars.number,
     sqlDefinition,
     customOptions,
   });
@@ -303,7 +301,7 @@ export function generateBooleanField(params: {
     hidden,
     isArray: false,
     sqlType: DataTypes.BOOLEAN,
-    type: BaseScalars.boolean,
+    type: Scalars.boolean,
     sqlDefinition,
     customOptions,
   });
@@ -474,7 +472,7 @@ export function generatePaginatorPivotResolverObject(params: {
   };
 
   const filterByScalarDefinition: ScalarDefinition = {
-    name: pivotService.typename + "FilterByFields",
+    name: pivotService.typename + "FilterBy",
     types: Object.keys(pivotService.filterFieldsMap).map((ele) => `"${ele}"`),
     parseValue: (value: unknown, typename) => {
       // must be string
@@ -504,7 +502,7 @@ export function generatePaginatorPivotResolverObject(params: {
         isArray: false,
       },
       value: {
-        type: BaseScalars.unknown,
+        type: Scalars.unknown,
         required: true,
         isArray: false,
       },
@@ -554,15 +552,15 @@ export function generatePaginatorPivotResolverObject(params: {
       type: {
         name: "get" + capitalizeString(pivotService.paginator.typename),
         fields: {
-          first: { type: BaseScalars.number },
-          last: { type: BaseScalars.number },
-          after: { type: BaseScalars.string },
-          before: { type: BaseScalars.string },
+          first: { type: Scalars.number },
+          last: { type: Scalars.number },
+          after: { type: Scalars.string },
+          before: { type: Scalars.string },
           sortBy: { type: sortByScalarDefinition, isArray: true },
-          sortDesc: { type: BaseScalars.boolean, isArray: true },
+          sortDesc: { type: Scalars.boolean, isArray: true },
           filterBy: { type: filterByTypeDefinition, isArray: true },
           groupBy: { type: groupByScalarDefinition, isArray: true },
-          search: { type: BaseScalars.string },
+          search: { type: Scalars.string },
         },
         inputsValidator: (args, fieldPath) => {
           // check for invalid first/last, before/after combos
