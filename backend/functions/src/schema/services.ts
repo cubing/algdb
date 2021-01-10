@@ -1,5 +1,8 @@
-import { filterOperatorEnum, caseVisualizationEnum } from "./enums";
-import { userRoleKenum } from "./enums";
+import {
+  filterOperatorEnum,
+  caseVisualizationEnum,
+  userRoleKenum,
+} from "./enums";
 import { KenumService, EnumService } from "./core/services";
 
 import { UserService } from "./types/user/service";

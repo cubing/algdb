@@ -1,10 +1,13 @@
 import { InputTypeDefinition, RootResolverObject } from "jomql";
-import { NormalService, PaginatedService } from "../core/services";
+import {
+  NormalService,
+  PaginatedService,
+  EnumService,
+  KenumService,
+} from "../core/services";
 import { generatePaginatorPivotResolverObject } from "../helpers/typeDef";
 import { isObject, capitalizeString } from "../helpers/shared";
 import { inputDefs } from "../inputDefs";
-import { EnumService } from "../core/services";
-import { KenumService } from "../core/services";
 import * as Scalars from "../scalars";
 
 type BaseRootResolverTypes =
