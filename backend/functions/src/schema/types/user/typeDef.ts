@@ -9,6 +9,7 @@ import {
   generateCreatedByField,
   generateStringField,
   generateEnumField,
+  generateBooleanField,
 } from "../../helpers/typeDef";
 import * as Scalars from "../../scalars";
 
@@ -41,6 +42,13 @@ export default <TypeDefinition>{
   }),
   avatar: generateStringField({
     allowNull: true,
+  }),
+  country: generateStringField({
+    allowNull: true,
+  }),
+  is_public: generateBooleanField({
+    allowNull: false,
+    defaultValue: true,
   }),
   role: generateEnumField({
     scalarDefinition: Scalars.userRole,

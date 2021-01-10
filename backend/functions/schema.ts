@@ -1,6 +1,10 @@
 // Query builder
 const queryResult = executeJomql({
   // Start typing here to get hints
+  getCurrentUser: {
+    updated_at: true,
+    country: true,
+  },
 });
 
 export function executeJomql<Key extends keyof Root>(
@@ -109,12 +113,16 @@ export type InputType = {
     email: Scalars["string"];
     name: Scalars["string"];
     avatar?: Scalars["string"];
+    country?: Scalars["string"];
+    is_public?: Scalars["boolean"];
     role?: Scalars["userRole"];
   };
   updateUserFields: {
     email?: Scalars["string"];
     name?: Scalars["string"];
     avatar?: Scalars["string"];
+    country?: Scalars["string"];
+    is_public?: Scalars["boolean"];
     role?: Scalars["userRole"];
   };
   updateUser: {
@@ -332,6 +340,8 @@ export type User = {
   email: Scalars["string"];
   name: Scalars["string"];
   avatar: Scalars["string"] | null;
+  country: Scalars["string"] | null;
+  is_public: Scalars["boolean"];
   role: Scalars["userRole"];
   created_at: Scalars["unixTimestamp"];
   updated_at: Scalars["unixTimestamp"] | null;

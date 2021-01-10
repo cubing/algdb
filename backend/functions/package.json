@@ -26,13 +26,14 @@
     "mysql2": "^2.2.5",
     "named-placeholders": "^1.1.2",
     "pusher": "^4.0.1",
-    "randomstring": "^1.1.5",
-    "sequelize": "^6.3.5"
+    "randomstring": "^1.1.5"
   },
   "devDependencies": {
+    "sequelize": "^6.3.5",
     "firebase-functions-test": "^0.1.6",
     "tslint": "^5.12.0",
-    "typescript": "^4.0.2"
+    "typescript": "^4.0.2",
+    "fs": "0.0.1-security"
   },
   "private": true
 }
