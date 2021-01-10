@@ -472,7 +472,7 @@ export function generatePaginatorPivotResolverObject(params: {
   };
 
   const filterByScalarDefinition: ScalarDefinition = {
-    name: pivotService.typename + "FilterBy",
+    name: pivotService.typename + "FilterByFields",
     types: Object.keys(pivotService.filterFieldsMap).map((ele) => `"${ele}"`),
     parseValue: (value: unknown, typename) => {
       // must be string

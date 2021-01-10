@@ -3,6 +3,19 @@ import { TsSchemaGenerator } from "jomql";
 export class CustomSchemaGenerator extends TsSchemaGenerator {
   constructor(schema) {
     super(schema);
+    this.scaffoldStr =
+      `// Query builder
+const queryResult = executeJomql({
+  // Start typing here to get hints
+});
+
+export function executeJomql<Key extends keyof Root>(
+  query: GetQuery<Key>
+): GetResponse<Key> {
+  return;
+}
+    ` + this.scaffoldStr;
+
     this.scaffoldStr += `
 type Edge<T> = {
   node: Omit<T, args>;
