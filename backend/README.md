@@ -57,11 +57,15 @@ Example Requests:
 		"country": true,
 		"is_public": true,
 		"role": true,
-		"__args": {
-			"id": 1,
-			"name": "John Doe",
-			"role": "NORMAL"
-		}
+    "__args": {
+      "item": {
+        "id": 1,
+      },
+      "fields": {
+        "name": "John Doe",
+        "role": "NORMAL",
+      },
+    },
 	}
 }
 ```
@@ -76,7 +80,6 @@ Example Requests:
 		"id": true,
 		"name": true,
 		"__args": {
-			"id": 1,
 			"name": "3x3x3",
 			"code": "333"
 		}

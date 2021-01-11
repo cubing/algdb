@@ -11,14 +11,20 @@ import {
 } from "../../helpers/typeDef";
 
 export default <TypeDefinition>{
-  ...generateIdField(),
-  sequence: generateStringField({
-    allowNull: false,
-    sqlDefinition: { unique: true },
-  }),
-  is_approved: generateBooleanField({ allowNull: false, defaultValue: false }),
-  score: generateIntegerField({ allowNull: false, defaultValue: 0 }),
-  ...generateCreatedAtField(),
-  ...generateUpdatedAtField(),
-  ...generateCreatedByField(User),
+  description: "Algorithm",
+  fields: {
+    ...generateIdField(),
+    sequence: generateStringField({
+      allowNull: false,
+      sqlDefinition: { unique: true },
+    }),
+    is_approved: generateBooleanField({
+      allowNull: false,
+      defaultValue: false,
+    }),
+    score: generateIntegerField({ allowNull: false, defaultValue: 0 }),
+    ...generateCreatedAtField(),
+    ...generateUpdatedAtField(),
+    ...generateCreatedByField(User),
+  },
 };

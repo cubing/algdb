@@ -3,6 +3,7 @@ import { JomqlFieldError, ScalarDefinition } from "jomql";
 export const jsonAsString: ScalarDefinition = {
   name: "jsonAsString",
   types: ["string"],
+  description: "Valid JSON that is stored in database as string",
   serialize(value, fieldPath) {
     try {
       if (!value) return value;

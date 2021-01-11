@@ -9,12 +9,15 @@ import {
 } from "../../helpers/typeDef";
 
 export default <TypeDefinition>{
-  ...generateIdField(),
-  name: generateStringField({
-    allowNull: false,
-    sqlDefinition: { unique: true },
-  }),
-  ...generateCreatedAtField(),
-  ...generateUpdatedAtField(),
-  ...generateCreatedByField(User),
+  description: "Tag type",
+  fields: {
+    ...generateIdField(),
+    name: generateStringField({
+      allowNull: false,
+      sqlDefinition: { unique: true },
+    }),
+    ...generateCreatedAtField(),
+    ...generateUpdatedAtField(),
+    ...generateCreatedByField(User),
+  },
 };

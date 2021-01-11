@@ -10,13 +10,16 @@ import {
 } from "../../helpers/typeDef";
 
 export default <TypeDefinition>{
-  ...generateIdField(),
-  name: generateStringField({ allowNull: false }),
-  algset: generateJoinableField({
-    allowNull: false,
-    service: Algset,
-  }),
-  ...generateCreatedAtField(),
-  ...generateUpdatedAtField(),
-  ...generateCreatedByField(User),
+  description: "Algorithm Case",
+  fields: {
+    ...generateIdField(),
+    name: generateStringField({ allowNull: false }),
+    algset: generateJoinableField({
+      allowNull: false,
+      service: Algset,
+    }),
+    ...generateCreatedAtField(),
+    ...generateUpdatedAtField(),
+    ...generateCreatedByField(User),
+  },
 };

@@ -52,7 +52,14 @@ type FilterByObject<T> = {
     this.typeDocumentRoot.forEach((value, key) => {
       // if typeDefKey ends in Edge, simplify to generic to save space
       if (key.match(/Edge$/)) {
-        this.typeDocumentRoot.set(key, `Edge<${key.replace(/Edge$/, "")}>`);
+        this.typeDocumentRoot.set(key, {
+          value: {
+            value: `Edge<${key.replace(/Edge$/, "")}>`,
+            isArray: false,
+            isNullable: false,
+            isOptional: false,
+          },
+        });
       }
     });
   }

@@ -12,6 +12,7 @@ function validate(value, fieldPath) {
 export const unixTimestamp: ScalarDefinition = {
   name: "unixTimestamp",
   types: ["number"],
+  description: "UNIX Timestamp (Seconds since Epoch Time)",
   serialize: validate,
 
   parseValue: validate,

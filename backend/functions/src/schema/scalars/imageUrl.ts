@@ -23,6 +23,7 @@ function validate(value, fieldPath) {
 export const imageUrl: ScalarDefinition = {
   name: "imageUrl",
   types: ["string"],
+  description: "Image URL Field",
   serialize: validate,
   parseValue: validate,
 };

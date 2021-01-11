@@ -33,7 +33,7 @@ export function generateBaseRootResolvers(
   const uniqueKeyMap = {};
   Object.entries(service.uniqueKeyMap).forEach(([uniqueKeyName, entry]) => {
     entry.forEach((key) => {
-      uniqueKeyMap[key] = { type: service.typeDef[key].type };
+      uniqueKeyMap[key] = { type: service.typeDef.fields[key].type };
     });
   });
   const lookupRecordInputDefinition: InputTypeDefinition = {
@@ -121,20 +121,22 @@ export function generateBaseRootResolvers(
         break;
       case "update":
         const updateArgs = {};
-        Object.entries(service.typeDef).forEach(([key, typeDefField]) => {
-          const type = typeDefField.type;
-          if (typeDefField.customOptions?.updateable) {
-            // generate the argDefinition for the string type
-            updateArgs[key] = {
-              type:
-                typeof type === "string"
-                  ? "get" + capitalizeString(type)
-                  : type,
-              required: false,
-              isArray: typeDefField.isArray,
-            };
+        Object.entries(service.typeDef.fields).forEach(
+          ([key, typeDefField]) => {
+            const type = typeDefField.type;
+            if (typeDefField.customOptions?.updateable) {
+              // generate the argDefinition for the string type
+              updateArgs[key] = {
+                type:
+                  typeof type === "string"
+                    ? "get" + capitalizeString(type)
+                    : type,
+                required: false,
+                isArray: typeDefField.isArray,
+              };
+            }
           }
-        });
+        );
         rootResolvers[method + capitalizedClass] = {
           method: "put",
           route: "/" + service.typename + "/:id",
@@ -171,20 +173,22 @@ export function generateBaseRootResolvers(
         break;
       case "create":
         const createArgs = {};
-        Object.entries(service.typeDef).forEach(([key, typeDefField]) => {
-          const type = typeDefField.type;
-          if (typeDefField.customOptions?.addable) {
-            // generate the argDefinition for the string type
-            createArgs[key] = {
-              type:
-                typeof type === "string"
-                  ? "get" + capitalizeString(type)
-                  : type,
-              required: typeDefField.required,
-              isArray: typeDefField.isArray,
-            };
+        Object.entries(service.typeDef.fields).forEach(
+          ([key, typeDefField]) => {
+            const type = typeDefField.type;
+            if (typeDefField.customOptions?.addable) {
+              // generate the argDefinition for the string type
+              createArgs[key] = {
+                type:
+                  typeof type === "string"
+                    ? "get" + capitalizeString(type)
+                    : type,
+                required: typeDefField.required,
+                isArray: typeDefField.isArray,
+              };
+            }
           }
-        });
+        );
         rootResolvers[method + capitalizedClass] = {
           method: "post",
           route: "/" + service.typename,

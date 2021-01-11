@@ -14,48 +14,50 @@ import {
 import * as Scalars from "../../scalars";
 
 export default <TypeDefinition>{
-  ...generateIdField(),
-  provider: generateStringField({
-    allowNull: false,
-    mysqlOptions: { joinHidden: true },
-    customOptions: { addable: true, updateable: false },
-    sqlDefinition: { unique: "compositeIndex" },
-    hidden: true,
-  }),
-  provider_id: generateStringField({
-    allowNull: false,
-    mysqlOptions: { joinHidden: true },
-    customOptions: { addable: true, updateable: false },
-    sqlDefinition: { unique: "compositeIndex" },
-    hidden: true,
-  }),
-  wca_id: generateStringField({
-    allowNull: true,
-    customOptions: { addable: true, updateable: false },
-  }),
-  email: generateStringField({
-    allowNull: false,
-    sqlDefinition: { unique: true },
-  }),
-  name: generateStringField({
-    allowNull: false,
-  }),
-  avatar: generateStringField({
-    allowNull: true,
-  }),
-  country: generateStringField({
-    allowNull: true,
-  }),
-  is_public: generateBooleanField({
-    allowNull: false,
-    defaultValue: true,
-  }),
-  role: generateEnumField({
-    scalarDefinition: Scalars.userRole,
-    allowNull: false,
-    defaultValue: "NONE",
-  }),
-  /*
+  description: "User type",
+  fields: {
+    ...generateIdField(),
+    provider: generateStringField({
+      allowNull: false,
+      mysqlOptions: { joinHidden: true },
+      customOptions: { addable: true, updateable: false },
+      sqlDefinition: { unique: "compositeIndex" },
+      hidden: true,
+    }),
+    provider_id: generateStringField({
+      allowNull: false,
+      mysqlOptions: { joinHidden: true },
+      customOptions: { addable: true, updateable: false },
+      sqlDefinition: { unique: "compositeIndex" },
+      hidden: true,
+    }),
+    wca_id: generateStringField({
+      allowNull: true,
+      customOptions: { addable: true, updateable: false },
+    }),
+    email: generateStringField({
+      allowNull: false,
+      sqlDefinition: { unique: true },
+    }),
+    name: generateStringField({
+      allowNull: false,
+    }),
+    avatar: generateStringField({
+      allowNull: true,
+    }),
+    country: generateStringField({
+      allowNull: true,
+    }),
+    is_public: generateBooleanField({
+      allowNull: false,
+      defaultValue: true,
+    }),
+    role: generateEnumField({
+      scalarDefinition: Scalars.userRole,
+      allowNull: false,
+      defaultValue: "NONE",
+    }),
+    /*
   // using wca auth
   password: {
     type: dataTypes.STRING,
@@ -75,7 +77,8 @@ export default <TypeDefinition>{
     },
   },
   */
-  ...generateCreatedAtField(),
-  ...generateUpdatedAtField(),
-  ...generateCreatedByField(User),
+    ...generateCreatedAtField(),
+    ...generateUpdatedAtField(),
+    ...generateCreatedByField(User),
+  },
 };

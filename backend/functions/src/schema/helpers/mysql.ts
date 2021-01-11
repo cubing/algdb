@@ -305,7 +305,7 @@ export function processSelectArray(
       currentTypeDef
     ) => {
       const getter =
-        currentTypeDef[fieldname].customOptions?.mysqlOptions?.getter;
+        currentTypeDef.fields[fieldname].customOptions?.mysqlOptions?.getter;
 
       return (
         (getter
@@ -367,7 +367,7 @@ export function processWhereObject(
         const placeholder = fieldname + subIndexString + "_" + subIndex;
 
         const getter =
-          currentTypeDef[fieldname].customOptions?.mysqlOptions?.getter;
+          currentTypeDef.fields[fieldname].customOptions?.mysqlOptions?.getter;
 
         let whereSubstatement = getter
           ? getter(tableAlias + "." + fieldname)
@@ -561,7 +561,7 @@ export function processJoins(
     // process the "normal" fields
     for (const field of fieldPath) {
       // does the field exist on the currentTypeDef?
-      if (!(field in currentTypeDef)) {
+      if (!(field in currentTypeDef.fields)) {
         // look in link fields and generate required joins
         linkDefs.forEach((linkDef, linkName) => {
           if (linkDef.types.has(field) && linkDef.types.has(tableName)) {
@@ -588,7 +588,7 @@ export function processJoins(
       //if there's no next field, no more joins
       if (joinArray[eleIndex + 1]) {
         // check for valid field in the typeDef
-        if (!(ele.field in currentTypeDef!))
+        if (!(ele.field in currentTypeDef!.fields))
           throw new Error(
             "Field: " + ele.field + " does not exist in Table: " + tableName
           );
@@ -596,8 +596,8 @@ export function processJoins(
         //join with this type
         const joinTableName =
           ele.joinTableName ??
-          currentTypeDef![ele.field].customOptions?.mysqlOptions?.joinInfo
-            ?.type;
+          currentTypeDef!.fields[ele.field].customOptions?.mysqlOptions
+            ?.joinInfo?.type;
 
         //if it requires a join, check if it was joined previously
         if (!joinTableName) throw new Error("Invalid Join Table");
@@ -644,7 +644,7 @@ export function processJoins(
         // shift the typeDef, tableAlias, and tableName
         currentTypeDef = typeDefs.get(joinTableName);
         // check for typeDef existence
-        if (!currentTypeDef)
+        if (!currentTypeDef?.fields)
           throw new Error(
             "TypeDef for table: " + tableName + " does not exist"
           );
@@ -657,7 +657,7 @@ export function processJoins(
     });
 
     // check if field exists in the table
-    if (!(fieldname in currentTypeDef))
+    if (!(fieldname in currentTypeDef.fields))
       throw new Error(
         "Field: " + fieldname + " does not exist in table: " + tableName
       );

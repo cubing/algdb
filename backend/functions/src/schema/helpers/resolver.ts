@@ -80,22 +80,22 @@ export async function addTableRow(
   const customResolvers: CustomResolverMap = {};
 
   for (const field in args) {
-    if (field in typeDef) {
+    if (field in typeDef.fields) {
       // skip if not addable -- a failsafe, since args validation should already catch this
-      if (!typeDef[field].customOptions?.addable) {
+      if (!typeDef.fields[field].customOptions?.addable) {
         throw new Error(`Field not addable: '${field}'`);
       }
 
       // if finalValue is null, see if that is allowed -- also a failsafe
-      validateResultFields(args[field], typeDef[field], [field]);
+      validateResultFields(args[field], typeDef.fields[field], [field]);
 
       // if it is a mysql field, add to mysqlFields
-      if (typeDef[field].customOptions?.mysqlOptions) {
+      if (typeDef.fields[field].customOptions?.mysqlOptions) {
         sqlFields[field] = args[field];
       }
 
       // if it has a custom updater, add to customResolvers
-      const customResolver = typeDef[field].updater;
+      const customResolver = typeDef.fields[field].updater;
       if (customResolver) {
         customResolvers[field] = {
           resolver: customResolver,
@@ -190,22 +190,22 @@ export async function updateTableRow(
   const customResolvers: CustomResolverMap = {};
 
   for (const field in args) {
-    if (field in typeDef) {
+    if (field in typeDef.fields) {
       // skip if not updateable -- a failsafe, since args validation should already catch this
-      if (!typeDef[field].customOptions?.updateable) {
+      if (!typeDef.fields[field].customOptions?.updateable) {
         throw new Error(`Field not updateable: '${field}'`);
       }
 
       // if finalValue is null, see if that is allowed -- also a failsafe
-      validateResultFields(args[field], typeDef[field], [field]);
+      validateResultFields(args[field], typeDef.fields[field], [field]);
 
       // if it is a mysql field, add to mysqlFields
-      if (typeDef[field].customOptions?.mysqlOptions) {
+      if (typeDef.fields[field].customOptions?.mysqlOptions) {
         sqlFields[field] = args[field];
       }
 
       // if it has a custom updater, add to customResolvers
-      const customResolver = typeDef[field].updater;
+      const customResolver = typeDef.fields[field].updater;
       if (customResolver) {
         customResolvers[field] = {
           resolver: customResolver,
@@ -256,9 +256,9 @@ export async function deleteTableRow(
   //handle the custom deleters
   const customResolvers: CustomResolverMap = {};
 
-  for (const field in typeDef) {
+  for (const field in typeDef.fields) {
     // if it has a custom deleter, add to customResolvers
-    const customResolver = typeDef[field].deleter;
+    const customResolver = typeDef.fields[field].deleter;
     if (customResolver) {
       customResolvers[field] = {
         resolver: customResolver,

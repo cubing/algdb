@@ -10,10 +10,10 @@ import {
 import { TypeDefinition } from "jomql";
 
 export function generateLinkTypeDef(services: NormalService[]) {
-  const typeDef = {};
+  const typeDefFields = {};
 
   for (const service of services) {
-    typeDef[service.typename] = generateJoinableField({
+    typeDefFields[service.typename] = generateJoinableField({
       allowNull: false,
       service: service,
       sqlDefinition: { unique: "compositeIndex" },
@@ -21,10 +21,13 @@ export function generateLinkTypeDef(services: NormalService[]) {
   }
 
   return <TypeDefinition>{
-    ...generateIdField(),
-    ...typeDef,
-    ...generateCreatedAtField(),
-    ...generateUpdatedAtField(),
-    ...generateCreatedByField(User),
+    description: "Link type",
+    fields: {
+      ...generateIdField(),
+      ...typeDefFields,
+      ...generateCreatedAtField(),
+      ...generateUpdatedAtField(),
+      ...generateCreatedByField(User),
+    },
   };
 }

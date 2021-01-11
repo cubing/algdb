@@ -11,6 +11,7 @@ export function generateEnumScalarDefinition(
   return {
     name: enumName,
     types: enumValues.map((ele) => `"${ele}"`),
+    description: `Enum stored as is`,
     serialize: (value, fieldPath) => {
       // convert from key to value
       if (typeof value !== "string")
@@ -45,6 +46,7 @@ export function generateKenumScalarDefinition(
   return {
     name: enumName,
     types: enumValues.map((ele) => `"${ele}"`),
+    description: `Enum stored as a separate key value`,
     serialize: (value, fieldPath) => {
       // convert from key to value
       if (typeof value !== "string")

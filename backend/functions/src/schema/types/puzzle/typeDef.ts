@@ -10,16 +10,19 @@ import {
 } from "../../helpers/typeDef";
 
 export default <TypeDefinition>{
-  ...generateIdField(),
-  name: generateStringField({ allowNull: false }),
-  code: generateStringField({
-    allowNull: false,
-    sqlDefinition: {
-      unique: true,
-    },
-  }),
-  is_public: generateBooleanField({ allowNull: false, defaultValue: true }),
-  ...generateCreatedAtField(),
-  ...generateUpdatedAtField(),
-  ...generateCreatedByField(User),
+  description: "Puzzle Type",
+  fields: {
+    ...generateIdField(),
+    name: generateStringField({ allowNull: false }),
+    code: generateStringField({
+      allowNull: false,
+      sqlDefinition: {
+        unique: true,
+      },
+    }),
+    is_public: generateBooleanField({ allowNull: false, defaultValue: true }),
+    ...generateCreatedAtField(),
+    ...generateUpdatedAtField(),
+    ...generateCreatedByField(User),
+  },
 };

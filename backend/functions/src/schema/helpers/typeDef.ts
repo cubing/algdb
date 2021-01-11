@@ -64,10 +64,10 @@ export function generateStandardField(params: {
     ...typeDefOptions,
   };
   return name
-    ? <TypeDefinition>{
+    ? {
         [name]: typeDef,
       }
-    : <TypeDefinitionField>typeDef;
+    : typeDef;
 }
 
 export function generateStringField(params: {

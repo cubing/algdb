@@ -1,10 +1,6 @@
 // Query builder
 const queryResult = executeJomql({
   // Start typing here to get hints
-  getCurrentUser: {
-    updated_at: true,
-    country: true,
-  },
 });
 
 export function executeJomql<Key extends keyof Root>(
@@ -60,18 +56,29 @@ type FilterByObject<T> = {
   value: unknown;
 };
 
-export type Scalars = {
-  string: string;
-  number: number;
-  boolean: boolean;
-  unknown: unknown;
-  imageUrl: string;
-  unixTimestamp: number;
-  jsonAsString: string;
-  id: number;
-  userRole: "NONE" | "NORMAL" | "ADMIN";
-  filterOperator: "eq" | "neq" | "gt" | "lt" | "in" | "nin" | "regex" | "like";
-  caseVisualization: "V_2D" | "V_3D" | "V_PG3D";
+/**All scalar values*/ export type Scalars = {
+  /**String value*/ string: string;
+  /**Numerical value*/ number: number;
+  /**True or False*/ boolean: boolean;
+  /**Unknown value*/ unknown: unknown;
+  /**Image URL Field*/ imageUrl: string;
+  /**UNIX Timestamp (Seconds since Epoch Time)*/ unixTimestamp: number;
+  /**Valid JSON that is stored in database as string*/ jsonAsString: string;
+  /**ID Field*/ id: number;
+  /**Enum stored as a separate key value*/ userRole:
+    | "NONE"
+    | "NORMAL"
+    | "ADMIN";
+  /**Enum stored as is*/ filterOperator:
+    | "eq"
+    | "neq"
+    | "gt"
+    | "lt"
+    | "in"
+    | "nin"
+    | "regex"
+    | "like";
+  /**Enum stored as is*/ caseVisualization: "V_2D" | "V_3D" | "V_PG3D";
   userSortBy: "id" | "created_at" | "updated_at";
   userFilterByFields: "id" | "created_by" | "created_by.name" | "role";
   userGroupBy: undefined;
@@ -91,7 +98,7 @@ export type Scalars = {
   tagFilterByFields: "id" | "alg";
   tagGroupBy: "id";
 };
-export type InputType = {
+/**All input types*/ export type InputType = {
   getUser: { id?: Scalars["id"] };
   userFilterByObject: FilterByObject<Scalars["userFilterByFields"]>;
   getUserPaginator: {
@@ -274,49 +281,49 @@ export type InputType = {
   deleteAlgTagLink: { id?: Scalars["id"] };
   createAlgTagLink: { alg: InputType["getAlg"]; tag: InputType["getTag"] };
 };
-export type PaginatorInfo = {
+/**PaginatorInfo Type*/ export type PaginatorInfo = {
   total: Scalars["number"];
   count: Scalars["number"];
   startCursor: Scalars["string"] | null;
   endCursor: Scalars["string"] | null;
 };
 export type UserEdge = Edge<User>;
-export type UserPaginator = {
+/**Paginator*/ export type UserPaginator = {
   paginatorInfo: PaginatorInfo;
   edges: UserEdge[];
-  __args: Root["getUserPaginator"]["Args"];
+  /**Args for UserPaginator*/ __args: Root["getUserPaginator"]["Args"];
 };
 export type PuzzleEdge = Edge<Puzzle>;
-export type PuzzlePaginator = {
+/**Paginator*/ export type PuzzlePaginator = {
   paginatorInfo: PaginatorInfo;
   edges: PuzzleEdge[];
-  __args: Root["getPuzzlePaginator"]["Args"];
+  /**Args for PuzzlePaginator*/ __args: Root["getPuzzlePaginator"]["Args"];
 };
 export type AlgsetEdge = Edge<Algset>;
-export type AlgsetPaginator = {
+/**Paginator*/ export type AlgsetPaginator = {
   paginatorInfo: PaginatorInfo;
   edges: AlgsetEdge[];
-  __args: Root["getAlgsetPaginator"]["Args"];
+  /**Args for AlgsetPaginator*/ __args: Root["getAlgsetPaginator"]["Args"];
 };
 export type AlgcaseEdge = Edge<Algcase>;
-export type AlgcasePaginator = {
+/**Paginator*/ export type AlgcasePaginator = {
   paginatorInfo: PaginatorInfo;
   edges: AlgcaseEdge[];
-  __args: Root["getAlgcasePaginator"]["Args"];
+  /**Args for AlgcasePaginator*/ __args: Root["getAlgcasePaginator"]["Args"];
 };
 export type AlgEdge = Edge<Alg>;
-export type AlgPaginator = {
+/**Paginator*/ export type AlgPaginator = {
   paginatorInfo: PaginatorInfo;
   edges: AlgEdge[];
-  __args: Root["getAlgPaginator"]["Args"];
+  /**Args for AlgPaginator*/ __args: Root["getAlgPaginator"]["Args"];
 };
 export type TagEdge = Edge<Tag>;
-export type TagPaginator = {
+/**Paginator*/ export type TagPaginator = {
   paginatorInfo: PaginatorInfo;
   edges: TagEdge[];
-  __args: Root["getTagPaginator"]["Args"];
+  /**Args for TagPaginator*/ __args: Root["getTagPaginator"]["Args"];
 };
-export type AlgAlgcaseLink = {
+/**Link type*/ export type AlgAlgcaseLink = {
   id: Scalars["id"];
   alg: Alg;
   algcase: Algcase;
@@ -324,7 +331,7 @@ export type AlgAlgcaseLink = {
   updated_at: Scalars["unixTimestamp"] | null;
   created_by: User;
 };
-export type AlgTagLink = {
+/**Link type*/ export type AlgTagLink = {
   id: Scalars["id"];
   alg: Alg;
   tag: Tag;
@@ -332,7 +339,7 @@ export type AlgTagLink = {
   updated_at: Scalars["unixTimestamp"] | null;
   created_by: User;
 };
-export type User = {
+/**User type*/ export type User = {
   id: Scalars["id"];
   provider: never;
   provider_id: never;
@@ -346,16 +353,16 @@ export type User = {
   created_at: Scalars["unixTimestamp"];
   updated_at: Scalars["unixTimestamp"] | null;
   created_by: User;
-  __args: Root["getUser"]["Args"];
+  /**Args for User*/ __args: Root["getUser"]["Args"];
 };
-export type Auth = {
+/**Authentication type*/ export type Auth = {
   type: Scalars["string"];
   token: Scalars["string"];
   expiration: Scalars["number"];
   expiration_days: Scalars["number"];
   user: User;
 };
-export type Puzzle = {
+/**Puzzle Type*/ export type Puzzle = {
   id: Scalars["id"];
   name: Scalars["string"];
   code: Scalars["string"];
@@ -363,9 +370,9 @@ export type Puzzle = {
   created_at: Scalars["unixTimestamp"];
   updated_at: Scalars["unixTimestamp"] | null;
   created_by: User;
-  __args: Root["getPuzzle"]["Args"];
+  /**Args for Puzzle*/ __args: Root["getPuzzle"]["Args"];
 };
-export type Algset = {
+/**Algorithm Set*/ export type Algset = {
   id: Scalars["id"];
   name: Scalars["string"];
   code: Scalars["string"];
@@ -378,18 +385,18 @@ export type Algset = {
   created_at: Scalars["unixTimestamp"];
   updated_at: Scalars["unixTimestamp"] | null;
   created_by: User;
-  __args: Root["getAlgset"]["Args"];
+  /**Args for Algset*/ __args: Root["getAlgset"]["Args"];
 };
-export type Algcase = {
+/**Algorithm Case*/ export type Algcase = {
   id: Scalars["id"];
   name: Scalars["string"];
   algset: Algset;
   created_at: Scalars["unixTimestamp"];
   updated_at: Scalars["unixTimestamp"] | null;
   created_by: User;
-  __args: Root["getAlgcase"]["Args"];
+  /**Args for Algcase*/ __args: Root["getAlgcase"]["Args"];
 };
-export type Alg = {
+/**Algorithm*/ export type Alg = {
   id: Scalars["id"];
   sequence: Scalars["string"];
   is_approved: Scalars["boolean"];
@@ -397,17 +404,17 @@ export type Alg = {
   created_at: Scalars["unixTimestamp"];
   updated_at: Scalars["unixTimestamp"] | null;
   created_by: User;
-  __args: Root["getAlg"]["Args"];
+  /**Args for Alg*/ __args: Root["getAlg"]["Args"];
 };
-export type Tag = {
+/**Tag type*/ export type Tag = {
   id: Scalars["id"];
   name: Scalars["string"];
   created_at: Scalars["unixTimestamp"];
   updated_at: Scalars["unixTimestamp"] | null;
   created_by: User;
-  __args: Root["getTag"]["Args"];
+  /**Args for Tag*/ __args: Root["getTag"]["Args"];
 };
-export type Root = {
+/**Root type*/ export type Root = {
   getCurrentUser: { Query: User; Response: User; Args?: undefined };
   getUser: { Query: User; Response: User; Args: InputType["getUser"] };
   getUserPaginator: {
