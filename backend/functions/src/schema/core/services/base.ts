@@ -1,4 +1,10 @@
-import { ExternalQuery } from "../../../types";
+import {
+  ServiceFunctionInputs,
+  AccessControlMap,
+  ExternalQuery,
+} from "../../../types";
+import { userPermissionEnum } from "../../enums";
+import { lookupSymbol } from "jomql";
 
 export abstract class BaseService {
   typename: string;
@@ -7,16 +13,14 @@ export abstract class BaseService {
 
   presets: ExternalQuery = {
     default: {
-      "*": true,
+      "*": lookupSymbol,
     },
   };
 
   permissionsLink?: any;
 
   // standard ones are 'get', 'getMultiple', 'update', 'create', 'delete'
-  accessControl?: {
-    [x: string]: Function;
-  };
+  accessControl?: AccessControlMap;
 
   constructor(typename?: string) {
     const camelCaseTypename =
@@ -25,18 +29,51 @@ export abstract class BaseService {
     this.typename = typename ?? camelCaseTypename.replace(/Service$/, "");
   }
 
-  async testPermissions(operation: string, req, args, query) {
-    let allowed: boolean;
+  async testPermissions(
+    operation: string,
+    {
+      req,
+      fieldPath,
+      args,
+      query,
+      data,
+      isAdmin = false,
+    }: ServiceFunctionInputs
+  ) {
+    if (isAdmin) return true;
 
+    if (!req.user) return false;
+
+    // check against permissions array first. allow if found.
+    const passablePermissionsArray = [
+      userPermissionEnum.A_A,
+      userPermissionEnum[this.typename + "_x"],
+      userPermissionEnum[this.typename + "_" + operation],
+    ];
+
+    if (
+      req.user.permissions.some((ele) => passablePermissionsArray.includes(ele))
+    )
+      return true;
+
+    // if that failed, fall back to accessControl
+    let allowed: boolean;
     if (this.accessControl) {
       const validatedOperation =
         operation in this.accessControl ? operation : "*";
       // if operation not in the accessControl object, deny
       allowed = this.accessControl[validatedOperation]
-        ? await this.accessControl[validatedOperation](req, args, query)
+        ? await this.accessControl[validatedOperation]({
+            req,
+            fieldPath,
+            args,
+            query,
+            data,
+            isAdmin,
+          })
         : false;
     } else {
-      // allow by default if no accessControl object
+      // deny by default if no accessControl object
       allowed = true;
     }
 

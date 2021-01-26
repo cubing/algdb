@@ -1,4 +1,4 @@
-import { User } from "../../services";
+import { Puzzle, User } from "../../services";
 import { TypeDefinition } from "jomql";
 import {
   generateIdField,
@@ -7,12 +7,15 @@ import {
   generateCreatedByField,
   generateStringField,
   generateBooleanField,
+  generateTypenameField,
 } from "../../helpers/typeDef";
 
 export default <TypeDefinition>{
+  name: Puzzle.typename,
   description: "Puzzle Type",
   fields: {
     ...generateIdField(),
+    ...generateTypenameField(Puzzle),
     name: generateStringField({ allowNull: false }),
     code: generateStringField({
       allowNull: false,

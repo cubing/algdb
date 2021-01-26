@@ -1,10 +1,20 @@
 import * as mysqlHelper from "./mysql";
 import { User } from "../services";
-import { userRoleKenum } from "../enums";
-import { BaseService } from "../core/services";
+import { userRoleKenum, userPermissionEnum } from "../enums";
+import { BaseService, NormalService } from "../core/services";
+import * as errorHelper from "./error";
+import { ServiceFunctionInputs, AccessControlFunction } from "../../types";
 
-export function generateItemCreatedByUserGuard(service: BaseService) {
-  return async function (req, args, query) {
+export const userRoleToPermissionsMap = {
+  // [userRoleKenum.ADMIN]: [userPermissionEnum.A_A],
+  [userRoleKenum.ADMIN]: [userPermissionEnum.A_A],
+  [userRoleKenum.NORMAL]: [],
+};
+
+export function generateItemCreatedByUserGuard(
+  service: BaseService
+): AccessControlFunction {
+  return async function ({ req, fieldPath, args, query }) {
     //check if logged in
     if (!req.user) return false;
 
@@ -27,8 +37,8 @@ export function generateItemCreatedByUserGuard(service: BaseService) {
 export function generateCheckPermissionsLink(
   method: string,
   service: BaseService
-) {
-  return async function (req, args, query) {
+): AccessControlFunction {
+  return async function ({ req, fieldPath, args, query }) {
     //check if logged in
     if (!req.user) return false;
     if (!service.permissionsLink) return false;
@@ -64,16 +74,20 @@ export function generateCheckPermissionsLink(
   };
 }
 
-export function generateUserAdminGuard() {
+export function generateUserAdminGuard(): AccessControlFunction {
   return generateUserRoleGuard([userRoleKenum.ADMIN]);
 }
 
-export function generateUserRoleGuard(allowedRoles: userRoleKenum[]) {
-  return async function (req, args, query) {
+export function generateUserRoleGuard(
+  allowedRoles: userRoleKenum[]
+): AccessControlFunction {
+  return async function ({ req, fieldPath, args, query }) {
     //check if logged in
     if (!req.user) return false;
 
     try {
+      // role is loaded in helpers/auth on token decode
+      /*
       const userRecords = await mysqlHelper.fetchTableRows({
         select: [{ field: "role" }],
         from: User.typename,
@@ -81,13 +95,104 @@ export function generateUserRoleGuard(allowedRoles: userRoleKenum[]) {
           fields: [{ field: "id", value: req.user.id }],
         },
       });
+      */
 
-      if (!userRecords[0]) return false;
-      return allowedRoles.includes(
-        userRoleKenum[userRoleKenum[userRecords[0].role]]
-      );
+      if (!req.user.role) return false;
+      return allowedRoles.includes(userRoleKenum[req.user.role]);
     } catch (err) {
       return false;
     }
+  };
+}
+
+/*
+export function userRoleGuard(allowedRoles: userRoleKenum[]) {
+  return function (
+    target: BaseService,
+    propertyName: string,
+    propertyDescriptor: PropertyDescriptor
+  ): PropertyDescriptor {
+    // target === Employee.prototype
+    // propertyName === "greet"
+    // propertyDesciptor === Object.getOwnPropertyDescriptor(Employee.prototype, "greet")
+    const method = propertyDescriptor.value;
+
+    propertyDescriptor.value = async function (req, args, query) {
+      // convert list of greet arguments to string
+      //const params = args.map((a) => JSON.stringify(a)).join();
+      const params = "bar";
+      //if it does not pass the access control, throw an error
+      if (!(await target.testPermissions("get", req, args, query))) {
+        throw errorHelper.badPermissionsError();
+      }
+
+      // invoke greet() and get its return value
+      const result = await method.apply(this, [req, args, query]);
+
+      // convert result to string
+      const r = JSON.stringify(result);
+
+      // display in console the function call details
+      console.log(`Call: ${propertyName}(${params}) => ${r}`);
+
+      // return the result of invoking the method
+      return result;
+    };
+    return propertyDescriptor;
+  };
+}
+*/
+
+export function permissionsCheck(methodKey: string) {
+  return function (
+    target: BaseService,
+    propertyName: string,
+    propertyDescriptor: PropertyDescriptor
+  ): PropertyDescriptor {
+    // target === Employee.prototype
+    // propertyName === "greet"
+    // propertyDesciptor === Object.getOwnPropertyDescriptor(Employee.prototype, "greet")
+    const method = propertyDescriptor.value;
+
+    propertyDescriptor.value = async function ({
+      req,
+      fieldPath,
+      args,
+      query,
+      data,
+      isAdmin = false,
+    }: ServiceFunctionInputs) {
+      //if it does not pass the access control, throw an error
+      if (
+        !(await target.testPermissions.apply(this, [
+          methodKey,
+          {
+            req,
+            fieldPath,
+            args,
+            query,
+            data,
+            isAdmin,
+          },
+        ]))
+      ) {
+        throw errorHelper.badPermissionsError(fieldPath);
+      }
+      // invoke greet() and get its return value
+      const result = await method.apply(this, [
+        {
+          req,
+          fieldPath,
+          args,
+          query,
+          data,
+          isAdmin,
+        },
+      ]);
+
+      // return the result of invoking the method
+      return result;
+    };
+    return propertyDescriptor;
   };
 }

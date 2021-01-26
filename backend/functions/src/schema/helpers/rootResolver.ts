@@ -1,14 +1,9 @@
-import { InputTypeDefinition, RootResolverObject } from "jomql";
-import {
-  NormalService,
-  PaginatedService,
-  EnumService,
-  KenumService,
-} from "../core/services";
+import { InputTypeDefinition, JomqlArgsError, RootResolverObject } from "jomql";
+import { NormalService, PaginatedService, EnumService } from "../core/services";
 import { generatePaginatorPivotResolverObject } from "../helpers/typeDef";
 import { isObject, capitalizeString } from "../helpers/shared";
 import { inputDefs } from "../inputDefs";
-import * as Scalars from "../scalars";
+import { JomqlInitializationError } from "jomql/lib/classes";
 
 type BaseRootResolverTypes =
   | "get"
@@ -59,10 +54,10 @@ export function generateBaseRootResolvers(
       }
 
       if (!validKeyCombination) {
-        const fieldString = ["root"].concat(...fieldPath).join(".");
-        throw new Error(
-          `Invalid combination of args on field '${fieldString}'`
-        );
+        throw new JomqlArgsError({
+          message: `Invalid combination of args`,
+          fieldPath,
+        });
       }
     },
   };
@@ -74,17 +69,25 @@ export function generateBaseRootResolvers(
     const capitalizedMethod = capitalizeString(method);
     switch (method) {
       case "get":
-        rootResolvers[method + capitalizedClass] = {
-          method: "get",
+        rootResolvers[method + capitalizedClass] = <RootResolverObject>{
+          method: "get" as const,
           route: "/" + service.typename + "/:id",
           type: service.typename,
           isArray: false,
           allowNull: false,
+          query: service.presets.default,
           args: {
             required: true,
             type: lookupRecordInputDefinition,
           },
-          resolver: (req, query, args) => service.getRecord(req, query, args),
+          resolver: ({ req, query, args, fieldPath }) => {
+            return service.getRecord({
+              req,
+              query,
+              args,
+              fieldPath,
+            });
+          },
         };
         break;
       case "getMultiple":
@@ -92,21 +95,21 @@ export function generateBaseRootResolvers(
           rootResolvers[
             "get" + capitalizeString(service.paginator.typename)
           ] = <RootResolverObject>{
-            method: "get",
+            method: "get" as const,
             route: "/" + service.typename,
             ...generatePaginatorPivotResolverObject({
               pivotService: service,
             }),
           };
         } else {
-          throw new Error(
-            `Cannot getMultiple of a non-paginated type '${service.typename}'`
-          );
+          throw new JomqlInitializationError({
+            message: `Cannot getMultiple of a non-paginated type '${service.typename}'`,
+          });
         }
         break;
       case "delete":
-        rootResolvers[method + capitalizedClass] = {
-          method: "delete",
+        rootResolvers[method + capitalizedClass] = <RootResolverObject>{
+          method: "delete" as const,
           route: "/" + service.typename + "/:id",
           type: service.typename,
           isArray: false,
@@ -115,8 +118,13 @@ export function generateBaseRootResolvers(
             required: true,
             type: lookupRecordInputDefinition,
           },
-          resolver: (req, query, args) =>
-            service.deleteRecord(req, query, args),
+          resolver: ({ req, query, args, fieldPath }) =>
+            service.deleteRecord({
+              req,
+              query,
+              args,
+              fieldPath,
+            }),
         };
         break;
       case "update":
@@ -124,7 +132,7 @@ export function generateBaseRootResolvers(
         Object.entries(service.typeDef.fields).forEach(
           ([key, typeDefField]) => {
             const type = typeDefField.type;
-            if (typeDefField.customOptions?.updateable) {
+            if (typeDefField.updateable) {
               // generate the argDefinition for the string type
               updateArgs[key] = {
                 type:
@@ -137,9 +145,10 @@ export function generateBaseRootResolvers(
             }
           }
         );
-        rootResolvers[method + capitalizedClass] = {
-          method: "put",
+        rootResolvers[method + capitalizedClass] = <RootResolverObject>{
+          method: "put" as const,
           route: "/" + service.typename + "/:id",
+          query: service.presets.default,
           type: service.typename,
           isArray: false,
           allowNull: false,
@@ -149,6 +158,7 @@ export function generateBaseRootResolvers(
               fields: {
                 item: {
                   type: "get" + capitalizedClass,
+                  required: true,
                 },
                 fields: {
                   type: {
@@ -158,17 +168,19 @@ export function generateBaseRootResolvers(
                       // check if at least 1 valid update field provided
                       const { id, ...updateFields } = args;
                       if (Object.keys(updateFields).length < 1)
-                        throw new Error(
-                          `No valid fields to update at '${fieldPath}'`
-                        );
+                        throw new JomqlArgsError({
+                          message: `No valid fields to update`,
+                          fieldPath,
+                        });
                     },
                   },
+                  required: true,
                 },
               },
             },
           },
-          resolver: (req, query, args) =>
-            service.updateRecord(req, query, args),
+          resolver: ({ req, query, args, fieldPath }) =>
+            service.updateRecord({ req, query, args, fieldPath }),
         };
         break;
       case "create":
@@ -176,7 +188,7 @@ export function generateBaseRootResolvers(
         Object.entries(service.typeDef.fields).forEach(
           ([key, typeDefField]) => {
             const type = typeDefField.type;
-            if (typeDefField.customOptions?.addable) {
+            if (typeDefField.addable) {
               // generate the argDefinition for the string type
               createArgs[key] = {
                 type:
@@ -189,8 +201,8 @@ export function generateBaseRootResolvers(
             }
           }
         );
-        rootResolvers[method + capitalizedClass] = {
-          method: "post",
+        rootResolvers[method + capitalizedClass] = <RootResolverObject>{
+          method: "post" as const,
           route: "/" + service.typename,
           type: service.typename,
           isArray: false,
@@ -201,71 +213,96 @@ export function generateBaseRootResolvers(
               fields: createArgs,
             },
           },
-          resolver: (req, query, args) =>
-            service.createRecord(req, query, args),
+          resolver: ({ req, query, args, fieldPath }) =>
+            service.createRecord({
+              req,
+              query,
+              args,
+              fieldPath,
+            }),
         };
         break;
       case "created":
-        rootResolvers[service.typename + capitalizedMethod] = {
-          method: "post",
+        rootResolvers[service.typename + capitalizedMethod] = <
+          RootResolverObject
+        >{
+          method: "post" as const,
           route: "/subscribe/" + service.typename + capitalizedMethod,
           type: service.typename,
           isArray: false,
           allowNull: false,
-          resolver: (req, query, args) =>
+          resolver: ({ req, query, args, fieldPath }) =>
             service.subscribeToMultipleItem(
               service.typename + capitalizedMethod,
-              req,
-              query,
-              args
+              {
+                req,
+                query,
+                args,
+                fieldPath,
+              }
             ),
         };
         break;
       case "deleted":
-        rootResolvers[service.typename + capitalizedMethod] = {
-          method: "post",
+        rootResolvers[service.typename + capitalizedMethod] = <
+          RootResolverObject
+        >{
+          method: "post" as const,
           route: "/subscribe/" + service.typename + capitalizedMethod,
           type: service.typename,
           isArray: false,
           allowNull: false,
-          resolver: (req, query, args) =>
+          resolver: ({ req, query, args, fieldPath }) =>
             service.subscribeToSingleItem(
               service.typename + capitalizedMethod,
-              req,
-              query,
-              args
+              {
+                req,
+                query,
+                args,
+                fieldPath,
+              }
             ),
         };
         break;
       case "updated":
-        rootResolvers[service.typename + capitalizedMethod] = {
-          method: "post",
+        rootResolvers[service.typename + capitalizedMethod] = <
+          RootResolverObject
+        >{
+          method: "post" as const,
           route: "/subscribe/" + service.typename + capitalizedMethod,
           type: service.typename,
           isArray: false,
           allowNull: false,
-          resolver: (req, query, args) =>
+          resolver: ({ req, query, args, fieldPath }) =>
             service.subscribeToSingleItem(
               service.typename + capitalizedMethod,
-              req,
-              query,
-              args
+              {
+                req,
+                query,
+                args,
+                fieldPath,
+              }
             ),
         };
         break;
       case "listUpdated":
-        rootResolvers[service.typename + capitalizedMethod] = {
-          method: "post",
+        rootResolvers[service.typename + capitalizedMethod] = <
+          RootResolverObject
+        >{
+          method: "post" as const,
           route: "/subscribe/" + service.typename + capitalizedMethod,
           type: service.typename,
           isArray: false,
           allowNull: false,
-          resolver: (req, query, args) =>
+          resolver: ({ req, query, args, fieldPath }) =>
             service.subscribeToMultipleItem(
               service.typename + capitalizedMethod,
-              req,
-              query,
-              args
+              {
+                req,
+                query,
+                args,
+                fieldPath,
+              }
             ),
         };
         break;
@@ -277,20 +314,23 @@ export function generateBaseRootResolvers(
   return rootResolvers;
 }
 
-export function generateEnumRootResolver(
-  enumService: EnumService | KenumService
-) {
-  const capitalizedClass = capitalizeString(enumService.typename);
+export function generateEnumRootResolver(enumService: EnumService) {
+  const capitalizedClass = capitalizeString(enumService.paginator.typename);
 
   const rootResolvers = {
-    ["getAll" + capitalizedClass]: {
-      method: "get",
-      route: "/" + enumService.typename,
-      isArray: true,
+    ["get" + capitalizedClass]: {
+      method: "get" as const,
+      route: "/" + enumService.paginator.typename,
+      isArray: false,
       allowNull: false,
-      type: Scalars[enumService.typename],
-      resolver: (req, args, query) =>
-        enumService.getAllRecords(req, args, query),
+      type: enumService.paginator.typename,
+      resolver: ({ req, args, query, fieldPath }) =>
+        enumService.paginator.getRecord({
+          req,
+          args,
+          query,
+          fieldPath,
+        }),
     },
   };
 

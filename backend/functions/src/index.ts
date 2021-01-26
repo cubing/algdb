@@ -31,10 +31,11 @@ app.use(async function (req: any, res, next) {
       req.user = await validateToken(req.headers.authorization);
     }
 
-    // handle origins
+    // handle origins -- only accepting string type origins.
     const origin =
       Array.isArray(allowedOrigins) && allowedOrigins.length
-        ? allowedOrigins.includes(req.headers.origin)
+        ? typeof req.headers.origin === "string" &&
+          allowedOrigins.includes(req.headers.origin)
           ? req.headers.origin
           : allowedOrigins[0]
         : "*";
@@ -74,6 +75,7 @@ initializeJomql(app, {
   debug: !!isDev,
   lookupValue: true,
   jomqlPath: "/jomql",
+  customProcessor: true,
 });
 
 app.get("/schema.ts", function (req, res, next) {

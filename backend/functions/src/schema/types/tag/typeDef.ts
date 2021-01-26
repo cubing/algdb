@@ -1,4 +1,4 @@
-import { User } from "../../services";
+import { Tag, User } from "../../services";
 import { TypeDefinition } from "jomql";
 import {
   generateIdField,
@@ -6,12 +6,15 @@ import {
   generateUpdatedAtField,
   generateCreatedByField,
   generateStringField,
+  generateTypenameField,
 } from "../../helpers/typeDef";
 
 export default <TypeDefinition>{
+  name: Tag.typename,
   description: "Tag type",
   fields: {
     ...generateIdField(),
+    ...generateTypenameField(Tag),
     name: generateStringField({
       allowNull: false,
       sqlDefinition: { unique: true },

@@ -80,9 +80,12 @@ export async function handleJqlSubscriptionTrigger(
         id: item.user,
       },
     };
+    /*
     promises.push(
       service
-        .getRecord(simulatedReq, JSON.parse(item.args), JSON.parse(item.query))
+        .getRecord({
+          req: simulatedReq, args: JSON.parse(item.args), query: JSON.parse(item.query)
+        })
         .then((data) => {
           getPusher().trigger("private-" + item.channel, "subscription-data", {
             data: data,
@@ -90,6 +93,7 @@ export async function handleJqlSubscriptionTrigger(
         })
         .catch((e) => e)
     );
+    */
   }
 
   return Promise.all(promises);
@@ -133,6 +137,7 @@ export async function handleJqlSubscriptionTriggerIterative(
       },
     };
 
+    /*
     promises.push(
       service
         .getRecord(simulatedReq, lookupItemArgs, JSON.parse(item.query))
@@ -143,6 +148,7 @@ export async function handleJqlSubscriptionTriggerIterative(
         })
         .catch((e) => e)
     );
+    */
   }
 
   return Promise.all(promises);

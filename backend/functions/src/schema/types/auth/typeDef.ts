@@ -1,17 +1,19 @@
-import { User } from "../../services";
+import { User, Auth } from "../../services";
 
 import * as jwt from "jsonwebtoken";
-
+import { generateTypenameField } from "../../helpers/typeDef";
 import { env } from "../../../config";
-import { BaseScalars } from "jomql";
+import { BaseScalars, TypeDefinition } from "jomql";
 
 const jwtExpirationDays = env.general.jwt_expiration
   ? parseInt(env.general.jwt_expiration)
   : 7;
 
-export default {
+export default <TypeDefinition>{
+  name: Auth.typename,
   description: "Authentication type",
   fields: {
+    ...generateTypenameField(Auth),
     type: {
       type: BaseScalars.string,
       isArray: false,
@@ -22,11 +24,11 @@ export default {
       type: BaseScalars.string,
       isArray: false,
       allowNull: false,
-      resolver: (req, args, query, typename, currentObject) => {
+      resolver: ({ data }) => {
         return jwt.sign(
           {
-            id: args.id,
-            email: args.email,
+            id: data.id,
+            email: data.email,
             exp:
               Math.floor(Date.now() / 1000) + jwtExpirationDays * 24 * 60 * 60,
           },
@@ -51,15 +53,14 @@ export default {
       type: User.typename,
       isArray: false,
       allowNull: false,
-      resolver: (req, args, query, typename, currentObject) => {
-        return User.getRecord(
+      resolver: ({ req, args, query, fieldPath }) => {
+        return User.getRecord({
           req,
-          {
-            id: args.id,
-          },
+          args,
           query,
-          true
-        );
+          fieldPath,
+          isAdmin: true,
+        });
       },
     },
   },

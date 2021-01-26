@@ -1,4 +1,4 @@
-import { User } from "../../services";
+import { Alg, User } from "../../services";
 import { TypeDefinition } from "jomql";
 import {
   generateIdField,
@@ -8,12 +8,15 @@ import {
   generateStringField,
   generateBooleanField,
   generateIntegerField,
+  generateTypenameField,
 } from "../../helpers/typeDef";
 
 export default <TypeDefinition>{
+  name: Alg.typename,
   description: "Algorithm",
   fields: {
     ...generateIdField(),
+    ...generateTypenameField(Alg),
     sequence: generateStringField({
       allowNull: false,
       sqlDefinition: { unique: true },

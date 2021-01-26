@@ -8,7 +8,9 @@ export class UserService extends PaginatedService {
 
   filterFieldsMap = {
     id: {},
-    created_by: {},
+    created_by: {
+      field: "created_by.id",
+    },
     "created_by.name": {},
     role: {},
   };
@@ -22,8 +24,6 @@ export class UserService extends PaginatedService {
   searchFieldsMap = {
     name: {},
   };
-
-  isFilterRequired = false;
 
   accessControl = {
     getMultiple: () => true,

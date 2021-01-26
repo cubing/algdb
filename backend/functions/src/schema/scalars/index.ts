@@ -6,6 +6,7 @@ import {
   filterOperatorEnum,
   caseVisualizationEnum,
   userRoleKenum,
+  userPermissionEnum,
 } from "../enums";
 
 import { BaseScalars } from "jomql";
@@ -36,4 +37,9 @@ export const filterOperator = generateEnumScalarDefinition(
 export const caseVisualization = generateEnumScalarDefinition(
   "caseVisualization",
   caseVisualizationEnum
+);
+
+export const userPermission = generateEnumScalarDefinition(
+  "userPermission",
+  userPermissionEnum
 );

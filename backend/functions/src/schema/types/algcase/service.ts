@@ -7,9 +7,9 @@ export class AlgcaseService extends PaginatedService {
 
   filterFieldsMap = {
     id: {},
-    created_by: {},
-    code: {},
-    is_public: {},
+    created_by: {
+      field: "created_by.id",
+    },
   };
 
   uniqueKeyMap = {
@@ -26,8 +26,6 @@ export class AlgcaseService extends PaginatedService {
   };
 
   groupByFieldsMap = {};
-
-  isFilterRequired = false;
 
   accessControl = {
     get: () => true,

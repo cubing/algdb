@@ -5,8 +5,10 @@ import { AlgAlgcaseLink, Algcase } from "../../services";
 import * as errorHelper from "../../helpers/error";
 import * as Resolver from "../../helpers/resolver";
 import * as mysqlHelper from "../../helpers/mysql";
-
+import { permissionsCheck } from "../../helpers/permissions";
 import { handleJqlSubscriptionTriggerIterative } from "../../helpers/subscription";
+import { ServiceFunctionInputs } from "../../../types";
+import { isObject } from "../../helpers/shared";
 
 export class AlgService extends PaginatedService {
   defaultTypename = "alg";
@@ -15,9 +17,9 @@ export class AlgService extends PaginatedService {
     id: {},
     "algcase.name": {},
     algcase: {
-      field: "algcase",
+      field: "algcase.id",
     },
-    tag: {},
+    tag: { field: "tag.id" },
     "tag.name": {},
   };
 
@@ -38,8 +40,6 @@ export class AlgService extends PaginatedService {
     id: {},
   };
 
-  isFilterRequired = false;
-
   accessControl = {
     get: () => true,
 
@@ -50,45 +50,66 @@ export class AlgService extends PaginatedService {
     delete: generateUserRoleGuard([userRoleKenum.ADMIN]),
   };
 
-  async createRecord(req, args: any, query?: object, admin = false) {
-    //if it does not pass the access control, throw an error
-    if (!admin && !(await this.testPermissions("create", req, args, query))) {
-      throw errorHelper.badPermissionsError();
+  @permissionsCheck("create")
+  async createRecord({
+    req,
+    fieldPath,
+    args,
+    query,
+    data = {},
+    isAdmin = false,
+  }: ServiceFunctionInputs) {
+    // convert any lookup/joined fields into IDs
+    for (const key in args) {
+      const type = this.typeDef.fields[key].type;
+      if (typeof type === "string" && isObject(args[key])) {
+        // get record ID of type, replace object with the ID
+        const results = await mysqlHelper.fetchTableRows({
+          select: [{ field: "id" }],
+          from: type,
+          where: {
+            connective: "AND",
+            fields: Object.entries(args[key]).map(([field, value]) => ({
+              field,
+              value,
+            })),
+          },
+        });
+
+        if (results.length < 1) {
+          throw new Error(`${type} not found`);
+        }
+
+        // replace args[key] with the item ID
+        args[key] = results[0].id;
+      }
     }
 
-    //algcase required
-    if (!args.algcase) throw errorHelper.missingParamsError();
-
-    //verify algcase exists
-    const algcaseCount = await mysqlHelper.countTableRows(Algcase.typename, {
-      fields: [
-        {
-          field: "id",
-          value: args.algcase,
-        },
-      ],
-    });
-
-    if (algcaseCount < 1) throw new Error("Invalid algcase");
-
-    const addResults = await Resolver.addTableRow(this.typename, req, args, {
-      created_by: req.user.id,
-    });
+    const addResults = await Resolver.addTableRow(
+      this.typename,
+      req,
+      fieldPath,
+      args,
+      {
+        created_by: req.user?.id,
+      }
+    );
 
     // create algAlgcaseLink
     await Resolver.addTableRow(
       AlgAlgcaseLink.typename,
       req,
+      fieldPath,
       {
         alg: addResults.id,
         algcase: args.algcase,
       },
-      { created_by: req.user.id }
+      { created_by: req.user?.id }
     );
 
     // args that will be compared with subscription args
     const subscriptionFilterableArgs = {
-      created_by: req.user.id,
+      created_by: req.user?.id,
     };
 
     handleJqlSubscriptionTriggerIterative(
@@ -107,6 +128,13 @@ export class AlgService extends PaginatedService {
       { id: addResults.id }
     );
 
-    return this.getRecord(req, { id: addResults.id }, query);
+    return this.getRecord({
+      req,
+      args: { id: addResults.id },
+      query,
+      fieldPath,
+      isAdmin,
+      data,
+    });
   }
 }

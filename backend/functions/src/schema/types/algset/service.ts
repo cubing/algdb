@@ -7,7 +7,9 @@ export class AlgsetService extends PaginatedService {
 
   filterFieldsMap = {
     id: {},
-    created_by: {},
+    created_by: {
+      field: "created_by.id",
+    },
     code: {},
     is_public: {},
   };
@@ -27,8 +29,6 @@ export class AlgsetService extends PaginatedService {
   };
 
   groupByFieldsMap = {};
-
-  isFilterRequired = false;
 
   accessControl = {
     get: () => true,

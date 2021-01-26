@@ -3,21 +3,9 @@ import { TsSchemaGenerator } from "jomql";
 export class CustomSchemaGenerator extends TsSchemaGenerator {
   constructor(schema) {
     super(schema);
-    this.scaffoldStr =
-      `// Query builder
-const queryResult = executeJomql({
-  // Start typing here to get hints
-});
-
-export function executeJomql<Key extends keyof Root>(
-  query: GetQuery<Key>
-): GetResponse<Key> {
-  return;
-}
-    ` + this.scaffoldStr;
-
     this.scaffoldStr += `
 type Edge<T> = {
+  __typename: string;
   node: Omit<T, args>;
   cursor: string;
 };
@@ -34,7 +22,7 @@ type FilterByObject<T> = {
     // loop through this.inputTypeTsTypeFields and find places to simplify
     this.inputTypeTsTypeFields.forEach((value, key) => {
       // if inputDefName is ends in FilterByObject, process differently
-      if (key.match(/FilterByObject$/)) {
+      /*       if (key.match(/FilterByObject$/)) {
         // replace the value
         this.inputTypeTsTypeFields.set(key, {
           value: `FilterByObject<Scalars["${key.replace(
@@ -45,7 +33,7 @@ type FilterByObject<T> = {
           isNullable: false,
           isOptional: false,
         });
-      }
+      } */
     });
 
     // loop through types and find places to simplify
