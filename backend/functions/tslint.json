@@ -57,7 +57,7 @@
     "no-implicit-dependencies": true,
 
     // The 'this' keyword can only be used inside of classes.
-    "no-invalid-this": true,
+    "no-invalid-this": false,
 
     // Do not allow strings to be thrown because they will not include stack traces. Throw Errors instead.
     "no-string-throw": true,
