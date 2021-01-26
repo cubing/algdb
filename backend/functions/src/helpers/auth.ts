@@ -1,6 +1,6 @@
 import { env } from "../config";
 import * as jwt from "jsonwebtoken";
-import { User } from "../schema/services";
+import { Puzzle, User } from "../schema/services";
 import { userRoleKenum, userPermissionEnum } from "../schema/enums";
 import { userRoleToPermissionsMap } from "../schema/helpers/permissions";
 import type { ContextUser } from "../types";
@@ -16,8 +16,12 @@ export async function validateToken(auth: string) {
   try {
     const decodedToken: any = await jwt.verify(token, env.general.jwt_secret);
 
+    if (!decodedToken.id) {
+      throw new Error("Bad ID token");
+    }
+
     const contextUser: ContextUser = {
-      id: parseInt(decodedToken.uid),
+      id: parseInt(decodedToken.id),
       role: null,
       permissions: [],
     };
