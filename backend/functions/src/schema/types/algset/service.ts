@@ -12,6 +12,7 @@ export class AlgsetService extends PaginatedService {
     },
     code: {},
     is_public: {},
+    name: {},
   };
 
   uniqueKeyMap = {

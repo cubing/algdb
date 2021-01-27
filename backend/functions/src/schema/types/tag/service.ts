@@ -10,6 +10,7 @@ export class TagService extends PaginatedService {
     alg: {
       field: "alg.id",
     },
+    name: {},
   };
 
   uniqueKeyMap = {

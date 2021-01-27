@@ -13,6 +13,7 @@ export class UserService extends PaginatedService {
     },
     "created_by.name": {},
     role: {},
+    name: {},
   };
 
   sortFieldsMap = {
