@@ -1,6 +1,12 @@
 import React, { createContext } from 'react'
-import { Spinner, Alert, AlertIcon, AlertTitle, AlertDescription } from '@chakra-ui/core'
-import { User } from '../generated/jql'
+import {
+  Spinner,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+} from '@chakra-ui/react'
+import { User } from '../generated/schema'
 import useJql from '../hooks/useJql'
 import { WCA_LOGIN_REDIRECT } from '../config'
 import useJqlMutation from '../hooks/useJqlMutation'
@@ -88,10 +94,12 @@ const UserProvider = ({ children }: React.PropsWithChildren<{}>) => {
           <AlertTitle mr={2}>Error when fetching user</AlertTitle>
           <AlertDescription>{error.message}</AlertDescription>
         </Alert>
-      ) : false}
+      ) : (
+        false
+      )}
       {children}
     </UserContext.Provider>
-)
+  )
 }
 
 export { UserContext }

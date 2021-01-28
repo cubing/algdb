@@ -1,6 +1,20 @@
 import React, { ReactElement } from 'react'
-import { Switch, Route, useRouteMatch, useLocation, Link, Redirect } from 'react-router-dom'
-import { Flex, Menu, MenuItem, Breadcrumb, BreadcrumbItem, BreadcrumbLink } from '@chakra-ui/core'
+import {
+  Switch,
+  Route,
+  useRouteMatch,
+  useLocation,
+  Link,
+  Redirect,
+} from 'react-router-dom'
+import {
+  Flex,
+  Menu,
+  MenuItem,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+} from '@chakra-ui/react'
 import UsersPage from './Users'
 import AlgsetPage from './Algset'
 import AlgsetsPage from './Algsets'
@@ -14,23 +28,42 @@ export default function Landing(): ReactElement {
     <Flex>
       <Flex w="20%" flexDirection="column">
         <Menu>
-          <MenuItem as={Link} to={`${match.url}/users`}>Users</MenuItem>
-          <MenuItem as={Link} to={`${match.url}/puzzles`}>Puzzles</MenuItem>
-          <MenuItem as={Link} to={`${match.url}/algsets`}>Algsets</MenuItem>
+          <MenuItem as={Link} to={`${match.url}/users`}>
+            Users
+          </MenuItem>
+          <MenuItem as={Link} to={`${match.url}/puzzles`}>
+            Puzzles
+          </MenuItem>
+          <MenuItem as={Link} to={`${match.url}/algsets`}>
+            Algsets
+          </MenuItem>
         </Menu>
       </Flex>
       <Flex w="80%" flexDirection="column">
         <Flex padding="1em">
           <Breadcrumb>
             <BreadcrumbItem>
-              <BreadcrumbLink as={Link} to="/">Home</BreadcrumbLink>
+              <BreadcrumbLink as={Link} to="/">
+                Home
+              </BreadcrumbLink>
             </BreadcrumbItem>
 
-            {location.pathname.split('/').slice(1).map((path, index, array) => (
-              <BreadcrumbItem key={path} isCurrentPage={index === array.length - 1}>
-                <BreadcrumbLink as={Link} to={`/${array.slice(0, index + 1).join('/')}`}>{path}</BreadcrumbLink>
-              </BreadcrumbItem>
-            ))}
+            {location.pathname
+              .split('/')
+              .slice(1)
+              .map((path, index, array) => (
+                <BreadcrumbItem
+                  key={path}
+                  isCurrentPage={index === array.length - 1}
+                >
+                  <BreadcrumbLink
+                    as={Link}
+                    to={`/${array.slice(0, index + 1).join('/')}`}
+                  >
+                    {path}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+              ))}
           </Breadcrumb>
         </Flex>
         <Flex flexDirection="column" padding="1em">
@@ -38,22 +71,21 @@ export default function Landing(): ReactElement {
             <Route path={`${match.path}/users`}>
               <UsersPage />
             </Route>
-            <Route path={[
-              `${match.path}/puzzles/:puzzleCode/:algsetCode-:subsetCode`,
-            ]}
+            <Route
+              path={[
+                `${match.path}/puzzles/:puzzleCode/:algsetCode-:subsetCode`,
+              ]}
             >
               <AlgsetPage />
             </Route>
-            <Route path={[
-              `${match.path}/puzzles/:puzzleCode/:algsetCode`,
-            ]}
-            >
+            <Route path={[`${match.path}/puzzles/:puzzleCode/:algsetCode`]}>
               <AlgsetPage />
             </Route>
-            <Route path={[
-              `${match.path}/algsets`,
-              `${match.path}/puzzles/:puzzleCode`,
-            ]}
+            <Route
+              path={[
+                `${match.path}/algsets`,
+                `${match.path}/puzzles/:puzzleCode`,
+              ]}
             >
               <AlgsetsPage />
             </Route>

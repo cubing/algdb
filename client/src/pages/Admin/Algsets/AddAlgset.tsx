@@ -1,7 +1,13 @@
-import React, { ReactElement, useState, ChangeEvent, MouseEvent, FormEvent } from 'react'
-import { Input, Select, Button } from '@chakra-ui/core'
+import React, {
+  ReactElement,
+  useState,
+  ChangeEvent,
+  MouseEvent,
+  FormEvent,
+} from 'react'
+import { Input, Select, Button } from '@chakra-ui/react'
 import useJqlMutation from '../../../hooks/useJqlMutation'
-import { Maybe, Algset, Puzzle } from '../../../generated/jql'
+import { Maybe, Algset, Puzzle } from '../../../generated/schema'
 
 export type AlgsetMutationArgs = {
   id?: string
@@ -9,7 +15,7 @@ export type AlgsetMutationArgs = {
   puzzle?: string
   mask?: Maybe<string> | null
   visualization?: string
-  is_public?: boolean,
+  is_public?: boolean
 }
 
 type Props = {
@@ -31,7 +37,7 @@ export default function AddAlgset({ onAdd, puzzles }: Props): ReactElement {
   })
 
   const onClick = async (e: MouseEvent<HTMLButtonElement> | FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (algsetName) {
       try {
         await mutate({
@@ -62,16 +68,26 @@ export default function AddAlgset({ onAdd, puzzles }: Props): ReactElement {
       </td>
       <td>
         <Select value={selectedPuzzle} onChange={handleChangePuzzle}>
-          <option key={0} value="0">Select</option>
+          <option key={0} value="0">
+            Select
+          </option>
           {puzzles.map((puzzle) => (
-            <option key={puzzle?.id} value={puzzle?.id}>{puzzle?.name}</option>
+            <option key={puzzle?.id} value={puzzle?.id}>
+              {puzzle?.name}
+            </option>
           ))}
         </Select>
       </td>
       <td />
       <td />
       <td>
-        <Button isLoading={isLoading} isDisabled={!algsetName} onClick={onClick}>Add</Button>
+        <Button
+          isLoading={isLoading}
+          isDisabled={!algsetName}
+          onClick={onClick}
+        >
+          Add
+        </Button>
       </td>
     </tr>
   )

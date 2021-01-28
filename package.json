@@ -5,7 +5,7 @@
 	"husky": {
 		"hooks": {
 			"pre-commit": [
-				"cd client/ && yarn run lint"
+				"cd client_web/ && yarn run lint"
 			]
 		}
 	},

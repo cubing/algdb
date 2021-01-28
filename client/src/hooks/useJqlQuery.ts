@@ -1,7 +1,7 @@
 import { useQuery, QueryKey, QueryConfig, QueryResult } from 'react-query'
 import axios from 'axios'
 import useJql from './useJql'
-import { Query, Mutation } from '../generated/jql'
+import { Query, Mutation } from '../generated/schema'
 
 export interface AlgDBFetchArgs {
   serverUrl: string

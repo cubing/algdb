@@ -1,6 +1,5 @@
 import * as React from 'react'
-import { ChakraProvider, CSSReset } from '@chakra-ui/core'
-import theme from '@chakra-ui/theme'
+import { ChakraProvider, CSSReset } from '@chakra-ui/react'
 import { BrowserRouter as Router } from 'react-router-dom'
 import Header from './Header'
 import Footer from './Footer'
@@ -10,7 +9,7 @@ import UserProvider from '../../providers/UserProvider'
 import { SERVER_URI } from '../../config'
 
 const App = () => (
-  <ChakraProvider theme={theme}>
+  <ChakraProvider>
     <JqlProvider serverUrl={SERVER_URI}>
       <UserProvider>
         <Router>

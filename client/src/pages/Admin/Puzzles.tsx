@@ -1,9 +1,9 @@
 import React, { ReactElement, useState, ChangeEvent } from 'react'
 import { Link, useRouteMatch } from 'react-router-dom'
-import { Flex, Heading, Spinner, Input, Button } from '@chakra-ui/core'
+import { Flex, Heading, Spinner, Input, Button } from '@chakra-ui/react'
 import useJqlQuery from '../../hooks/useJqlQuery'
 import useJqlMutation from '../../hooks/useJqlMutation'
-import { Maybe, Puzzle, PuzzlePaginator } from '../../generated/jql'
+import { Maybe, Puzzle, PuzzlePaginator } from '../../generated/schema'
 
 type AddPuzzleProps = {
   onAdd: () => void
@@ -29,7 +29,7 @@ function AddPuzzle({ onAdd }: AddPuzzleProps): ReactElement {
     if (puzzleName) {
       try {
         await mutate({
-          name: puzzleName
+          name: puzzleName,
         })
         onAdd()
         setPuzzleName('')
@@ -44,7 +44,7 @@ function AddPuzzle({ onAdd }: AddPuzzleProps): ReactElement {
   }
 
   if (error) {
-    console.error(error);
+    console.error(error)
   }
 
   return (
@@ -54,7 +54,13 @@ function AddPuzzle({ onAdd }: AddPuzzleProps): ReactElement {
         <Input placeholder="fto" value={puzzleName} onChange={handleChange} />
       </td>
       <td>
-        <Button isLoading={isLoading} isDisabled={!puzzleName} onClick={onClick}>Add</Button>
+        <Button
+          isLoading={isLoading}
+          isDisabled={!puzzleName}
+          onClick={onClick}
+        >
+          Add
+        </Button>
       </td>
     </tr>
   )
@@ -75,13 +81,12 @@ const getPuzzlesQuery = {
 export default function Puzzles(): ReactElement {
   const match = useRouteMatch()
 
-  const { isLoading, data, refetch, error } = useJqlQuery<PuzzlePaginator, Error>(
-    'getMultiplePuzzle',
-    'getMultiplePuzzle',
-    getPuzzlesQuery,
-  )
+  const { isLoading, data, refetch, error } = useJqlQuery<
+    PuzzlePaginator,
+    Error
+  >('getMultiplePuzzle', 'getMultiplePuzzle', getPuzzlesQuery)
 
-  const puzzles = data?.data || [];
+  const puzzles = data?.data || []
 
   if (isLoading) {
     return <Spinner />
@@ -101,22 +106,28 @@ export default function Puzzles(): ReactElement {
         <table width="100%">
           <thead>
             <tr>
-              <th style={{textAlign: 'left'}}>Code</th>
-              <th style={{textAlign: 'left'}}>Name</th>
-              <th style={{textAlign: 'left'}}>Created</th>
-              <th style={{textAlign: 'left'}}>{' '}</th>
+              <th style={{ textAlign: 'left' }}>Code</th>
+              <th style={{ textAlign: 'left' }}>Name</th>
+              <th style={{ textAlign: 'left' }}>Created</th>
+              <th style={{ textAlign: 'left' }}> </th>
             </tr>
           </thead>
           <tbody>
-            {puzzles.map((puzzle) => puzzle ? (
-              <tr key={puzzle.id}>
-                <td>{puzzle.id}</td>
-                <td>{puzzle.code}</td>
-                <td>{puzzle.name}</td>
-                <td>{new Date(puzzle.created_at * 1000).toLocaleString()}</td>
-                <td><Link to={`${match.url}/${puzzle.code}`}>Algsets</Link></td>
-              </tr>
-            ) : false)}
+            {puzzles.map((puzzle) =>
+              puzzle ? (
+                <tr key={puzzle.id}>
+                  <td>{puzzle.id}</td>
+                  <td>{puzzle.code}</td>
+                  <td>{puzzle.name}</td>
+                  <td>{new Date(puzzle.created_at * 1000).toLocaleString()}</td>
+                  <td>
+                    <Link to={`${match.url}/${puzzle.code}`}>Algsets</Link>
+                  </td>
+                </tr>
+              ) : (
+                false
+              ),
+            )}
             <AddPuzzle onAdd={refetch} />
           </tbody>
         </table>

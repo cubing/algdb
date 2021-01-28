@@ -7,7 +7,7 @@ import {
   Button,
   FlexProps,
   useColorModeValue,
-} from '@chakra-ui/core'
+} from '@chakra-ui/react'
 import { useHistory, Link } from 'react-router-dom'
 import ColorModeSwitcher from '../../components/ColorModeSwitcher/ColorModeSwitcher'
 import useUser from '../../hooks/useUser'
@@ -62,6 +62,7 @@ const Header = (props: Props) => {
 
       <Box
         display={{ xs: show ? 'block' : 'none', md: 'flex' }}
+        flexDirection={{ default: 'inherit', md: 'row' }}
         width={{ xs: 'full', md: 'auto' }}
         alignItems="center"
         flexGrow={1}

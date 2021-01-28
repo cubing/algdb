@@ -1,9 +1,9 @@
 import React, { ReactElement, useEffect } from 'react'
 import { useLocation, useHistory } from 'react-router-dom'
-import { Spinner } from '@chakra-ui/core'
+import { Spinner } from '@chakra-ui/react'
 import useJql from '../../hooks/useJql'
 import useJqlQuery from '../../hooks/useJqlQuery'
-import { Auth } from '../../generated/jql'
+import { Auth } from '../../generated/schema'
 
 export default function WcaRedirect(): ReactElement {
   const { search } = useLocation()

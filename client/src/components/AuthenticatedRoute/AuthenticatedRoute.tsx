@@ -1,6 +1,6 @@
 import React from 'react'
 import { Route, RouteComponentProps, RouteProps } from 'react-router-dom'
-import { User } from '../../generated/jql'
+import { User } from '../../generated/schema'
 import useUser from '../../hooks/useUser'
 
 interface AuthenticatedRouteProps {
@@ -22,7 +22,8 @@ export default function AuthenticatedRoute({
     <Route
       {...rest}
       render={(props) =>
-        authCallback(userInfo) ? <C {...props} /> : RedirectComponent}
+        authCallback(userInfo) ? <C {...props} /> : RedirectComponent
+      }
     />
   )
 }

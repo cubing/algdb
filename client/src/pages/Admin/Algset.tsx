@@ -1,14 +1,23 @@
 import React, { ReactElement } from 'react'
 import { Link, useParams, useRouteMatch } from 'react-router-dom'
-import { Flex, Heading, Spinner, Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/core'
+import {
+  Flex,
+  Heading,
+  Spinner,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+} from '@chakra-ui/react'
 import useJqlQuery from '../../hooks/useJqlQuery'
-import { Maybe, Algset, Algcase } from '../../generated/jql'
+import { Maybe, Algset, Algcase } from '../../generated/schema'
 
 type AddSubsetProps = {
   OnAdd: () => void
 }
 
-function AddSubset ({ OnAdd }: AddSubsetProps): ReactElement {
+function AddSubset({ OnAdd }: AddSubsetProps): ReactElement {
   return (
     <tr>
       <td />
@@ -16,7 +25,7 @@ function AddSubset ({ OnAdd }: AddSubsetProps): ReactElement {
   )
 }
 
-const query = (puzzleCode: string, algsetCode: string, subsetCode : string) => ({
+const query = (puzzleCode: string, algsetCode: string, subsetCode: string) => ({
   id: null,
   name: null,
   code: null,
@@ -24,10 +33,10 @@ const query = (puzzleCode: string, algsetCode: string, subsetCode : string) => (
     data: {
       id: null,
       name: null,
-    }
+    },
   },
   subsets: {
-    data: { 
+    data: {
       id: null,
       code: null,
       name: null,
@@ -42,17 +51,17 @@ const query = (puzzleCode: string, algsetCode: string, subsetCode : string) => (
           count: null,
           total: null,
         },
-      }
+      },
     },
     __args: {
-      parent: null
-    }
+      parent: null,
+    },
   },
   __args: {
     code: subsetCode || algsetCode,
     algset_code: algsetCode,
     puzzle_code: puzzleCode,
-  }
+  },
 })
 
 export default function AlgsetPage(): ReactElement {
@@ -65,15 +74,15 @@ export default function AlgsetPage(): ReactElement {
   )
 
   if (algset.isLoading) {
-    return (<Spinner />)
+    return <Spinner />
   }
 
   if (algset.error) {
-    return (<>{algset.error.message}</>)
+    return <>{algset.error.message}</>
   }
 
-  const algCases = algset.data?.algcases?.data || [];
-  const subsets: Algset[] = []; // TODO: query for them separate
+  const algCases = algset.data?.algcases?.data || []
+  const subsets: Algset[] = [] // TODO: query for them separate
 
   return (
     <Flex justify="center" align="center" direction="column">
@@ -92,28 +101,34 @@ export default function AlgsetPage(): ReactElement {
             <table width="100%">
               <thead>
                 <tr>
-                  <th style={{textAlign: 'left'}}>ID</th>
-                  <th style={{textAlign: 'left'}}>Code</th>
-                  <th style={{textAlign: 'left'}}>Name</th>
-                  <th style={{textAlign: 'left'}}>Algs</th>
-                  <th style={{textAlign: 'left'}}>Subsets</th>
-                  <th style={{textAlign: 'left'}}>{' '}</th>
+                  <th style={{ textAlign: 'left' }}>ID</th>
+                  <th style={{ textAlign: 'left' }}>Code</th>
+                  <th style={{ textAlign: 'left' }}>Name</th>
+                  <th style={{ textAlign: 'left' }}>Algs</th>
+                  <th style={{ textAlign: 'left' }}>Subsets</th>
+                  <th style={{ textAlign: 'left' }}> </th>
                 </tr>
               </thead>
               <tbody>
-                {subsets.map((subset) => subset ? (
-                  <tr key={subset.id}>
-                    <td>{subset.id}</td>
-                    <td>{subset.code}</td>
-                    <td>{subset.name}</td>
-                    <td>{subset.algcases.paginatorInfo.count}</td>
-                    <td>
-                      { /* subset.subsets.paginatorInfo.count */ }
-                      0
-                    </td>
-                    <td><Link to={`/admin/puzzles/${puzzleCode}/${algsetCode}-${subset.code}`}>Manage</Link></td>
-                  </tr>
-                ) : false)}
+                {subsets.map((subset) =>
+                  subset ? (
+                    <tr key={subset.id}>
+                      <td>{subset.id}</td>
+                      <td>{subset.code}</td>
+                      <td>{subset.name}</td>
+                      <td>{subset.algcases.paginatorInfo.count}</td>
+                      <td>
+                        <Link
+                          to={`/admin/puzzles/${puzzleCode}/${algsetCode}-${subset.code}`}
+                        >
+                          Manage
+                        </Link>
+                      </td>
+                    </tr>
+                  ) : (
+                    false
+                  ),
+                )}
               </tbody>
             </table>
           </TabPanel>
@@ -121,17 +136,21 @@ export default function AlgsetPage(): ReactElement {
             <table width="100%">
               <thead>
                 <tr>
-                  <th style={{textAlign: 'left'}}>ID</th>
-                  <th style={{textAlign: 'left'}}>Name</th>
+                  <th style={{ textAlign: 'left' }}>ID</th>
+                  <th style={{ textAlign: 'left' }}>Name</th>
                 </tr>
               </thead>
               <tbody>
-                {algCases.map((algCase) => algCase ? (
-                  <tr key={algCase.id}>
-                    <td>{algCase.id}</td>
-                    <td>{algCase.name}</td>
-                  </tr>
-                ) : false)}
+                {algCases.map((algCase) =>
+                  algCase ? (
+                    <tr key={algCase.id}>
+                      <td>{algCase.id}</td>
+                      <td>{algCase.name}</td>
+                    </tr>
+                  ) : (
+                    false
+                  ),
+                )}
               </tbody>
             </table>
           </TabPanel>

@@ -3,11 +3,11 @@ on:
   workflow_dispatch:
     inputs:
       logLevel:
-        description: "Log level"
+        description: 'Log level'
         required: true
-        default: "warning"
+        default: 'warning'
       tags:
-        description: "Test scenario tags"
+        description: 'Test scenario tags'
 defaults:
   run:
     working-directory: client
@@ -26,7 +26,7 @@ jobs:
         uses: actions/upload-artifact@master
         with:
           name: build
-          path: client/build
+          path: client_web/build
     env:
       SKIP_PREFLIGHT_CHECK: true
       REACT_APP_WCA_LOGIN_URL_DEV: ${{ secrets.REACT_APP_WCA_LOGIN_URL_DEV}}
@@ -42,11 +42,11 @@ jobs:
         uses: actions/download-artifact@master
         with:
           name: build
-          path: client/build
+          path: client_web/build
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
         with:
           args: deploy --only hosting
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_CI_TOKEN }}
-          PROJECT_PATH: ./client
+          PROJECT_PATH: ./client_web

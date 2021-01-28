@@ -6,7 +6,7 @@ import {
   useColorModeValue,
   Box,
   VStack,
-} from '@chakra-ui/core'
+} from '@chakra-ui/react'
 import LandingCube from './LandingCube'
 import Search from '../../components/Search/Search'
 import Trending from './Trending'

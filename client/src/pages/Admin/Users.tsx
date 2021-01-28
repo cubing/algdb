@@ -1,8 +1,23 @@
 import React, { ReactElement, ChangeEvent } from 'react'
-import { Flex, Heading, Spinner, Select, CircularProgress, Alert, AlertIcon, AlertDescription } from '@chakra-ui/core'
+import {
+  Flex,
+  Heading,
+  Spinner,
+  Select,
+  CircularProgress,
+  Alert,
+  AlertIcon,
+  AlertDescription,
+} from '@chakra-ui/react'
 import useJqlQuery from '../../hooks/useJqlQuery'
 import useJqlMutation from '../../hooks/useJqlMutation'
-import { Maybe, User, UserPaginator, UserRole, UserRoleEnum } from '../../generated/jql'
+import {
+  Maybe,
+  User,
+  UserPaginator,
+  UserRole,
+  UserRoleEnum,
+} from '../../generated/schema'
 
 type RoleSelectorProps = {
   user: string
@@ -15,9 +30,13 @@ type UpdateUserVariables = {
   role: Maybe<UserRole>
 }
 
-const Roles = [UserRole.Normal, UserRole.Moderator, UserRole.Admin];
+const Roles = [UserRole.Normal, UserRole.Moderator, UserRole.Admin]
 
-const RoleSelector = ({ user, role, onChange }: RoleSelectorProps): ReactElement => {
+const RoleSelector = ({
+  user,
+  role,
+  onChange,
+}: RoleSelectorProps): ReactElement => {
   const [mutate, { isLoading, error }] = useJqlMutation<
     Maybe<User>,
     Error,
@@ -30,7 +49,7 @@ const RoleSelector = ({ user, role, onChange }: RoleSelectorProps): ReactElement
       name: null,
     },
   })
-  
+
   const changeRole = async (event: ChangeEvent<HTMLSelectElement>) => {
     try {
       await mutate({
@@ -46,7 +65,7 @@ const RoleSelector = ({ user, role, onChange }: RoleSelectorProps): ReactElement
 
   return (
     <Flex>
-      {isLoading && <CircularProgress size="1em" /> }
+      {isLoading && <CircularProgress size="1em" />}
       <Select variant="unstyled" value={role?.id} onChange={changeRole}>
         <option value="1">Normal</option>
         <option value="2">Moderator</option>
@@ -78,7 +97,7 @@ export default function Users(): ReactElement {
     getUsersQuery,
   )
 
-  const users = data?.data || [];
+  const users = data?.data || []
 
   if (isLoading) {
     return <Spinner />
@@ -86,7 +105,7 @@ export default function Users(): ReactElement {
 
   if (error) {
     return (
-      <Alert status='error'>
+      <Alert status="error">
         <AlertIcon />
         {error.message}
       </Alert>
@@ -102,21 +121,31 @@ export default function Users(): ReactElement {
         <table width="100%">
           <thead>
             <tr>
-              <th style={{textAlign: 'left'}}>ID</th>
-              <th style={{textAlign: 'left'}}>Name</th>
-              <th style={{textAlign: 'left'}}>Role</th>
-              <th style={{textAlign: 'left'}}>Joined</th>
+              <th style={{ textAlign: 'left' }}>ID</th>
+              <th style={{ textAlign: 'left' }}>Name</th>
+              <th style={{ textAlign: 'left' }}>Role</th>
+              <th style={{ textAlign: 'left' }}>Joined</th>
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => user ? (
-              <tr key={user.id}>
-                <td>{user.id}</td>
-                <td>{user.name}</td>
-                <td><RoleSelector user={user.id} role={user?.role} onChange={refetch} /></td>
-                <td>{new Date(user.created_at * 1000).toLocaleString()}</td>
-              </tr>
-            ) : false)}
+            {users.map((user) =>
+              user ? (
+                <tr key={user.id}>
+                  <td>{user.id}</td>
+                  <td>{user.name}</td>
+                  <td>
+                    <RoleSelector
+                      user={user.id}
+                      role={user?.role}
+                      onChange={refetch}
+                    />
+                  </td>
+                  <td>{new Date(user.created_at * 1000).toLocaleString()}</td>
+                </tr>
+              ) : (
+                false
+              ),
+            )}
           </tbody>
         </table>
       </Flex>

@@ -1,7 +1,7 @@
 import React, { ReactElement } from 'react'
 import { TwistyPlayer } from 'cubing/twisty'
 import { parse } from 'cubing/alg'
-import { useColorModeValue, Box } from '@chakra-ui/core'
+import { useColorModeValue, Box } from '@chakra-ui/react'
 import TransparentTwisty from '../../components/TwistyPlayers/Transparent'
 
 export default function LandingCube(): ReactElement {

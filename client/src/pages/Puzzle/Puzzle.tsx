@@ -1,8 +1,8 @@
 import React, { ReactElement } from 'react'
-import { useParams , Link } from 'react-router-dom'
-import { Skeleton, Flex, Heading, SimpleGrid, Box } from '@chakra-ui/core'
+import { useParams, Link } from 'react-router-dom'
+import { Skeleton, Flex, Heading, SimpleGrid, Box } from '@chakra-ui/react'
 import useJqlQuery from '../../hooks/useJqlQuery'
-import { Puzzle, Algset } from '../../generated/jql'
+import { Puzzle, Algset } from '../../generated/schema'
 import CubingIcon from '../../components/CubingIcon/CubingIcon'
 import Paginator from '../../components/Paginator/Paginator'
 import TransparentTwisty from '../../components/TwistyPlayers/Transparent'
@@ -87,7 +87,7 @@ export default function PuzzlePage(): ReactElement {
   )
 
   const { isLoading, data, error } = useJqlQuery<Puzzle, Error>(
-    `${puzzleId}-get`,  
+    `${puzzleId}-get`,
     'getPuzzle',
     query,
   )
