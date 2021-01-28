@@ -11,9 +11,12 @@ import {
   generateJoinableField,
   generateIntegerField,
   generateEnumField,
+  generateTypenameField,
 } from "../../helpers/typeDef";
 
 export default <TypeDefinition>{
+  name: Algset.typename,
+  ...generateTypenameField(Algset),
   description: "Algorithm Set",
   fields: {
     ...generateIdField(),

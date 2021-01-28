@@ -1,3 +1,6 @@
+import type { Request } from "express";
+import type { JomqlQuery } from "jomql";
+
 export type PusherEnv = {
   readonly app_id: string;
   readonly key: string;
@@ -55,7 +58,7 @@ export type SqlGroupFieldObject = SqlFieldObject & {
 };
 
 export type SqlFieldObject = {
-  //joinFields?: SqlJoinFieldObject[];
+  joinFields?: SqlJoinFieldObject[];
 };
 
 export type SqlQueryObject = SqlParams & {
@@ -87,16 +90,46 @@ export type TypeDefSqlOptions = {
     foreignKey?: string;
   };
   getter?: (value: string) => string;
+  setter?: (value: string) => string;
+  parseValue?: (value: unknown) => unknown; // performed before inserts/updates
   joinHidden?: boolean;
   sqlDefinition: any;
-};
-
-export type TypeDefCustomOptions = {
-  mysqlOptions: TypeDefSqlOptions;
-  addable?: boolean;
-  updateable?: boolean;
 };
 
 export type ExternalQuery = {
   [x: string]: any;
 };
+
+export type ServiceFunctionInputs = {
+  req: Request;
+  fieldPath: string[];
+  args: any;
+  query?: JomqlQuery;
+  data?: any;
+  isAdmin?: boolean;
+};
+
+export type ContextUser = {
+  id: number;
+  role: string | null;
+  permissions: string[];
+};
+
+export type AccessControlMap = {
+  [x: string]: AccessControlFunction;
+};
+
+export type AccessControlFunction = (
+  inputs: ServiceFunctionInputs
+) => boolean | Promise<boolean>;
+
+export type DataloaderFunctionInput = {
+  req: Request;
+  fieldPath: string[];
+  args: any;
+  query: JomqlQuery;
+  currentObject: any;
+  data: any;
+};
+
+export type DataloaderFunction = (input: DataloaderFunctionInput) => any;

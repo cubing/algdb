@@ -1,4 +1,4 @@
-import { NormalService } from "../services";
+import { BaseService, NormalService } from "../services";
 import { User } from "../../services";
 import {
   generateIdField,
@@ -6,10 +6,14 @@ import {
   generateUpdatedAtField,
   generateCreatedByField,
   generateJoinableField,
+  generateTypenameField,
 } from "../../helpers/typeDef";
 import { TypeDefinition } from "jomql";
 
-export function generateLinkTypeDef(services: NormalService[]) {
+export function generateLinkTypeDef(
+  services: NormalService[],
+  currentService: BaseService
+) {
   const typeDefFields = {};
 
   for (const service of services) {
@@ -21,9 +25,11 @@ export function generateLinkTypeDef(services: NormalService[]) {
   }
 
   return <TypeDefinition>{
+    name: currentService.typename,
     description: "Link type",
     fields: {
       ...generateIdField(),
+      ...generateTypenameField(currentService),
       ...typeDefFields,
       ...generateCreatedAtField(),
       ...generateUpdatedAtField(),

@@ -36,6 +36,8 @@ for (const rootResolvers of rootResolversArray) {
 
     if (rootResolverMap.has(rootResolverName)) {
       throw new Error(`Root Resolver for ${rootResolverName} already exists`);
-    } else [rootResolverMap.set(rootResolverName, rootResolverMethod)];
+    } else {
+      rootResolverMap.set(rootResolverName, rootResolverMethod);
+    }
   }
 }

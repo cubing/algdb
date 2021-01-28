@@ -5,7 +5,7 @@ import { typeDefs } from "../../typeDefs";
 export class LinkService extends NormalService {
   constructor(services: NormalService[], name?: string) {
     super(name);
-    this.typeDef = generateLinkTypeDef(services);
+    this.typeDef = generateLinkTypeDef(services, this);
 
     // register linkDef
     linkDefs.set(this.typename, {

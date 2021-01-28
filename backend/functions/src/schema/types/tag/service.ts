@@ -7,7 +7,10 @@ export class TagService extends PaginatedService {
 
   filterFieldsMap = {
     id: {},
-    alg: {},
+    alg: {
+      field: "alg.id",
+    },
+    name: {},
   };
 
   uniqueKeyMap = {
@@ -26,8 +29,6 @@ export class TagService extends PaginatedService {
   groupByFieldsMap = {
     id: {},
   };
-
-  isFilterRequired = false;
 
   accessControl = {
     get: () => true,

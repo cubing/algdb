@@ -1,41 +1,25 @@
-import { ErrorWrapper } from "jomql";
+import { JomqlBaseError } from "jomql";
 
 export function generateError(
   message: string,
-  statusCode = 400,
-  errorCode = "misc/other"
+  fieldPath: string[],
+  statusCode = 400
 ) {
-  return new ErrorWrapper(message, statusCode, errorCode);
+  return new JomqlBaseError({
+    message,
+    fieldPath,
+    statusCode,
+  });
 }
 
-export function wrapError(error: Error) {
-  return new ErrorWrapper(error.message, 500, "system-generated-error", error);
+export function itemNotFoundError(fieldPath) {
+  return generateError("Record was not found", fieldPath, 404);
 }
 
-export function loginRequiredError() {
-  return new ErrorWrapper(
-    "Login required for this action",
-    401,
-    "unauthorized"
-  );
-}
-
-export function missingParamsError() {
-  return new ErrorWrapper(
-    "Missing or invalid parameters",
-    500,
-    "missing-invalid-params"
-  );
-}
-
-export function itemNotFoundError() {
-  return new ErrorWrapper("Record was not found", 404, "not-found");
-}
-
-export function badPermissionsError() {
-  return new ErrorWrapper("Insufficient permissions", 401, "not-found");
+export function badPermissionsError(fieldPath) {
+  return generateError("Insufficient permissions", fieldPath, 401);
 }
 
 export function invalidSqlError() {
-  return new ErrorWrapper("Invalid SQL", 500, "system-error");
+  return generateError("Insufficient permissions", [], 401);
 }

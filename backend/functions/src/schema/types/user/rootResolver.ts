@@ -8,8 +8,14 @@ export default {
     allowNull: false,
     isArray: false,
     type: User.typename,
-    resolver: (req, args, query) =>
-      User.getRecord(req, { id: req.user?.id }, query, true),
+    resolver: ({ req, fieldPath, args, query }) =>
+      User.getRecord({
+        req,
+        fieldPath,
+        args: { id: req.user?.id },
+        query,
+        isAdmin: true,
+      }),
     // always allow user to get own user
   },
   ...generateBaseRootResolvers(User, [

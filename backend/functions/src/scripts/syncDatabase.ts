@@ -20,9 +20,8 @@ function syncDatabase(
   currentSchema.typeDefs.forEach((typeDef, typeKey) => {
     const definition = {};
 
-    for (const prop in typeDef) {
-      const sqlDefinition =
-        typeDef[prop].customOptions?.mysqlOptions?.sqlDefinition;
+    for (const prop in typeDef.fields) {
+      const sqlDefinition = typeDef.fields[prop].mysqlOptions?.sqlDefinition;
       if (prop !== "id" && sqlDefinition) {
         definition[prop] = sqlDefinition;
       }

@@ -1,18 +1,21 @@
-import { NormalService, SimpleService } from ".";
+import { NormalService, SimpleService, PaginatedService } from ".";
 
 import * as Resolver from "../../helpers/resolver";
 import { itemNotFoundError, badPermissionsError } from "../../helpers/error";
 import { generatePaginatorTypeDef } from "../generators";
+import { ServiceFunctionInputs } from "../../../types";
+
+import { lookupSymbol } from "jomql";
 
 export class PaginatorService extends SimpleService {
-  constructor(service: NormalService) {
+  constructor(service: PaginatedService) {
     super(service.typename + "Paginator");
-    this.typeDef = generatePaginatorTypeDef(service);
+    this.typeDef = generatePaginatorTypeDef(service, this);
     this.presets = {
       default: {
         paginatorInfo: {
-          total: true,
-          count: true,
+          total: lookupSymbol,
+          count: lookupSymbol,
         },
         edges: {
           node: service.presets?.default,
@@ -22,32 +25,41 @@ export class PaginatorService extends SimpleService {
 
     this.initialize(this.typeDef);
 
-    this.getRecord = async (req, args, query, admin = false) => {
+    this.getRecord = async ({
+      req,
+      fieldPath,
+      args,
+      query,
+      data = {},
+      isAdmin = false,
+    }: ServiceFunctionInputs) => {
       const selectQuery = query || Object.assign({}, this.presets.default);
 
-      //if it does not pass the access control, throw an error
-      if (!admin && !(await this.testPermissions("get", req, args, query))) {
-        throw badPermissionsError();
-      }
+      data.rootArgs = args;
 
-      // check if properly formed query
-      const data = !selectQuery.edges?.node
+      // check if properly formed query and store the results in data
+      data.records = !selectQuery.edges?.node
         ? []
-        : await service.getRecords(req, args, selectQuery.edges.node);
+        : await service.getRecords({
+            req,
+            args,
+            query: selectQuery.edges.node,
+            fieldPath: fieldPath.concat(["edges", "node"]), // need to add these since the query field is from edges.node
+            isAdmin,
+            data,
+          });
 
       const results = await Resolver.resolveTableRows(
         this.typename,
         req,
+        fieldPath,
         selectQuery,
         {},
-        {
-          ...args,
-          data,
-        }
+        data
       );
 
       if (results.length < 1) {
-        throw itemNotFoundError();
+        throw itemNotFoundError(fieldPath);
       }
 
       return results[0];

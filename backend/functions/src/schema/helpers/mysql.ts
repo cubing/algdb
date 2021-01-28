@@ -170,18 +170,36 @@ export function insertTableRow(
   let setStatement = "";
   const params = {};
 
-  for (const fieldname in setFields) {
-    setStatement += fieldname + " = :" + fieldname + ", ";
-    params[fieldname] = setFields[fieldname];
+  // check if there is a mysql setter on the field
+  const currentTypeDef = typeDefs.get(table);
+  if (!currentTypeDef) {
+    throw new Error(`TypeDef for ${table} not found`);
   }
 
-  //raw fields MUST be sanitized or internally added
+  for (const fieldname in setFields) {
+    const setter = currentTypeDef.fields[fieldname].mysqlOptions?.setter;
+
+    const parseValue =
+      currentTypeDef.fields[fieldname].mysqlOptions?.parseValue;
+
+    if (setter) {
+      setStatement += `${fieldname} = ${setter(":" + fieldname)}, `;
+    } else {
+      setStatement += fieldname + " = :" + fieldname + ", ";
+    }
+
+    params[fieldname] = parseValue
+      ? parseValue(setFields[fieldname])
+      : setFields[fieldname];
+  }
+
+  // raw fields MUST be sanitized or internally added
   for (const fieldname in rawSetFields) {
     setStatement += fieldname + " = " + rawSetFields[fieldname] + ", ";
   }
 
   if (setStatement) {
-    //remove trailing comma
+    // remove trailing comma
     setStatement = setStatement.slice(0, -2);
   } else {
     throw new Error("Invalid SQL");
@@ -210,25 +228,42 @@ export function updateTableRow(
   const previousJoins: JoinsMap = {};
   const params = {};
 
-  //handle set fields
-  for (const fieldname in setFields) {
-    setStatement += fieldname + " = :" + fieldname + ", ";
-    params[fieldname] = setFields[fieldname];
+  // check if there is a mysql setter on the field
+  const currentTypeDef = typeDefs.get(table);
+  if (!currentTypeDef) {
+    throw new Error(`TypeDef for ${table} not found`);
   }
 
-  //raw fields MUST be sanitized or internally added
+  // handle set fields
+  for (const fieldname in setFields) {
+    const setter = currentTypeDef.fields[fieldname].mysqlOptions?.setter;
+
+    const parseValue =
+      currentTypeDef.fields[fieldname].mysqlOptions?.parseValue;
+
+    if (setter) {
+      setStatement += `${fieldname} = ${setter(":" + fieldname)}, `;
+    } else {
+      setStatement += fieldname + " = :" + fieldname + ", ";
+    }
+    params[fieldname] = parseValue
+      ? parseValue(setFields[fieldname])
+      : setFields[fieldname];
+  }
+
+  // raw fields MUST be sanitized or internally added
   for (const fieldname in rawSetFields) {
     setStatement += fieldname + " = " + rawSetFields[fieldname] + ", ";
   }
 
   if (setStatement) {
-    //remove trailing comma
+    // remove trailing comma
     setStatement = setStatement.slice(0, -2);
   } else {
     throw new Error("Invalid SQL");
   }
 
-  //handle where statements
+  // handle where statements
   if (whereObject) {
     const whereResults = processWhereObject(
       table,
@@ -304,8 +339,7 @@ export function processSelectArray(
       fieldIndex,
       currentTypeDef
     ) => {
-      const getter =
-        currentTypeDef.fields[fieldname].customOptions?.mysqlOptions?.getter;
+      const getter = currentTypeDef.fields[fieldname].mysqlOptions?.getter;
 
       return (
         (getter
@@ -366,8 +400,7 @@ export function processWhereObject(
         const operator = fieldObject.operator ?? "eq";
         const placeholder = fieldname + subIndexString + "_" + subIndex;
 
-        const getter =
-          currentTypeDef.fields[fieldname].customOptions?.mysqlOptions?.getter;
+        const getter = currentTypeDef.fields[fieldname].mysqlOptions?.getter;
 
         let whereSubstatement = getter
           ? getter(tableAlias + "." + fieldname)
@@ -596,8 +629,7 @@ export function processJoins(
         //join with this type
         const joinTableName =
           ele.joinTableName ??
-          currentTypeDef!.fields[ele.field].customOptions?.mysqlOptions
-            ?.joinInfo?.type;
+          currentTypeDef!.fields[ele.field].mysqlOptions?.joinInfo?.type;
 
         //if it requires a join, check if it was joined previously
         if (!joinTableName) throw new Error("Invalid Join Table");

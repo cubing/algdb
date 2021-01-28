@@ -1,4 +1,4 @@
-import { JomqlFieldError, ScalarDefinition } from "jomql";
+import { ScalarDefinition } from "jomql";
 
 export function generateEnumScalarDefinition(
   enumName: string,
@@ -8,30 +8,21 @@ export function generateEnumScalarDefinition(
     (k) => !Number.isNaN(Number(currentEnum[k]))
   );
 
+  const validate = (value) => {
+    // convert from key to value
+    if (typeof value !== "string") throw true;
+
+    if (!(value in currentEnum)) throw true;
+
+    return value;
+  };
+
   return {
     name: enumName,
     types: enumValues.map((ele) => `"${ele}"`),
     description: `Enum stored as is`,
-    serialize: (value, fieldPath) => {
-      // convert from key to value
-      if (typeof value !== "string")
-        throw new JomqlFieldError("Invalid enum", fieldPath);
-
-      if (!(value in currentEnum))
-        throw new JomqlFieldError("Invalid enum", fieldPath);
-
-      return value;
-    },
-    parseValue: (value, fieldPath) => {
-      // convert from key to value
-      if (typeof value !== "string")
-        throw new JomqlFieldError("Invalid enum", fieldPath);
-
-      if (!(value in currentEnum))
-        throw new JomqlFieldError("Invalid enum", fieldPath);
-
-      return value;
-    },
+    serialize: validate,
+    parseValue: validate,
   };
 }
 
@@ -42,30 +33,19 @@ export function generateKenumScalarDefinition(
   const enumValues = Object.keys(currentEnum).filter(
     (k) => !Number.isNaN(Number(currentEnum[k]))
   );
+  const validate = (value) => {
+    // convert from key to value
+    if (typeof value !== "string") throw true;
 
+    if (!(value in currentEnum)) throw true;
+
+    return currentEnum[value];
+  };
   return {
     name: enumName,
     types: enumValues.map((ele) => `"${ele}"`),
     description: `Enum stored as a separate key value`,
-    serialize: (value, fieldPath) => {
-      // convert from key to value
-      if (typeof value !== "string")
-        throw new JomqlFieldError("Invalid enum", fieldPath);
-
-      if (!(value in currentEnum))
-        throw new JomqlFieldError("Invalid enum", fieldPath);
-
-      return currentEnum[value];
-    },
-    parseValue: (value, fieldPath) => {
-      // convert from key to value
-      if (typeof value !== "string")
-        throw new JomqlFieldError("Invalid enum", fieldPath);
-
-      if (!(value in currentEnum))
-        throw new JomqlFieldError("Invalid enum", fieldPath);
-
-      return currentEnum[value];
-    },
+    serialize: validate,
+    parseValue: validate,
   };
 }

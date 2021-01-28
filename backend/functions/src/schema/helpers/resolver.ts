@@ -1,10 +1,11 @@
 import {
+  generateAnonymousRootResolver,
   generateJomqlResolverTree,
   processJomqlResolverTree,
-  handleAggregatedQueries,
   TypeDefinition,
-  JomqlResolverObject,
+  JomqlResolverNode,
   validateResultFields,
+  JomqlQueryError,
 } from "jomql";
 
 import * as mysqlHelper from "./mysql";
@@ -15,7 +16,12 @@ import {
   SqlParams,
   SqlSelectQueryOutput,
   TypeDefSqlOptions,
+  DataloaderFunction,
 } from "../../types";
+
+import { isObject } from "../helpers/shared";
+import { scalars } from "..";
+import type { Request } from "express";
 
 export type CustomResolver = {
   resolver: Function;
@@ -26,45 +32,56 @@ export type CustomResolverMap = {
   [x: string]: CustomResolver;
 };
 
-function collapseObject(obj: SqlSelectQueryOutput) {
-  const returnObject: SqlSelectQueryOutput = {};
-  const checkArray: string[] = [];
+function collapseSqlOutput(
+  obj: SqlSelectQueryOutput
+): SqlSelectQueryOutput | null {
+  const returnObject = {};
+  const nestedFieldsSet: Set<string> = new Set();
 
   for (const field in obj) {
-    if (field.includes(".")) {
-      //const fieldParts = field.split('.');
+    if (field.match(/\./)) {
       const firstPart = field.substr(0, field.indexOf("."));
       const secondPart = field.substr(field.indexOf(".") + 1);
-      if (!(firstPart in returnObject)) {
+
+      // if field is set as null, skip
+      if (returnObject[firstPart] === null) continue;
+
+      // if field not in return object as object, set it
+      if (!isObject(returnObject[firstPart])) {
         returnObject[firstPart] = {};
-        checkArray.push(firstPart);
+        nestedFieldsSet.add(firstPart);
+      }
+
+      // if secondPart is "id", set it to null
+      if (secondPart === "id" && obj[field] === null) {
+        returnObject[firstPart] = null;
+        nestedFieldsSet.delete(firstPart);
+        continue;
       }
 
       returnObject[firstPart][secondPart] = obj[field];
     } else {
-      //if the field is id and it is null, return null
-      if (field === "id" && obj[field] === null) {
-        return null;
-      }
-      returnObject[field] = obj[field];
+      // leaf field, add to obj if not already set
+      if (!(field in returnObject)) returnObject[field] = obj[field];
     }
   }
 
-  checkArray.forEach((field) => {
-    returnObject[field] = collapseObject(returnObject[field]);
+  // process the fields that are nested
+  nestedFieldsSet.forEach((field) => {
+    returnObject[field] = collapseSqlOutput(returnObject[field]);
   });
-
   return returnObject;
 }
 
-function collapseObjectArray(objArray: SqlSelectQueryOutput[]) {
-  return objArray.map((obj) => collapseObject(obj));
+function collapseSqlOutputArray(objArray: SqlSelectQueryOutput[]) {
+  return objArray.map((obj) => collapseSqlOutput(obj));
 }
 
 //validates the add fields, and then does the add operation
 export async function addTableRow(
   typename: string,
   req,
+  fieldPath: string[],
   args,
   rawFields = {},
   ignore = false
@@ -81,16 +98,18 @@ export async function addTableRow(
 
   for (const field in args) {
     if (field in typeDef.fields) {
-      // skip if not addable -- a failsafe, since args validation should already catch this
-      if (!typeDef.fields[field].customOptions?.addable) {
+      // we are only checking this is args
+      /*
+      if (!typeDef.fields[field].addable) {
         throw new Error(`Field not addable: '${field}'`);
       }
+      */
 
       // if finalValue is null, see if that is allowed -- also a failsafe
       validateResultFields(args[field], typeDef.fields[field], [field]);
 
       // if it is a mysql field, add to mysqlFields
-      if (typeDef.fields[field].customOptions?.mysqlOptions) {
+      if (typeDef.fields[field].mysqlOptions) {
         sqlFields[field] = args[field];
       }
 
@@ -104,43 +123,6 @@ export async function addTableRow(
       }
     }
   }
-
-  // process adminFields -- will not check for addable for these
-  /*
-  for (const field in adminFields) {
-    if (field in typeDef) {
-      const type = typeDef[field].type;
-
-      // if it is a scalar definition, use the parseValue function (if available) as a setter
-      const finalValue =
-        isScalarDefinition(type) && type.parseValue
-          ? await type.parseValue(adminFields[field], field)
-          : adminFields[field];
-
-      // if finalValue is null, see if that is allowed
-      if (
-        finalValue === null ||
-        (finalValue === undefined && !typeDef[field].allowNull)
-      ) {
-        throw new Error("Null value not allowed for field: '" + field + "'");
-      }
-
-      // if it is a mysql field, add to mysqlFields
-      if (typeDef[field].mysqlOptions) {
-        sqlFields[field] = finalValue;
-      }
-
-      // if it has a custom setter, add to customResolvers
-      const customSetter = typeDef[field].setter;
-      if (customSetter) {
-        customResolvers[field] = {
-          resolver: customSetter,
-          value: finalValue,
-        };
-      }
-    }
-  }
-  */
 
   let addedResults;
 
@@ -175,6 +157,7 @@ export async function addTableRow(
 export async function updateTableRow(
   typename: string,
   req,
+  fieldPath: string[],
   args,
   rawFields = {},
   whereObject: SqlWhereObject
@@ -191,16 +174,11 @@ export async function updateTableRow(
 
   for (const field in args) {
     if (field in typeDef.fields) {
-      // skip if not updateable -- a failsafe, since args validation should already catch this
-      if (!typeDef.fields[field].customOptions?.updateable) {
-        throw new Error(`Field not updateable: '${field}'`);
-      }
-
       // if finalValue is null, see if that is allowed -- also a failsafe
       validateResultFields(args[field], typeDef.fields[field], [field]);
 
       // if it is a mysql field, add to mysqlFields
-      if (typeDef.fields[field].customOptions?.mysqlOptions) {
+      if (typeDef.fields[field].mysqlOptions) {
         sqlFields[field] = args[field];
       }
 
@@ -246,6 +224,7 @@ export async function updateTableRow(
 export async function deleteTableRow(
   typename: string,
   req,
+  fieldPath: string[],
   args,
   whereObject: SqlWhereObject
 ) {
@@ -284,23 +263,31 @@ export async function deleteTableRow(
 export async function resolveTableRows(
   typename: string,
   req,
+  fieldPath: string[],
   externalQuery: { [x: string]: any },
   sqlParams: SqlParams,
-  args = {},
+  data = {},
   externalTypeDef?: TypeDefinition
 ) {
-  // shortcut: if no fields were requested, simply return typename
-  if (Object.keys(externalQuery).length < 1) return [{ __typename: typename }];
+  // shortcut: if no fields were requested, simply return empty object
+  if (Object.keys(externalQuery).length < 1) return [{}];
 
-  const typeDef: TypeDefinition | undefined =
-    externalTypeDef ?? typeDefs.get(typename);
-  if (!typeDef) throw new Error(`Invalid TypeDef: ${typename}`);
+  const anonymousRootResolver = generateAnonymousRootResolver(
+    externalTypeDef ?? typename
+  );
 
-  // convert externalQuery into a resolver tree
-  const jomqlResolverTree = generateJomqlResolverTree(externalQuery, typeDef);
-  // convert jomqlResolverTree into a validatedSqlQuery
+  // build an anonymous root resolver
+  const jomqlResolverTree = generateJomqlResolverTree(
+    externalQuery,
+    anonymousRootResolver,
+    fieldPath
+  );
+
+  // convert jomqlResolverNode into a validatedSqlQuery
   const validatedSqlSelectArray = generateSqlQuerySelectObject(
-    jomqlResolverTree
+    jomqlResolverTree,
+    [],
+    fieldPath
   );
 
   const sqlQuery = {
@@ -309,66 +296,86 @@ export async function resolveTableRows(
     ...sqlParams,
   };
 
-  const returnArray: SqlSelectQueryOutput[] = collapseObjectArray(
+  const jomqlResultsTreeArray: SqlSelectQueryOutput[] = collapseSqlOutputArray(
     await mysqlHelper.fetchTableRows(sqlQuery)
   );
 
-  // finish processing jomqlResolverTree
-  for (const returnObject of returnArray) {
-    await processJomqlResolverTree(
-      returnObject,
-      jomqlResolverTree,
-      typename,
+  // finish processing jomqlResolverNode by running the resolvers on the data fetched thru sql.
+  const processedResultsTree = await Promise.all(
+    jomqlResultsTreeArray.map((jomqlResultsTree) =>
+      processJomqlResolverTree({
+        jomqlResultsNode: jomqlResultsTree,
+        jomqlResolverNode: jomqlResolverTree,
+        req,
+        data,
+        fieldPath,
+      })
+    )
+  );
+
+  // handle aggregated fields -- must be nested query. cannot be array of scalars like [1, 2, 3, 4] at the moment
+  if (jomqlResolverTree.nested) {
+    await handleAggregatedQueries(
+      processedResultsTree,
+      jomqlResolverTree.nested,
       req,
-      args
+      data,
+      fieldPath
     );
   }
 
-  // handle aggregated fields
-  await handleAggregatedQueries(
-    returnArray,
-    jomqlResolverTree,
-    typename,
-    req,
-    args
-  );
-
-  return returnArray;
+  return processedResultsTree;
 }
 
 function generateSqlQuerySelectObject(
-  jomqlResolverTree: JomqlResolverObject,
-  parentFields: string[] = []
+  jomqlResolverNode: JomqlResolverNode,
+  parentFields: string[] = [],
+  fieldPath: string[]
 ) {
   const sqlSelectObjectArray: SqlQuerySelectObject[] = [];
-  for (const field in jomqlResolverTree) {
-    const nested = jomqlResolverTree[field].nested;
-    const mysqlOptions = <TypeDefSqlOptions | undefined>(
-      jomqlResolverTree[field].typeDef.customOptions?.mysqlOptions
-    );
-    if (mysqlOptions) {
-      // if nested with no resolver and no dataloader
-      if (
-        nested &&
-        !jomqlResolverTree[field].typeDef.resolver &&
-        !jomqlResolverTree[field].typeDef.dataloader
-      ) {
-        sqlSelectObjectArray.push(
-          ...generateSqlQuerySelectObject(nested, parentFields.concat(field))
+  const nested = jomqlResolverNode.nested;
+  const mysqlOptions = jomqlResolverNode.typeDef.mysqlOptions;
+
+  if (parentFields.length < 1 || mysqlOptions) {
+    // if nested with no resolver and no dataloader
+    if (
+      nested &&
+      !jomqlResolverNode.typeDef.resolver &&
+      !jomqlResolverNode.typeDef.dataloader
+    ) {
+      let addIdField = true;
+      let fieldsAdded = 0;
+      for (const field in jomqlResolverNode.nested) {
+        // indicate if we need to add the id field later
+        if (field === "id") addIdField = false;
+
+        const parentPlusCurrentField = parentFields.concat(field);
+        const arrayToAdd = generateSqlQuerySelectObject(
+          jomqlResolverNode.nested[field],
+          parentPlusCurrentField,
+          fieldPath
         );
+        fieldsAdded += arrayToAdd.length;
+        sqlSelectObjectArray.push(...arrayToAdd);
+      }
+
+      // if any sql fields requested at this node, add the id field if not already added
+      if (fieldsAdded > 0 && addIdField) {
+        sqlSelectObjectArray.push({
+          field: parentFields.concat("id").join("."),
+        });
+      }
+    } else {
+      // if not root level AND joinHidden, throw error
+      if (parentFields.length > 1 && mysqlOptions!.joinHidden) {
+        throw new JomqlQueryError({
+          message: `Requested field not allowed to be accessed directly in an nested context`,
+          fieldPath: fieldPath.concat(parentFields),
+        });
       } else {
-        // if not root level AND joinHidden, throw error
-        if (parentFields.length && mysqlOptions.joinHidden) {
-          throw new Error(
-            `Invalid Query: Requested field not allowed to be accessed directly in an nested context: '${parentFields
-              .concat(field)
-              .join(".")}'`
-          );
-        } else {
-          sqlSelectObjectArray.push({
-            field: parentFields.concat(field).join("."),
-          });
-        }
+        sqlSelectObjectArray.push({
+          field: parentFields.join("."),
+        });
       }
     }
   }
@@ -378,4 +385,67 @@ function generateSqlQuerySelectObject(
 
 export function countTableRows(typename: string, whereObject: SqlWhereObject) {
   return mysqlHelper.countTableRows(typename, whereObject);
+}
+
+async function handleAggregatedQueries(
+  resultsArray: any[],
+  nestedResolverNodeMap: { [x: string]: JomqlResolverNode },
+  req: Request,
+  args: any,
+  data: any,
+  fieldPath: string[] = []
+) {
+  for (const field in nestedResolverNodeMap) {
+    const currentFieldPath = fieldPath.concat(field);
+    const dataloaderFn = nestedResolverNodeMap[field].typeDef.dataloader;
+    const nestedResolver = nestedResolverNodeMap[field].nested;
+    if (dataloaderFn && nestedResolverNodeMap[field].query) {
+      const keySet = new Set();
+
+      // aggregate ids
+      resultsArray.forEach((result) => {
+        if (result) keySet.add(result[field]);
+      });
+
+      // set ids in data
+      data.idArray = [...keySet];
+
+      // lookup all the ids
+      const aggregatedResults = await dataloaderFn({
+        req,
+        args,
+        query: nestedResolverNodeMap[field].query!,
+        currentObject: {},
+        fieldPath: currentFieldPath,
+        data,
+      });
+
+      // build id -> record map
+      const recordMap = new Map();
+      aggregatedResults.forEach((result: any) => {
+        recordMap.set(result.id, result);
+      });
+
+      // join the records in memory
+      resultsArray.forEach((result) => {
+        if (result) result[field] = recordMap.get(result[field]);
+      });
+    } else if (nestedResolver) {
+      // if field does not have a dataloader, it must be nested.
+      // build the array of records that will need replacing and go deeper
+      const nestedResultsArray = resultsArray.reduce((total: any[], result) => {
+        if (result) total.push(result[field]);
+        return total;
+      }, []);
+
+      await handleAggregatedQueries(
+        nestedResultsArray,
+        nestedResolver,
+        req,
+        args,
+        data,
+        currentFieldPath
+      );
+    }
+  }
 }

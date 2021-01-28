@@ -19,8 +19,6 @@ export class AlgAlgcaseLinkService extends LinkService {
 
   groupByFieldsMap = {};
 
-  isFilterRequired = false;
-
   accessControl = {
     create: generateUserRoleGuard([userRoleKenum.ADMIN]),
     delete: generateUserRoleGuard([userRoleKenum.ADMIN]),

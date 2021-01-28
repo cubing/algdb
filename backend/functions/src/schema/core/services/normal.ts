@@ -1,6 +1,7 @@
 import * as errorHelper from "../../helpers/error";
 import { BaseService } from ".";
 import * as mysqlHelper from "../../helpers/mysql";
+import { permissionsCheck } from "../../helpers/permissions";
 import {
   handleJqlSubscription,
   handleJqlSubscriptionTriggerIterative,
@@ -10,12 +11,17 @@ import {
 
 import * as Resolver from "../../helpers/resolver";
 
-import { generateJomqlResolverTree, TypeDefinition } from "jomql";
+import {
+  generateAnonymousRootResolver,
+  generateJomqlResolverTree,
+  TypeDefinition,
+} from "jomql";
 
 import {
   SqlWhereObject,
   SqlQuerySelectObject,
   SqlSortFieldObject,
+  ServiceFunctionInputs,
 } from "../../../types";
 
 import { btoa, isObject } from "../../helpers/shared";
@@ -55,8 +61,6 @@ export class NormalService extends BaseService {
 
   searchFieldsMap: FieldMap = {};
 
-  isFilterRequired: boolean = false;
-
   constructor(typename?: string) {
     super(typename);
   }
@@ -69,35 +73,36 @@ export class NormalService extends BaseService {
     typeDefs.set(this.typename, this.typeDef);
   }
 
+  @permissionsCheck("get")
   async subscribeToSingleItem(
     operationName: string,
-    req,
-    args,
-    query?: object,
-    admin = false
+    {
+      req,
+      fieldPath,
+      args,
+      query,
+      data = {},
+      isAdmin = false,
+    }: ServiceFunctionInputs
   ) {
     const selectQuery = query || Object.assign({}, this.presets.default);
-
-    //if it does not pass the access control, throw an error
-    if (!admin && !(await this.testPermissions("get", req, args, query))) {
-      throw errorHelper.badPermissionsError();
-    }
 
     //check if the record and query is fetchable
     const results = await Resolver.resolveTableRows(
       this.typename,
       req,
+      fieldPath,
       selectQuery,
       {
         where: {
           fields: [{ field: "id", value: args.id }],
         },
       },
-      args
+      data
     );
 
     if (results.length < 1) {
-      throw errorHelper.itemNotFoundError();
+      throw errorHelper.itemNotFoundError(fieldPath);
     }
 
     const subscriptionFilterableArgs = {
@@ -116,25 +121,29 @@ export class NormalService extends BaseService {
     };
   }
 
+  @permissionsCheck("getMultiple")
   async subscribeToMultipleItem(
     operationName: string,
-    req,
-    args,
-    query?: object,
-    admin = false
+    {
+      req,
+      fieldPath,
+      args,
+      query,
+      data = {},
+      isAdmin = false,
+    }: ServiceFunctionInputs
   ) {
     const selectQuery = query || Object.assign({}, this.presets.default);
 
-    //if it does not pass the access control, throw an error
-    if (
-      !admin &&
-      !(await this.testPermissions("getMultiple", req, args, query))
-    ) {
-      throw errorHelper.badPermissionsError();
-    }
-
     //check if the query is valid (no need to actually run it)
-    if (this.typeDef) generateJomqlResolverTree(selectQuery, this.typeDef);
+    /*     if (this.typeDef)
+      generateJomqlResolverTreeFromTypeDefinition(
+        selectQuery,
+        this.typeDef,
+        this.typename,
+        fieldPath,
+        true
+      ); */
 
     // only allowed to filter subscriptions based on these limited args
     const subscriptionFilterableArgs = {
@@ -153,21 +162,23 @@ export class NormalService extends BaseService {
     };
   }
 
-  async getRecord(req, args: any, query?: object, admin = false) {
+  @permissionsCheck("get")
+  async getRecord({
+    req,
+    fieldPath,
+    args,
+    query,
+    data = {},
+    isAdmin = false,
+  }: ServiceFunctionInputs) {
     const selectQuery = query ?? Object.assign({}, this.presets.default);
-
-    // if no fields requested, can skip the permissions check
-    if (Object.keys(selectQuery).length < 1) return { typename: this.typename };
-
-    //if it does not pass the access control, throw an error
-    if (!admin && !(await this.testPermissions("get", req, args, query))) {
-      throw errorHelper.badPermissionsError();
-    }
 
     const whereObject: SqlWhereObject = {
       connective: "AND",
       fields: [],
     };
+
+    data.rootArgs = args;
 
     whereObject.fields.push(
       ...Object.entries(args).map(([field, value]) => ({
@@ -176,63 +187,51 @@ export class NormalService extends BaseService {
       }))
     );
 
-    if (whereObject.fields.length < 1) {
-      throw errorHelper.generateError(
-        "Must supply at least 1 filter parameter"
-      );
-    }
-
     const results = await Resolver.resolveTableRows(
       this.typename,
       req,
+      fieldPath,
       selectQuery,
       {
         where: whereObject,
         limit: 1,
       },
-      args
+      data
     );
 
     if (results.length < 1) {
-      throw errorHelper.itemNotFoundError();
+      throw errorHelper.itemNotFoundError(fieldPath);
     }
 
     return results[0];
   }
 
-  async getRecords(
+  @permissionsCheck("getMultiple")
+  async countRecords({
     req,
-    args: any,
-    query?: object,
-    count = false,
-    admin = false
-  ) {
-    const selectQuery = query || Object.assign({}, this.presets.default);
-
-    //if it does not pass the access control, throw an error
-    if (
-      !admin &&
-      !(await this.testPermissions("getMultiple", req, args, query))
-    ) {
-      throw errorHelper.badPermissionsError();
-    }
-
+    fieldPath,
+    args,
+    query,
+    data = {},
+    isAdmin = false,
+  }: ServiceFunctionInputs) {
     const whereObject: SqlWhereObject = {
       connective: "AND",
       fields: [],
     };
 
-    // handle filter fields
-    if (Array.isArray(args.filterBy)) {
-      args.filterBy.forEach((ele) => {
-        if (!(ele.field in this.filterFieldsMap)) {
-          throw new Error(`Invalid filter by field '${ele.field}'`);
+    if (isObject(args.filterBy)) {
+      Object.entries(args.filterBy).forEach(([key, value]) => {
+        // all keys must be pre-validated via args checking
+        if (Array.isArray(value)) {
+          value.forEach((ele) => {
+            whereObject.fields.push({
+              field: this.filterFieldsMap[key].field ?? key,
+              operator: ele.operator,
+              value: ele.value,
+            });
+          });
         }
-        whereObject.fields.push({
-          field: this.filterFieldsMap[ele.field].field ?? ele.field,
-          operator: ele.operator,
-          value: ele.value,
-        });
       });
     }
 
@@ -254,10 +253,61 @@ export class NormalService extends BaseService {
       whereObject.fields.push(whereSubObject);
     }
 
-    if (whereObject.fields.length < 1 && this.isFilterRequired) {
-      throw errorHelper.generateError(
-        "Must supply at least 1 filter parameter"
-      );
+    const resultsCount = await Resolver.countTableRows(
+      this.typename,
+      whereObject
+    );
+
+    return resultsCount;
+  }
+
+  @permissionsCheck("getMultiple")
+  async getRecords({
+    req,
+    fieldPath,
+    args,
+    query,
+    data = {},
+    isAdmin = false,
+  }: ServiceFunctionInputs) {
+    const selectQuery = query || Object.assign({}, this.presets.default);
+
+    const whereObject: SqlWhereObject = {
+      connective: "AND",
+      fields: [],
+    };
+
+    if (isObject(args.filterBy)) {
+      Object.entries(args.filterBy).forEach(([key, value]) => {
+        // all keys must be pre-validated via args checking
+        if (Array.isArray(value)) {
+          value.forEach((ele) => {
+            whereObject.fields.push({
+              field: this.filterFieldsMap[key].field ?? key,
+              operator: ele.operator,
+              value: ele.value,
+            });
+          });
+        }
+      });
+    }
+
+    //handle search fields
+    if (args.search) {
+      const whereSubObject: SqlWhereObject = {
+        connective: "OR",
+        fields: [],
+      };
+
+      for (const prop in this.searchFieldsMap) {
+        whereSubObject.fields.push({
+          field: this.searchFieldsMap[prop].field ?? prop,
+          value: "%" + args.search + "%",
+          operator: "like",
+        });
+      }
+
+      whereObject.fields.push(whereSubObject);
     }
 
     let isBeforeQuery = false;
@@ -266,7 +316,7 @@ export class NormalService extends BaseService {
     const sortByField =
       (Array.isArray(args.sortBy) ? args.sortBy[0] : "id") ?? "id";
     if (!(sortByField in this.sortFieldsMap))
-      throw errorHelper.generateError("Invalid sortBy field");
+      throw errorHelper.generateError("Invalid sortBy field", fieldPath);
     const sortByDesc = Array.isArray(args.sortDesc)
       ? args.sortDesc[0] === true
       : false;
@@ -382,84 +432,77 @@ export class NormalService extends BaseService {
       whereObject.fields.push(whereOrObject);
     }
 
-    if (count) {
-      const resultsCount = await Resolver.countTableRows(
-        this.typename,
-        whereObject
-      );
+    // set limit to args.first or args.last
+    //parse args.first and ensure it is less than 100
+    const requestedLimit = parseInt(args.first ?? args.last);
+    const limit = Math.min(requestedLimit, 100) || 100;
 
-      return resultsCount;
-    } else {
-      // set limit to args.first or args.last
-      //parse args.first and ensure it is less than 100
-      const requestedLimit = parseInt(args.first ?? args.last);
-      const limit = Math.min(requestedLimit, 100) || 100;
+    // process sort fields
+    const orderBy: SqlSortFieldObject[] = [];
+    const rawSelect: SqlQuerySelectObject[] = [{ field: "id", as: "last_id" }];
 
-      // process sort fields
-      const orderBy: SqlSortFieldObject[] = [];
-      const rawSelect: SqlQuerySelectObject[] = [
-        { field: "id", as: "last_id" },
-      ];
+    if (sortByField) {
+      rawSelect.push({
+        field: sortByField,
+        as: "last_value",
+      });
 
-      if (sortByField) {
-        rawSelect.push({
-          field: sortByField,
-          as: "last_value",
-        });
-
-        // overwrite orderBy statement
-        orderBy.push({
-          field: sortByField,
-          desc: isBeforeQuery ? !sortByDesc : sortByDesc,
-        });
-      }
-
-      // always add id as the last sort key
-      orderBy.push({ field: "id", desc: isBeforeQuery ? true : false });
-
-      const results = await Resolver.resolveTableRows(
-        this.typename,
-        req,
-        selectQuery,
-        {
-          rawSelect,
-          where: whereObject,
-          orderBy,
-          limit: limit,
-          groupBy: Array.isArray(args.groupBy)
-            ? args.groupBy.reduce((total, item, index) => {
-                if (item in this.groupByFieldsMap) {
-                  total.push({
-                    field: this.groupByFieldsMap[item].field ?? item,
-                  });
-                }
-                return total;
-              }, [])
-            : null,
-          //offset: args.first*args.page || 0
-        },
-        args
-      );
-
-      return args.reverse
-        ? isBeforeQuery
-          ? results
-          : results.reverse()
-        : isBeforeQuery
-        ? results.reverse()
-        : results;
+      // overwrite orderBy statement
+      orderBy.push({
+        field: sortByField,
+        desc: isBeforeQuery ? !sortByDesc : sortByDesc,
+      });
     }
+
+    // always add id as the last sort key
+    orderBy.push({ field: "id", desc: isBeforeQuery ? true : false });
+
+    const results = await Resolver.resolveTableRows(
+      this.typename,
+      req,
+      fieldPath,
+      selectQuery,
+      {
+        rawSelect,
+        where: whereObject,
+        orderBy,
+        limit: limit,
+        groupBy: Array.isArray(args.groupBy)
+          ? args.groupBy.reduce((total, item, index) => {
+              if (item in this.groupByFieldsMap) {
+                total.push({
+                  field: this.groupByFieldsMap[item].field ?? item,
+                });
+              }
+              return total;
+            }, [])
+          : null,
+        //offset: args.first*args.page || 0
+      },
+      data
+    );
+
+    return args.reverse
+      ? isBeforeQuery
+        ? results
+        : results.reverse()
+      : isBeforeQuery
+      ? results.reverse()
+      : results;
   }
 
-  async createRecord(req, args: any, query?: object, admin = false) {
-    //if it does not pass the access control, throw an error
-    if (!admin && !(await this.testPermissions("create", req, args, query))) {
-      throw errorHelper.badPermissionsError();
-    }
-
+  @permissionsCheck("create")
+  async createRecord({
+    req,
+    fieldPath,
+    args,
+    query,
+    data = {},
+    isAdmin = false,
+  }: ServiceFunctionInputs) {
     // convert any lookup/joined fields into IDs
     for (const key in args) {
-      const type = this.typeDef[key].type;
+      const type = this.typeDef.fields[key].type;
       if (typeof type === "string" && isObject(args[key])) {
         // get record ID of type, replace object with the ID
         const results = await mysqlHelper.fetchTableRows({
@@ -486,17 +529,18 @@ export class NormalService extends BaseService {
     const addResults = await Resolver.addTableRow(
       this.typename,
       req,
+      fieldPath,
       {
         ...args,
       },
       {
-        created_by: req.user.id,
+        created_by: req.user?.id,
       }
     );
 
     // args that will be compared with subscription args
     const subscriptionFilterableArgs = {
-      created_by: req.user.id,
+      created_by: req.user?.id,
     };
 
     handleJqlSubscriptionTriggerIterative(
@@ -515,15 +559,25 @@ export class NormalService extends BaseService {
       { id: addResults.id }
     );
 
-    return this.getRecord(req, { id: addResults.id }, query);
+    return this.getRecord({
+      req,
+      args: { id: addResults.id },
+      query,
+      fieldPath,
+      isAdmin,
+      data,
+    });
   }
 
-  async updateRecord(req, args: any, query?: object) {
-    //if it does not pass the access control, throw an error
-    if (!(await this.testPermissions("update", req, args, query))) {
-      throw errorHelper.badPermissionsError();
-    }
-
+  @permissionsCheck("update")
+  async updateRecord({
+    req,
+    fieldPath,
+    args,
+    query,
+    data = {},
+    isAdmin = false,
+  }: ServiceFunctionInputs) {
     // check if record exists, get ID
     const records = await mysqlHelper.fetchTableRows({
       select: [{ field: "id" }],
@@ -538,14 +592,14 @@ export class NormalService extends BaseService {
     });
 
     if (records.length < 1) {
-      throw errorHelper.generateError("Item not found", 404);
+      throw errorHelper.itemNotFoundError(fieldPath);
     }
 
     const itemId = records[0].id;
 
     // convert any lookup/joined fields into IDs
     for (const key in args.fields) {
-      const type = this.typeDef[key].type;
+      const type = this.typeDef.fields[key].type;
       if (typeof type === "string" && isObject(args.fields[key])) {
         // get record ID of type, replace object with the ID
         const results = await mysqlHelper.fetchTableRows({
@@ -572,14 +626,23 @@ export class NormalService extends BaseService {
     await Resolver.updateTableRow(
       this.typename,
       req,
-      args.fields,
+      fieldPath,
       {
-        updated_at: "now()",
+        ...args.fields,
+        updated_at: 1, // this will automatically get converted to now()
       },
+      {},
       { fields: [{ field: "id", value: itemId }] }
     );
 
-    const returnData = this.getRecord(req, { id: itemId }, query);
+    const returnData = this.getRecord({
+      req,
+      args: { id: itemId },
+      query,
+      fieldPath,
+      isAdmin,
+      data,
+    });
 
     handleJqlSubscriptionTrigger(req, this, this.typename + "Updated", {
       id: itemId,
@@ -601,12 +664,15 @@ export class NormalService extends BaseService {
     return returnData;
   }
 
-  async deleteRecord(req, args: any, query?: object) {
-    //if it does not pass the access control, throw an error
-    if (!(await this.testPermissions("delete", req, args, query))) {
-      throw errorHelper.badPermissionsError();
-    }
-
+  @permissionsCheck("delete")
+  async deleteRecord({
+    req,
+    fieldPath,
+    args,
+    query,
+    data = {},
+    isAdmin = false,
+  }: ServiceFunctionInputs) {
     // confirm existence of item and get ID
     const results = await mysqlHelper.fetchTableRows({
       select: [{ field: "id" }],
@@ -627,7 +693,14 @@ export class NormalService extends BaseService {
     const itemId = results[0].id;
 
     // first, fetch the requested query, if any
-    const requestedResults = await this.getRecord(req, args, query);
+    const requestedResults = await this.getRecord({
+      req,
+      args,
+      query,
+      fieldPath,
+      isAdmin,
+      data,
+    });
 
     await handleJqlSubscriptionTrigger(req, this, this.typename + "Deleted", {
       id: itemId,
@@ -646,7 +719,7 @@ export class NormalService extends BaseService {
       { id: itemId }
     );
 
-    await Resolver.deleteTableRow(this.typename, req, args, {
+    await Resolver.deleteTableRow(this.typename, req, fieldPath, args, {
       fields: [{ field: "id", value: itemId }],
     });
 
@@ -659,9 +732,15 @@ export class NormalService extends BaseService {
 
     //also need to delete all permissions attached to this item
     if (this.permissionsLink) {
-      await Resolver.deleteTableRow(this.permissionsLink.typename, req, args, {
-        fields: [{ field: this.typename, value: itemId }],
-      });
+      await Resolver.deleteTableRow(
+        this.permissionsLink.typename,
+        req,
+        fieldPath,
+        args,
+        {
+          fields: [{ field: this.typename, value: itemId }],
+        }
+      );
     }
 
     return requestedResults;

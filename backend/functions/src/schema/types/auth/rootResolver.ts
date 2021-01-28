@@ -17,6 +17,7 @@ export default {
         },
       },
     },
-    resolver: (req, args, query) => Auth.socialLogin(req, args, query),
+    resolver: ({ req, args, query, fieldPath }) =>
+      Auth.socialLogin({ req, args, query, fieldPath }),
   },
 };

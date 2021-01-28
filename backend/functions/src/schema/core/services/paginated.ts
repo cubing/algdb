@@ -6,4 +6,8 @@ export class PaginatedService extends NormalService {
     super();
     this.paginator = new PaginatorService(this);
   }
+
+  getPaginator() {
+    return this.paginator;
+  }
 }

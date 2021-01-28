@@ -4,8 +4,8 @@
     "lint": "tslint --project tsconfig.json",
     "build": "tsc",
     "serve": "set DEV=1 && npm run build && firebase emulators:start --only functions",
-    "db:sync": "set DEV=1 && npm run build && node lib/scripts/syncDatabase.js",
-    "generate:schema": "set DEV=1 && npm run build && node lib/scripts/generateSchema.js",
+    "db:sync": "set DEV=1 && ts-node src/scripts/syncDatabase.ts",
+    "generate:schema": "set DEV=1 && ts-node src/scripts/generateSchema.ts",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
@@ -21,7 +21,7 @@
     "express": "^4.17.1",
     "firebase-admin": "^9.2.0",
     "firebase-functions": "^3.11.0",
-    "jomql": "^0.2.9",
+    "jomql": "^0.2.15",
     "jsonwebtoken": "^8.5.1",
     "mysql2": "^2.2.5",
     "named-placeholders": "^1.1.2",
@@ -31,9 +31,10 @@
   },
   "devDependencies": {
     "firebase-functions-test": "^0.1.6",
+    "fs": "0.0.1-security",
+    "ts-node": "^9.1.1",
     "tslint": "^5.12.0",
-    "typescript": "^4.0.2",
-    "fs": "0.0.1-security"
+    "typescript": "^4.0.2"
   },
   "private": true
 }
