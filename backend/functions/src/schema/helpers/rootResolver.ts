@@ -1,10 +1,17 @@
-import { InputTypeDefinition, JomqlArgsError, RootResolverObject } from "jomql";
+import {
+  JomqlObjectTypeLookup,
+  JomqlArgsError,
+  RootResolverDefinition,
+  JomqlInitializationError,
+  JomqlRootResolverType,
+  JomqlInputType,
+  JomqlInputTypeLookup,
+  JomqlObjectType,
+  JomqlInputFieldType,
+} from "jomql";
 import { NormalService, PaginatedService, EnumService } from "../core/services";
 import { generatePaginatorPivotResolverObject } from "../helpers/typeDef";
-import { isObject, capitalizeString } from "../helpers/shared";
-import { inputDefs } from "../inputDefs";
-import { JomqlInitializationError } from "jomql/lib/classes";
-
+import { capitalizeString } from "../helpers/shared";
 type BaseRootResolverTypes =
   | "get"
   | "getMultiple"
@@ -24,62 +31,24 @@ export function generateBaseRootResolvers(
 
   const rootResolvers = {};
 
-  // build unique key map and ArgDefinition here
-  const uniqueKeyMap = {};
-  Object.entries(service.uniqueKeyMap).forEach(([uniqueKeyName, entry]) => {
-    entry.forEach((key) => {
-      uniqueKeyMap[key] = { type: service.typeDef.fields[key].type };
-    });
-  });
-  const lookupRecordInputDefinition: InputTypeDefinition = {
-    fields: uniqueKeyMap,
-    inputsValidator: (args, fieldPath) => {
-      // check if a valid combination of key args exist
-      let validKeyCombination = false;
-      if (isObject(args)) {
-        const argsArray = Object.keys(args);
-        for (const keyName in service.uniqueKeyMap) {
-          if (
-            service.uniqueKeyMap[keyName].every((ele) =>
-              argsArray.includes(ele)
-            ) &&
-            argsArray.every((ele) =>
-              service.uniqueKeyMap[keyName].includes(ele)
-            )
-          ) {
-            validKeyCombination = true;
-            break;
-          }
-        }
-      }
-
-      if (!validKeyCombination) {
-        throw new JomqlArgsError({
-          message: `Invalid combination of args`,
-          fieldPath,
-        });
-      }
-    },
-  };
-
-  // register the record lookup definition under getX
-  inputDefs.set("get" + capitalizedClass, lookupRecordInputDefinition);
-
   methods.forEach((method) => {
     const capitalizedMethod = capitalizeString(method);
+    let methodName;
     switch (method) {
       case "get":
-        rootResolvers[method + capitalizedClass] = <RootResolverObject>{
+        methodName = method + capitalizedClass;
+        rootResolvers[methodName] = new JomqlRootResolverType({
+          name: methodName,
           method: "get" as const,
           route: "/" + service.typename + "/:id",
-          type: service.typename,
+          type: service.typeDefLookup,
           isArray: false,
           allowNull: false,
           query: service.presets.default,
-          args: {
+          args: new JomqlInputFieldType({
             required: true,
-            type: lookupRecordInputDefinition,
-          },
+            type: service.inputTypeDefLookup,
+          }),
           resolver: ({ req, query, args, fieldPath }) => {
             return service.getRecord({
               req,
@@ -88,19 +57,21 @@ export function generateBaseRootResolvers(
               fieldPath,
             });
           },
-        };
+        });
         break;
       case "getMultiple":
         if (service instanceof PaginatedService) {
+          methodName = "get" + capitalizeString(service.paginator.typename);
           rootResolvers[
             "get" + capitalizeString(service.paginator.typename)
-          ] = <RootResolverObject>{
+          ] = new JomqlRootResolverType(<RootResolverDefinition>{
+            name: methodName,
             method: "get" as const,
             route: "/" + service.typename,
             ...generatePaginatorPivotResolverObject({
               pivotService: service,
             }),
-          };
+          });
         } else {
           throw new JomqlInitializationError({
             message: `Cannot getMultiple of a non-paginated type '${service.typename}'`,
@@ -108,16 +79,18 @@ export function generateBaseRootResolvers(
         }
         break;
       case "delete":
-        rootResolvers[method + capitalizedClass] = <RootResolverObject>{
+        methodName = method + capitalizedClass;
+        rootResolvers[methodName] = new JomqlRootResolverType({
+          name: methodName,
           method: "delete" as const,
           route: "/" + service.typename + "/:id",
-          type: service.typename,
+          type: service.typeDefLookup,
           isArray: false,
           allowNull: false,
-          args: {
+          args: new JomqlInputFieldType({
             required: true,
-            type: lookupRecordInputDefinition,
-          },
+            type: service.inputTypeDefLookup,
+          }),
           resolver: ({ req, query, args, fieldPath }) =>
             service.deleteRecord({
               req,
@@ -125,43 +98,55 @@ export function generateBaseRootResolvers(
               args,
               fieldPath,
             }),
-        };
+        });
         break;
       case "update":
         const updateArgs = {};
-        Object.entries(service.typeDef.fields).forEach(
+        methodName = method + capitalizedClass;
+        Object.entries(service.getTypeDef().definition.fields).forEach(
           ([key, typeDefField]) => {
-            const type = typeDefField.type;
+            let typeField = typeDefField.type;
+
+            // if typeField is JomqlObjectTypeLookup, convert to JomqlInputTypeLookup
+            if (typeField instanceof JomqlObjectTypeLookup) {
+              typeField = new JomqlInputTypeLookup(
+                "get" + capitalizeString(typeField.name)
+              );
+            } else if (typeField instanceof JomqlObjectType) {
+              typeField = new JomqlInputTypeLookup(
+                "get" + capitalizeString(typeField.definition.name)
+              );
+            }
+
             if (typeDefField.updateable) {
               // generate the argDefinition for the string type
-              updateArgs[key] = {
-                type:
-                  typeof type === "string"
-                    ? "get" + capitalizeString(type)
-                    : type,
+              updateArgs[key] = new JomqlInputFieldType({
+                type: typeField,
                 required: false,
                 isArray: typeDefField.isArray,
-              };
+              });
             }
           }
         );
-        rootResolvers[method + capitalizedClass] = <RootResolverObject>{
+        rootResolvers[methodName] = new JomqlRootResolverType({
+          name: methodName,
           method: "put" as const,
           route: "/" + service.typename + "/:id",
           query: service.presets.default,
-          type: service.typename,
+          type: service.typeDefLookup,
           isArray: false,
           allowNull: false,
-          args: {
+          args: new JomqlInputFieldType({
             required: true,
-            type: {
+            type: new JomqlInputType({
+              name: methodName,
               fields: {
-                item: {
-                  type: "get" + capitalizedClass,
+                item: new JomqlInputFieldType({
+                  type: service.inputTypeDefLookup,
                   required: true,
-                },
-                fields: {
-                  type: {
+                }),
+                fields: new JomqlInputFieldType({
+                  type: new JomqlInputType({
                     name: "update" + capitalizedClass + "Fields",
                     fields: updateArgs,
                     inputsValidator: (args, fieldPath) => {
@@ -173,46 +158,58 @@ export function generateBaseRootResolvers(
                           fieldPath,
                         });
                     },
-                  },
+                  }),
                   required: true,
-                },
+                }),
               },
-            },
-          },
+            }),
+          }),
           resolver: ({ req, query, args, fieldPath }) =>
             service.updateRecord({ req, query, args, fieldPath }),
-        };
+        });
         break;
       case "create":
         const createArgs = {};
-        Object.entries(service.typeDef.fields).forEach(
+        methodName = method + capitalizedClass;
+        Object.entries(service.getTypeDef().definition.fields).forEach(
           ([key, typeDefField]) => {
-            const type = typeDefField.type;
+            let typeField = typeDefField.type;
+
+            // if typeField is JomqlObjectTypeLookup, convert to JomqlInputTypeLookup
+            if (typeField instanceof JomqlObjectTypeLookup) {
+              typeField = new JomqlInputTypeLookup(
+                "get" + capitalizeString(typeField.name)
+              );
+            } else if (typeField instanceof JomqlObjectType) {
+              typeField = new JomqlInputTypeLookup(
+                "get" + capitalizeString(typeField.definition.name)
+              );
+            }
+
             if (typeDefField.addable) {
               // generate the argDefinition for the string type
-              createArgs[key] = {
-                type:
-                  typeof type === "string"
-                    ? "get" + capitalizeString(type)
-                    : type,
+              createArgs[key] = new JomqlInputFieldType({
+                type: typeField,
                 required: typeDefField.required,
                 isArray: typeDefField.isArray,
-              };
+              });
             }
           }
         );
-        rootResolvers[method + capitalizedClass] = <RootResolverObject>{
+        rootResolvers[methodName] = new JomqlRootResolverType({
+          name: methodName,
           method: "post" as const,
           route: "/" + service.typename,
-          type: service.typename,
+          type: service.typeDefLookup,
           isArray: false,
           allowNull: false,
-          args: {
+          args: new JomqlInputFieldType({
             required: true,
-            type: {
+            type: new JomqlInputType({
+              name: methodName,
               fields: createArgs,
-            },
-          },
+            }),
+          }),
           resolver: ({ req, query, args, fieldPath }) =>
             service.createRecord({
               req,
@@ -220,15 +217,15 @@ export function generateBaseRootResolvers(
               args,
               fieldPath,
             }),
-        };
+        });
         break;
       case "created":
-        rootResolvers[service.typename + capitalizedMethod] = <
-          RootResolverObject
-        >{
+        methodName = service.typename + capitalizedMethod;
+        rootResolvers[methodName] = new JomqlRootResolverType({
+          name: methodName,
           method: "post" as const,
           route: "/subscribe/" + service.typename + capitalizedMethod,
-          type: service.typename,
+          type: service.typeDefLookup,
           isArray: false,
           allowNull: false,
           resolver: ({ req, query, args, fieldPath }) =>
@@ -241,15 +238,15 @@ export function generateBaseRootResolvers(
                 fieldPath,
               }
             ),
-        };
+        });
         break;
       case "deleted":
-        rootResolvers[service.typename + capitalizedMethod] = <
-          RootResolverObject
-        >{
+        methodName = service.typename + capitalizedMethod;
+        rootResolvers[methodName] = new JomqlRootResolverType({
+          name: methodName,
           method: "post" as const,
           route: "/subscribe/" + service.typename + capitalizedMethod,
-          type: service.typename,
+          type: service.typeDefLookup,
           isArray: false,
           allowNull: false,
           resolver: ({ req, query, args, fieldPath }) =>
@@ -262,15 +259,15 @@ export function generateBaseRootResolvers(
                 fieldPath,
               }
             ),
-        };
+        });
         break;
       case "updated":
-        rootResolvers[service.typename + capitalizedMethod] = <
-          RootResolverObject
-        >{
+        methodName = service.typename + capitalizedMethod;
+        rootResolvers[methodName] = new JomqlRootResolverType({
+          name: methodName,
           method: "post" as const,
           route: "/subscribe/" + service.typename + capitalizedMethod,
-          type: service.typename,
+          type: service.typeDefLookup,
           isArray: false,
           allowNull: false,
           resolver: ({ req, query, args, fieldPath }) =>
@@ -283,15 +280,15 @@ export function generateBaseRootResolvers(
                 fieldPath,
               }
             ),
-        };
+        });
         break;
       case "listUpdated":
-        rootResolvers[service.typename + capitalizedMethod] = <
-          RootResolverObject
-        >{
+        methodName = service.typename + capitalizedMethod;
+        rootResolvers[methodName] = new JomqlRootResolverType({
+          name: methodName,
           method: "post" as const,
           route: "/subscribe/" + service.typename + capitalizedMethod,
-          type: service.typename,
+          type: service.typeDefLookup,
           isArray: false,
           allowNull: false,
           resolver: ({ req, query, args, fieldPath }) =>
@@ -304,7 +301,7 @@ export function generateBaseRootResolvers(
                 fieldPath,
               }
             ),
-        };
+        });
         break;
       default:
         throw new Error(`Unknown root resolver method requested: '${method}'`);
@@ -316,14 +313,15 @@ export function generateBaseRootResolvers(
 
 export function generateEnumRootResolver(enumService: EnumService) {
   const capitalizedClass = capitalizeString(enumService.paginator.typename);
-
+  const methodName = "get" + capitalizedClass;
   const rootResolvers = {
-    ["get" + capitalizedClass]: {
+    [methodName]: new JomqlRootResolverType({
+      name: methodName,
       method: "get" as const,
       route: "/" + enumService.paginator.typename,
       isArray: false,
       allowNull: false,
-      type: enumService.paginator.typename,
+      type: enumService.paginator.typeDef,
       resolver: ({ req, args, query, fieldPath }) =>
         enumService.paginator.getRecord({
           req,
@@ -331,7 +329,7 @@ export function generateEnumRootResolver(enumService: EnumService) {
           query,
           fieldPath,
         }),
-    },
+    }),
   };
 
   return rootResolvers;

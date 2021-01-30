@@ -1,4 +1,3 @@
-import { typeDefs } from "../typeDefs";
 import { linkDefs } from "../links";
 import * as mysql from "../../utils/mysql2";
 import type {
@@ -10,7 +9,7 @@ import type {
   SqlSortFieldObject,
   SqlWhereFieldObject,
 } from "../../types";
-import { TypeDefinition } from "jomql";
+import { JomqlObjectType, objectTypeDefs } from "jomql";
 
 export type JoinsMap = {
   [x: string]: string[];
@@ -22,7 +21,7 @@ export type AssemblyFunction = (
   fieldname: string,
   fieldObject: any,
   fieldIndex: number,
-  currentTypeDef: TypeDefinition
+  currentTypeDef: JomqlObjectType
 ) => string;
 
 export function fetchTableRows(sqlQuery: SqlQueryObject) {
@@ -171,16 +170,17 @@ export function insertTableRow(
   const params = {};
 
   // check if there is a mysql setter on the field
-  const currentTypeDef = typeDefs.get(table);
+  const currentTypeDef = objectTypeDefs.get(table);
   if (!currentTypeDef) {
     throw new Error(`TypeDef for ${table} not found`);
   }
 
   for (const fieldname in setFields) {
-    const setter = currentTypeDef.fields[fieldname].mysqlOptions?.setter;
+    const setter =
+      currentTypeDef.definition.fields[fieldname].mysqlOptions?.setter;
 
     const parseValue =
-      currentTypeDef.fields[fieldname].mysqlOptions?.parseValue;
+      currentTypeDef.definition.fields[fieldname].mysqlOptions?.parseValue;
 
     if (setter) {
       setStatement += `${fieldname} = ${setter(":" + fieldname)}, `;
@@ -229,17 +229,18 @@ export function updateTableRow(
   const params = {};
 
   // check if there is a mysql setter on the field
-  const currentTypeDef = typeDefs.get(table);
+  const currentTypeDef = objectTypeDefs.get(table);
   if (!currentTypeDef) {
     throw new Error(`TypeDef for ${table} not found`);
   }
 
   // handle set fields
   for (const fieldname in setFields) {
-    const setter = currentTypeDef.fields[fieldname].mysqlOptions?.setter;
+    const setter =
+      currentTypeDef.definition.fields[fieldname].mysqlOptions?.setter;
 
     const parseValue =
-      currentTypeDef.fields[fieldname].mysqlOptions?.parseValue;
+      currentTypeDef.definition.fields[fieldname].mysqlOptions?.parseValue;
 
     if (setter) {
       setStatement += `${fieldname} = ${setter(":" + fieldname)}, `;
@@ -339,7 +340,8 @@ export function processSelectArray(
       fieldIndex,
       currentTypeDef
     ) => {
-      const getter = currentTypeDef.fields[fieldname].mysqlOptions?.getter;
+      const getter =
+        currentTypeDef.definition.fields[fieldname].mysqlOptions?.getter;
 
       return (
         (getter
@@ -400,7 +402,8 @@ export function processWhereObject(
         const operator = fieldObject.operator ?? "eq";
         const placeholder = fieldname + subIndexString + "_" + subIndex;
 
-        const getter = currentTypeDef.fields[fieldname].mysqlOptions?.getter;
+        const getter =
+          currentTypeDef.definition.fields[fieldname].mysqlOptions?.getter;
 
         let whereSubstatement = getter
           ? getter(tableAlias + "." + fieldname)
@@ -563,7 +566,7 @@ export function processJoins(
 
   fieldsArray.forEach((fieldObject, fieldIndex) => {
     const fieldPath = fieldObject.field.split(".");
-    let currentTypeDef = typeDefs.get(table);
+    let currentTypeDef = objectTypeDefs.get(table);
     let tableAlias = table;
     let tableName = table;
 
@@ -594,7 +597,7 @@ export function processJoins(
     // process the "normal" fields
     for (const field of fieldPath) {
       // does the field exist on the currentTypeDef?
-      if (!(field in currentTypeDef.fields)) {
+      if (!(field in currentTypeDef.definition.fields)) {
         // look in link fields and generate required joins
         linkDefs.forEach((linkDef, linkName) => {
           if (linkDef.types.has(field) && linkDef.types.has(tableName)) {
@@ -621,7 +624,7 @@ export function processJoins(
       //if there's no next field, no more joins
       if (joinArray[eleIndex + 1]) {
         // check for valid field in the typeDef
-        if (!(ele.field in currentTypeDef!.fields))
+        if (!(ele.field in currentTypeDef!.definition.fields))
           throw new Error(
             "Field: " + ele.field + " does not exist in Table: " + tableName
           );
@@ -629,7 +632,8 @@ export function processJoins(
         //join with this type
         const joinTableName =
           ele.joinTableName ??
-          currentTypeDef!.fields[ele.field].mysqlOptions?.joinInfo?.type;
+          currentTypeDef!.definition.fields[ele.field].mysqlOptions?.joinInfo
+            ?.type;
 
         //if it requires a join, check if it was joined previously
         if (!joinTableName) throw new Error("Invalid Join Table");
@@ -674,9 +678,9 @@ export function processJoins(
         }
 
         // shift the typeDef, tableAlias, and tableName
-        currentTypeDef = typeDefs.get(joinTableName);
+        currentTypeDef = objectTypeDefs.get(joinTableName);
         // check for typeDef existence
-        if (!currentTypeDef?.fields)
+        if (!currentTypeDef?.definition.fields)
           throw new Error(
             "TypeDef for table: " + tableName + " does not exist"
           );
@@ -689,7 +693,7 @@ export function processJoins(
     });
 
     // check if field exists in the table
-    if (!(fieldname in currentTypeDef.fields))
+    if (!(fieldname in currentTypeDef.definition.fields))
       throw new Error(
         "Field: " + fieldname + " does not exist in table: " + tableName
       );

@@ -1,9 +1,9 @@
-import type { TypeDefSqlOptions, DataloaderFunction } from "..";
+import type { ObjectTypeDefsqlOptions, DataloaderFunction } from "..";
 
 declare global {
   namespace Jomql {
-    interface TypeDefinitionField {
-      mysqlOptions?: TypeDefSqlOptions;
+    interface ObjectTypeDefinitionField {
+      mysqlOptions?: ObjectTypeDefsqlOptions;
       addable?: boolean;
       updateable?: boolean;
       dataloader?: DataloaderFunction;

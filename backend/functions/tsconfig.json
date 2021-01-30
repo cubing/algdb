@@ -12,5 +12,5 @@
     "typeRoots": ["src/types", "./node_modules/@types"]
   },
   "compileOnSave": true,
-  "include": ["src", "src/scripts"]
+  "include": ["src"]
 }

@@ -1,27 +1,27 @@
-import * as schema from "../schema";
-import { Schema } from "jomql";
+import "../schema";
+import { objectTypeDefs } from "jomql";
 import { typeDef as subscriptionTypeDef } from "../schema/helpers/subscription";
 import { MysqlEnv } from "../types";
 import { env } from "../config";
 import { initializeSequelize, getSequelizeInstance } from "../utils/sequelize";
 
-syncDatabase(env.mysql, schema);
+syncDatabase(env.mysql);
 
 function syncDatabase(
   mysqlEnv: MysqlEnv,
-  currentSchema: Schema,
   initSubscriptions = true,
   force = false
 ) {
-  //loop through typeDefs to identify needed mysql tables
+  //loop through objectTypeDefs to identify needed mysql tables
   initializeSequelize(mysqlEnv);
   const sequelize = getSequelizeInstance();
 
-  currentSchema.typeDefs.forEach((typeDef, typeKey) => {
+  objectTypeDefs.forEach((typeDef, typeKey) => {
     const definition = {};
 
-    for (const prop in typeDef.fields) {
-      const sqlDefinition = typeDef.fields[prop].mysqlOptions?.sqlDefinition;
+    for (const prop in typeDef.definition.fields) {
+      const sqlDefinition =
+        typeDef.definition.fields[prop].mysqlOptions?.sqlDefinition;
       if (prop !== "id" && sqlDefinition) {
         definition[prop] = sqlDefinition;
       }

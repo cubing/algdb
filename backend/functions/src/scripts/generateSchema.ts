@@ -1,10 +1,10 @@
-import * as schema from "../schema";
+import "../schema";
 import * as fs from "fs";
 import { CustomSchemaGenerator } from "../helpers/schema";
 
 // process nextTick, to allow inputType definitions to load
 process.nextTick(() => {
-  const tsSchemaGenerator = new CustomSchemaGenerator(schema);
+  const tsSchemaGenerator = new CustomSchemaGenerator();
   tsSchemaGenerator.buildSchema();
   tsSchemaGenerator.processSchema();
 

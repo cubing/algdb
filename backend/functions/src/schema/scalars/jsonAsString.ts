@@ -1,6 +1,6 @@
-import { ScalarDefinition } from "jomql";
+import { JomqlScalarType } from "jomql";
 
-export const jsonAsString: ScalarDefinition = {
+export const jsonAsString = new JomqlScalarType({
   name: "jsonAsString",
   types: ["unknown"],
   description: "Valid generic JSON that is stored in database as string",
@@ -13,4 +13,4 @@ export const jsonAsString: ScalarDefinition = {
   parseValue(value) {
     return JSON.stringify(value);
   },
-};
+});

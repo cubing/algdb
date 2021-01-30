@@ -8,7 +8,7 @@ import {
   generateJoinableField,
   generateTypenameField,
 } from "../../helpers/typeDef";
-import { TypeDefinition } from "jomql";
+import { ObjectTypeDefinition } from "jomql";
 
 export function generateLinkTypeDef(
   services: NormalService[],
@@ -24,7 +24,7 @@ export function generateLinkTypeDef(
     });
   }
 
-  return <TypeDefinition>{
+  return <ObjectTypeDefinition>{
     name: currentService.typename,
     description: "Link type",
     fields: {

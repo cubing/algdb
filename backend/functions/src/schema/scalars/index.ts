@@ -9,7 +9,7 @@ import {
   userPermissionEnum,
 } from "../enums";
 
-import { BaseScalars } from "jomql";
+import { BaseScalars, JomqlScalarType } from "jomql";
 
 // base scalars
 export const string = BaseScalars.string;
@@ -24,22 +24,18 @@ export { jsonAsString } from "./jsonAsString";
 export { id } from "./id";
 
 // generated scalars
-export const userRole = generateKenumScalarDefinition(
-  "userRole",
-  userRoleKenum
+export const userRole = new JomqlScalarType(
+  generateKenumScalarDefinition("userRole", userRoleKenum)
 );
 
-export const filterOperator = generateEnumScalarDefinition(
-  "filterOperator",
-  filterOperatorEnum
+export const filterOperator = new JomqlScalarType(
+  generateEnumScalarDefinition("filterOperator", filterOperatorEnum)
 );
 
-export const caseVisualization = generateEnumScalarDefinition(
-  "caseVisualization",
-  caseVisualizationEnum
+export const caseVisualization = new JomqlScalarType(
+  generateEnumScalarDefinition("caseVisualization", caseVisualizationEnum)
 );
 
-export const userPermission = generateEnumScalarDefinition(
-  "userPermission",
-  userPermissionEnum
+export const userPermission = new JomqlScalarType(
+  generateEnumScalarDefinition("userPermission", userPermissionEnum)
 );

@@ -1,5 +1,7 @@
+import { LinkService } from "../core/services";
+
 type LinkDefinition = {
-  types: Set<string>;
+  types: Map<string, LinkService>;
 };
 
 export const linkDefs: Map<string, LinkDefinition> = new Map();

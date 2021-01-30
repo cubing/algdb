@@ -1,6 +1,12 @@
 // Query builder
 const queryResult = executeJomql({
   // Start typing here to get hints
+  getAlg: {
+    id: true,
+    __args: {
+      id: 1,
+    },
+  },
 });
 
 export function executeJomql<Key extends keyof Root>(
@@ -11,54 +17,57 @@ export function executeJomql<Key extends keyof Root>(
 }
 
 // scaffolding
-export type GetQuery<K extends keyof Root> = Record<
-  K,
-  Argize<Queryize<Root[K]["Type"]>, Root[K]["Args"]>
->;
+export type GetQuery<K extends keyof Root> = K extends never
+  ? Partial<Record<K, Queryize<Root[keyof Root]>>>
+  : Record<K, Queryize<Root[K]>>;
 
-export type GetResponse<K extends keyof Root> = Omit<Root[K]["Type"], args>;
+export type GetResponse<K extends keyof Root> = Responseize<Root[K]>;
 
 type Primitive = string | number | boolean | undefined | null;
 
-type args = "__args";
+type Field<T, K> = {
+  Type: T;
+  Args: K;
+};
 
-type ElementType<T extends any[]> = T[number];
+type Responseize<T> = T extends Field<infer Type, infer Args>
+  ? Type extends never
+    ? never
+    : Type extends (infer U)[]
+    ? { [P in keyof U]: Responseize<U[P]> }[]
+    : { [P in keyof Type]: Responseize<Type[P]> }
+  : never;
 
-type Queryize<T> = T extends never
-  ? never
-  : T extends Primitive
-  ? true
-  : T extends any[]
-  ? Queryize<ElementType<T>>
-  : args extends keyof T
-  ? {
-      [P in keyof T as Exclude<P, args>]?: Queryize<T[P]>;
-    } &
-      (undefined extends T[args] ? { __args?: T[args] } : { __args: T[args] })
-  : {
-      [P in keyof T]?: Queryize<T[P]>;
-    };
-
-type Argize<T, Args> = Args extends undefined
-  ? Omit<T, args>
-  : Omit<T, args> & { __args: Args };
+type Queryize<T> = T extends Field<infer Type, infer Args>
+  ? Type extends never
+    ? never
+    : Type extends Primitive
+    ? Args extends undefined // Args is undefined
+      ? true
+      : Args extends [infer Arg]
+      ? true | { __args: Arg } // Args is a tuple
+      : { __args: Args }
+    : Type extends (infer U)[]
+    ? Queryize<Field<U, Args>>
+    : Args extends undefined // Args is undefined
+    ? { [P in keyof Type]?: Queryize<Type[P]> }
+    : Args extends [infer Arg]
+    ? { [P in keyof Type]?: Queryize<Type[P]> } & {
+        __args?: Arg;
+      }
+    : { [P in keyof Type]?: Queryize<Type[P]> } & { __args: Args }
+  : never;
 
 type Edge<T> = {
-  __typename: string;
-  node: Omit<T, args>;
-  cursor: string;
+  __typename: Field<string, undefined>;
+  node: Field<T, undefined>;
+  cursor: Field<string, undefined>;
 };
 
-type FilterByObject<T> = {
-  field: T;
-  operator?: string;
-  value: unknown;
-};
-
-/**All scalar values*/ export type Scalars = {
+/**All Scalar values*/ export type Scalars = {
   /**String value*/ string: string;
-  /**Numerical value*/ number: number;
   /**True or False*/ boolean: boolean;
+  /**Numerical value*/ number: number;
   /**Unknown value*/ unknown: unknown;
   /**Image URL Field*/ imageUrl: string;
   /**UNIX Timestamp (Seconds since Epoch Time)*/ unixTimestamp: number;
@@ -99,7 +108,7 @@ type FilterByObject<T> = {
   tagSortByKey: "id" | "created_at";
   tagGroupByKey: "id";
 };
-/**All input types*/ export type InputType = {
+/**All Input types*/ export type InputType = {
   getUser: { id?: Scalars["id"] };
   "userFilterByField/id": {
     operator?: Scalars["filterOperator"];
@@ -117,11 +126,16 @@ type FilterByObject<T> = {
     operator?: Scalars["filterOperator"];
     value: Scalars["userRole"];
   };
+  "userFilterByField/name": {
+    operator?: Scalars["filterOperator"];
+    value: Scalars["string"];
+  };
   userFilterByObject: {
     id?: InputType["userFilterByField/id"][];
     created_by?: InputType["userFilterByField/created_by"][];
     "created_by.name"?: InputType["userFilterByField/created_by.name"][];
     role?: InputType["userFilterByField/role"][];
+    name?: InputType["userFilterByField/name"][];
   };
   getUserPaginator: {
     first?: Scalars["number"];
@@ -134,7 +148,6 @@ type FilterByObject<T> = {
     groupBy?: Scalars["userGroupByKey"][];
     search?: Scalars["string"];
   };
-  deleteUser: { id?: Scalars["id"] };
   createUser: {
     provider: Scalars["string"];
     provider_id: Scalars["string"];
@@ -199,7 +212,6 @@ type FilterByObject<T> = {
     groupBy?: Scalars["puzzleGroupByKey"][];
     search?: Scalars["string"];
   };
-  deletePuzzle: { id?: Scalars["id"]; code?: Scalars["string"] };
   createPuzzle: {
     name: Scalars["string"];
     code: Scalars["string"];
@@ -231,11 +243,16 @@ type FilterByObject<T> = {
     operator?: Scalars["filterOperator"];
     value: Scalars["boolean"];
   };
+  "algsetFilterByField/name": {
+    operator?: Scalars["filterOperator"];
+    value: Scalars["string"];
+  };
   algsetFilterByObject: {
     id?: InputType["algsetFilterByField/id"][];
     created_by?: InputType["algsetFilterByField/created_by"][];
     code?: InputType["algsetFilterByField/code"][];
     is_public?: InputType["algsetFilterByField/is_public"][];
+    name?: InputType["algsetFilterByField/name"][];
   };
   getAlgsetPaginator: {
     first?: Scalars["number"];
@@ -248,7 +265,6 @@ type FilterByObject<T> = {
     groupBy?: Scalars["algsetGroupByKey"][];
     search?: Scalars["string"];
   };
-  deleteAlgset: { id?: Scalars["id"]; code?: Scalars["string"] };
   createAlgset: {
     name: Scalars["string"];
     code: Scalars["string"];
@@ -297,7 +313,6 @@ type FilterByObject<T> = {
     groupBy?: Scalars["algcaseGroupByKey"][];
     search?: Scalars["string"];
   };
-  deleteAlgcase: { id?: Scalars["id"] };
   createAlgcase: { name: Scalars["string"]; algset: InputType["getAlgset"] };
   updateAlgcaseFields: {
     name?: Scalars["string"];
@@ -346,7 +361,6 @@ type FilterByObject<T> = {
     groupBy?: Scalars["algGroupByKey"][];
     search?: Scalars["string"];
   };
-  deleteAlg: { id?: Scalars["id"] };
   createAlg: {
     sequence: Scalars["string"];
     is_approved?: Scalars["boolean"];
@@ -370,9 +384,14 @@ type FilterByObject<T> = {
     operator?: Scalars["filterOperator"];
     value: Scalars["id"];
   };
+  "tagFilterByField/name": {
+    operator?: Scalars["filterOperator"];
+    value: Scalars["string"];
+  };
   tagFilterByObject: {
     id?: InputType["tagFilterByField/id"][];
     alg?: InputType["tagFilterByField/alg"][];
+    name?: InputType["tagFilterByField/name"][];
   };
   getTagPaginator: {
     first?: Scalars["number"];
@@ -385,211 +404,293 @@ type FilterByObject<T> = {
     groupBy?: Scalars["tagGroupByKey"][];
     search?: Scalars["string"];
   };
-  deleteTag: { id?: Scalars["id"] };
   createTag: { name: Scalars["string"] };
-  deleteAlgAlgcaseLink: { id?: Scalars["id"] };
+  getAlgAlgcaseLink: { id?: Scalars["id"] };
   createAlgAlgcaseLink: {
     alg: InputType["getAlg"];
     algcase: InputType["getAlgcase"];
   };
-  deleteAlgTagLink: { id?: Scalars["id"] };
+  getAlgTagLink: { id?: Scalars["id"] };
   createAlgTagLink: { alg: InputType["getAlg"]; tag: InputType["getTag"] };
 };
 /**PaginatorInfo Type*/ export type PaginatorInfo = {
-  /**The typename of the record*/ __typename: Scalars["string"];
-  total: Scalars["number"];
-  count: Scalars["number"];
-  startCursor: Scalars["string"] | null;
-  endCursor: Scalars["string"] | null;
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  total: { Type: Scalars["number"]; Args: undefined };
+  count: { Type: Scalars["number"]; Args: undefined };
+  startCursor: { Type: Scalars["string"] | null; Args: undefined };
+  endCursor: { Type: Scalars["string"] | null; Args: undefined };
 };
 export type UserEdge = Edge<User>;
 /**Paginator*/ export type UserPaginator = {
-  /**The typename of the record*/ __typename: Scalars["string"];
-  paginatorInfo: PaginatorInfo;
-  edges: UserEdge[];
-  /**Args for UserPaginator*/ __args: Root["getUserPaginator"]["Args"];
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  paginatorInfo: { Type: PaginatorInfo; Args: undefined };
+  edges: { Type: UserEdge[]; Args: undefined };
 };
 export type PuzzleEdge = Edge<Puzzle>;
 /**Paginator*/ export type PuzzlePaginator = {
-  /**The typename of the record*/ __typename: Scalars["string"];
-  paginatorInfo: PaginatorInfo;
-  edges: PuzzleEdge[];
-  /**Args for PuzzlePaginator*/ __args: Root["getPuzzlePaginator"]["Args"];
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  paginatorInfo: { Type: PaginatorInfo; Args: undefined };
+  edges: { Type: PuzzleEdge[]; Args: undefined };
 };
 export type AlgsetEdge = Edge<Algset>;
 /**Paginator*/ export type AlgsetPaginator = {
-  /**The typename of the record*/ __typename: Scalars["string"];
-  paginatorInfo: PaginatorInfo;
-  edges: AlgsetEdge[];
-  /**Args for AlgsetPaginator*/ __args: Root["getAlgsetPaginator"]["Args"];
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  paginatorInfo: { Type: PaginatorInfo; Args: undefined };
+  edges: { Type: AlgsetEdge[]; Args: undefined };
 };
 export type AlgcaseEdge = Edge<Algcase>;
 /**Paginator*/ export type AlgcasePaginator = {
-  /**The typename of the record*/ __typename: Scalars["string"];
-  paginatorInfo: PaginatorInfo;
-  edges: AlgcaseEdge[];
-  /**Args for AlgcasePaginator*/ __args: Root["getAlgcasePaginator"]["Args"];
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  paginatorInfo: { Type: PaginatorInfo; Args: undefined };
+  edges: { Type: AlgcaseEdge[]; Args: undefined };
 };
 export type AlgEdge = Edge<Alg>;
 /**Paginator*/ export type AlgPaginator = {
-  /**The typename of the record*/ __typename: Scalars["string"];
-  paginatorInfo: PaginatorInfo;
-  edges: AlgEdge[];
-  /**Args for AlgPaginator*/ __args: Root["getAlgPaginator"]["Args"];
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  paginatorInfo: { Type: PaginatorInfo; Args: undefined };
+  edges: { Type: AlgEdge[]; Args: undefined };
 };
 export type TagEdge = Edge<Tag>;
 /**Paginator*/ export type TagPaginator = {
-  /**The typename of the record*/ __typename: Scalars["string"];
-  paginatorInfo: PaginatorInfo;
-  edges: TagEdge[];
-  /**Args for TagPaginator*/ __args: Root["getTagPaginator"]["Args"];
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  paginatorInfo: { Type: PaginatorInfo; Args: undefined };
+  edges: { Type: TagEdge[]; Args: undefined };
 };
 /**Link type*/ export type AlgAlgcaseLink = {
-  /**The unique ID of the field*/ id: Scalars["id"];
-  /**The typename of the record*/ __typename: Scalars["string"];
-  alg: Alg;
-  algcase: Algcase;
-  /**When the record was created*/ created_at: Scalars["unixTimestamp"];
-  /**When the record was last updated*/ updated_at:
-    | Scalars["unixTimestamp"]
-    | null;
-  created_by: User;
+  /**The unique ID of the field*/ id: { Type: Scalars["id"]; Args: undefined };
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  alg: { Type: Alg; Args: undefined };
+  algcase: { Type: Algcase; Args: undefined };
+  /**When the record was created*/ created_at: {
+    Type: Scalars["unixTimestamp"];
+    Args: undefined;
+  };
+  /**When the record was last updated*/ updated_at: {
+    Type: Scalars["unixTimestamp"] | null;
+    Args: undefined;
+  };
+  created_by: { Type: User; Args: undefined };
 };
 /**Link type*/ export type AlgTagLink = {
-  /**The unique ID of the field*/ id: Scalars["id"];
-  /**The typename of the record*/ __typename: Scalars["string"];
-  alg: Alg;
-  tag: Tag;
-  /**When the record was created*/ created_at: Scalars["unixTimestamp"];
-  /**When the record was last updated*/ updated_at:
-    | Scalars["unixTimestamp"]
-    | null;
-  created_by: User;
+  /**The unique ID of the field*/ id: { Type: Scalars["id"]; Args: undefined };
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  alg: { Type: Alg; Args: undefined };
+  tag: { Type: Tag; Args: undefined };
+  /**When the record was created*/ created_at: {
+    Type: Scalars["unixTimestamp"];
+    Args: undefined;
+  };
+  /**When the record was last updated*/ updated_at: {
+    Type: Scalars["unixTimestamp"] | null;
+    Args: undefined;
+  };
+  created_by: { Type: User; Args: undefined };
 };
 /**EnumPaginator*/ export type UserRoleEnumPaginator = {
-  /**The typename of the record*/ __typename: Scalars["string"];
-  values: Scalars["userRole"][];
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  values: { Type: Scalars["userRole"][]; Args: undefined };
 };
 /**EnumPaginator*/ export type FilterOperatorEnumPaginator = {
-  /**The typename of the record*/ __typename: Scalars["string"];
-  values: Scalars["filterOperator"][];
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  values: { Type: Scalars["filterOperator"][]; Args: undefined };
 };
 /**EnumPaginator*/ export type CaseVisualizationEnumPaginator = {
-  /**The typename of the record*/ __typename: Scalars["string"];
-  values: Scalars["caseVisualization"][];
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  values: { Type: Scalars["caseVisualization"][]; Args: undefined };
 };
 /**User type*/ export type User = {
-  /**The unique ID of the field*/ id: Scalars["id"];
-  /**The typename of the record*/ __typename: Scalars["string"];
-  provider: never;
-  provider_id: never;
-  wca_id: Scalars["string"] | null;
-  email: Scalars["string"];
-  name: Scalars["string"];
-  avatar: Scalars["string"] | null;
-  country: Scalars["string"] | null;
-  is_public: Scalars["boolean"];
-  role: Scalars["userRole"];
-  permissions: (Scalars["userPermission"] | null)[];
-  all_permissions: Scalars["userPermission"][];
-  /**When the record was created*/ created_at: Scalars["unixTimestamp"];
-  /**When the record was last updated*/ updated_at:
-    | Scalars["unixTimestamp"]
-    | null;
-  created_by: User;
-  /**Args for User*/ __args: Root["getUser"]["Args"];
+  /**The unique ID of the field*/ id: { Type: Scalars["id"]; Args: undefined };
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  provider: { Type: never; Args: undefined };
+  provider_id: { Type: never; Args: undefined };
+  wca_id: { Type: Scalars["string"] | null; Args: undefined };
+  email: { Type: Scalars["string"]; Args: undefined };
+  name: { Type: Scalars["string"]; Args: undefined };
+  avatar: { Type: Scalars["string"] | null; Args: undefined };
+  country: { Type: Scalars["string"] | null; Args: undefined };
+  is_public: { Type: Scalars["boolean"]; Args: undefined };
+  role: { Type: Scalars["userRole"]; Args: undefined };
+  permissions: { Type: (Scalars["userPermission"] | null)[]; Args: undefined };
+  all_permissions: { Type: Scalars["userPermission"][]; Args: undefined };
+  /**When the record was created*/ created_at: {
+    Type: Scalars["unixTimestamp"];
+    Args: undefined;
+  };
+  /**When the record was last updated*/ updated_at: {
+    Type: Scalars["unixTimestamp"] | null;
+    Args: undefined;
+  };
+  created_by: { Type: User; Args: undefined };
 };
 /**Authentication type*/ export type Auth = {
-  /**The typename of the record*/ __typename: Scalars["string"];
-  type: Scalars["string"];
-  token: Scalars["string"];
-  expiration: Scalars["number"];
-  expiration_days: Scalars["number"];
-  user: User;
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  type: { Type: Scalars["string"]; Args: undefined };
+  token: { Type: Scalars["string"]; Args: undefined };
+  expiration: { Type: Scalars["number"]; Args: undefined };
+  expiration_days: { Type: Scalars["number"]; Args: undefined };
+  user: { Type: User; Args: undefined };
 };
 /**Puzzle Type*/ export type Puzzle = {
-  /**The unique ID of the field*/ id: Scalars["id"];
-  /**The typename of the record*/ __typename: Scalars["string"];
-  name: Scalars["string"];
-  code: Scalars["string"];
-  is_public: Scalars["boolean"];
-  /**When the record was created*/ created_at: Scalars["unixTimestamp"];
-  /**When the record was last updated*/ updated_at:
-    | Scalars["unixTimestamp"]
-    | null;
-  created_by: User;
-  /**Args for Puzzle*/ __args: Root["getPuzzle"]["Args"];
+  /**The unique ID of the field*/ id: { Type: Scalars["id"]; Args: undefined };
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  name: { Type: Scalars["string"]; Args: undefined };
+  code: { Type: Scalars["string"]; Args: undefined };
+  is_public: { Type: Scalars["boolean"]; Args: undefined };
+  /**When the record was created*/ created_at: {
+    Type: Scalars["unixTimestamp"];
+    Args: undefined;
+  };
+  /**When the record was last updated*/ updated_at: {
+    Type: Scalars["unixTimestamp"] | null;
+    Args: undefined;
+  };
+  created_by: { Type: User; Args: undefined };
 };
 /**Algorithm Set*/ export type Algset = {
-  /**The unique ID of the field*/ id: Scalars["id"];
-  name: Scalars["string"];
-  code: Scalars["string"];
-  parent: Algset | null;
-  puzzle: Puzzle;
-  mask: Scalars["string"] | null;
-  visualization: Scalars["caseVisualization"];
-  score: Scalars["number"];
-  is_public: Scalars["boolean"];
-  /**When the record was created*/ created_at: Scalars["unixTimestamp"];
-  /**When the record was last updated*/ updated_at:
-    | Scalars["unixTimestamp"]
-    | null;
-  created_by: User;
-  /**Args for Algset*/ __args: Root["getAlgset"]["Args"];
+  /**The unique ID of the field*/ id: { Type: Scalars["id"]; Args: undefined };
+  name: { Type: Scalars["string"]; Args: undefined };
+  code: { Type: Scalars["string"]; Args: undefined };
+  parent: { Type: Algset | null; Args: undefined };
+  puzzle: { Type: Puzzle; Args: undefined };
+  mask: { Type: Scalars["string"] | null; Args: undefined };
+  visualization: { Type: Scalars["caseVisualization"]; Args: undefined };
+  score: { Type: Scalars["number"]; Args: undefined };
+  is_public: { Type: Scalars["boolean"]; Args: undefined };
+  /**When the record was created*/ created_at: {
+    Type: Scalars["unixTimestamp"];
+    Args: undefined;
+  };
+  /**When the record was last updated*/ updated_at: {
+    Type: Scalars["unixTimestamp"] | null;
+    Args: undefined;
+  };
+  created_by: { Type: User; Args: undefined };
 };
 /**Algorithm Case*/ export type Algcase = {
-  /**The unique ID of the field*/ id: Scalars["id"];
-  /**The typename of the record*/ __typename: Scalars["string"];
-  name: Scalars["string"];
-  algset: Algset;
-  /**When the record was created*/ created_at: Scalars["unixTimestamp"];
-  /**When the record was last updated*/ updated_at:
-    | Scalars["unixTimestamp"]
-    | null;
-  created_by: User;
-  /**Args for Algcase*/ __args: Root["getAlgcase"]["Args"];
+  /**The unique ID of the field*/ id: { Type: Scalars["id"]; Args: undefined };
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  name: { Type: Scalars["string"]; Args: undefined };
+  algset: { Type: Algset; Args: undefined };
+  /**When the record was created*/ created_at: {
+    Type: Scalars["unixTimestamp"];
+    Args: undefined;
+  };
+  /**When the record was last updated*/ updated_at: {
+    Type: Scalars["unixTimestamp"] | null;
+    Args: undefined;
+  };
+  created_by: { Type: User; Args: undefined };
 };
 /**Algorithm*/ export type Alg = {
-  /**The unique ID of the field*/ id: Scalars["id"];
-  /**The typename of the record*/ __typename: Scalars["string"];
-  sequence: Scalars["string"];
-  is_approved: Scalars["boolean"];
-  score: Scalars["number"];
-  /**When the record was created*/ created_at: Scalars["unixTimestamp"];
-  /**When the record was last updated*/ updated_at:
-    | Scalars["unixTimestamp"]
-    | null;
-  created_by: User;
-  /**Args for Alg*/ __args: Root["getAlg"]["Args"];
+  /**The unique ID of the field*/ id: { Type: Scalars["id"]; Args: undefined };
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  sequence: { Type: Scalars["string"]; Args: undefined };
+  is_approved: { Type: Scalars["boolean"]; Args: undefined };
+  score: { Type: Scalars["number"]; Args: undefined };
+  /**When the record was created*/ created_at: {
+    Type: Scalars["unixTimestamp"];
+    Args: undefined;
+  };
+  /**When the record was last updated*/ updated_at: {
+    Type: Scalars["unixTimestamp"] | null;
+    Args: undefined;
+  };
+  created_by: { Type: User; Args: undefined };
 };
 /**Tag type*/ export type Tag = {
-  /**The unique ID of the field*/ id: Scalars["id"];
-  /**The typename of the record*/ __typename: Scalars["string"];
-  name: Scalars["string"];
-  /**When the record was created*/ created_at: Scalars["unixTimestamp"];
-  /**When the record was last updated*/ updated_at:
-    | Scalars["unixTimestamp"]
-    | null;
-  created_by: User;
-  /**Args for Tag*/ __args: Root["getTag"]["Args"];
+  /**The unique ID of the field*/ id: { Type: Scalars["id"]; Args: undefined };
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  name: { Type: Scalars["string"]; Args: undefined };
+  /**When the record was created*/ created_at: {
+    Type: Scalars["unixTimestamp"];
+    Args: undefined;
+  };
+  /**When the record was last updated*/ updated_at: {
+    Type: Scalars["unixTimestamp"] | null;
+    Args: undefined;
+  };
+  created_by: { Type: User; Args: undefined };
 };
-/**Root type*/ export type Root = {
-  getCurrentUser: { Type: User; Args?: undefined };
+/**All Root resolvers*/ export type Root = {
+  getUserRoleEnumPaginator: { Type: UserRoleEnumPaginator; Args: undefined };
+  getFilterOperatorEnumPaginator: {
+    Type: FilterOperatorEnumPaginator;
+    Args: undefined;
+  };
+  getCaseVisualizationEnumPaginator: {
+    Type: CaseVisualizationEnumPaginator;
+    Args: undefined;
+  };
+  getCurrentUser: { Type: User; Args: undefined };
   getUser: { Type: User; Args: InputType["getUser"] };
   getUserPaginator: {
     Type: UserPaginator;
     Args: InputType["getUserPaginator"];
   };
-  deleteUser: { Type: User; Args: InputType["deleteUser"] };
+  deleteUser: { Type: User; Args: InputType["getUser"] };
   createUser: { Type: User; Args: InputType["createUser"] };
   updateUser: { Type: User; Args: InputType["updateUser"] };
-  socialLogin: { Type: Auth; Args?: InputType["socialLogin"] };
+  socialLogin: { Type: Auth; Args: [InputType["socialLogin"]] };
   getPuzzle: { Type: Puzzle; Args: InputType["getPuzzle"] };
   getPuzzlePaginator: {
     Type: PuzzlePaginator;
     Args: InputType["getPuzzlePaginator"];
   };
-  deletePuzzle: { Type: Puzzle; Args: InputType["deletePuzzle"] };
+  deletePuzzle: { Type: Puzzle; Args: InputType["getPuzzle"] };
   createPuzzle: { Type: Puzzle; Args: InputType["createPuzzle"] };
   updatePuzzle: { Type: Puzzle; Args: InputType["updatePuzzle"] };
   getAlgset: { Type: Algset; Args: InputType["getAlgset"] };
@@ -597,7 +698,7 @@ export type TagEdge = Edge<Tag>;
     Type: AlgsetPaginator;
     Args: InputType["getAlgsetPaginator"];
   };
-  deleteAlgset: { Type: Algset; Args: InputType["deleteAlgset"] };
+  deleteAlgset: { Type: Algset; Args: InputType["getAlgset"] };
   createAlgset: { Type: Algset; Args: InputType["createAlgset"] };
   updateAlgset: { Type: Algset; Args: InputType["updateAlgset"] };
   getAlgcase: { Type: Algcase; Args: InputType["getAlgcase"] };
@@ -605,35 +706,26 @@ export type TagEdge = Edge<Tag>;
     Type: AlgcasePaginator;
     Args: InputType["getAlgcasePaginator"];
   };
-  deleteAlgcase: { Type: Algcase; Args: InputType["deleteAlgcase"] };
+  deleteAlgcase: { Type: Algcase; Args: InputType["getAlgcase"] };
   createAlgcase: { Type: Algcase; Args: InputType["createAlgcase"] };
   updateAlgcase: { Type: Algcase; Args: InputType["updateAlgcase"] };
   getAlg: { Type: Alg; Args: InputType["getAlg"] };
   getAlgPaginator: { Type: AlgPaginator; Args: InputType["getAlgPaginator"] };
-  deleteAlg: { Type: Alg; Args: InputType["deleteAlg"] };
+  deleteAlg: { Type: Alg; Args: InputType["getAlg"] };
   createAlg: { Type: Alg; Args: InputType["createAlg"] };
   updateAlg: { Type: Alg; Args: InputType["updateAlg"] };
   getTag: { Type: Tag; Args: InputType["getTag"] };
   getTagPaginator: { Type: TagPaginator; Args: InputType["getTagPaginator"] };
-  deleteTag: { Type: Tag; Args: InputType["deleteTag"] };
+  deleteTag: { Type: Tag; Args: InputType["getTag"] };
   createTag: { Type: Tag; Args: InputType["createTag"] };
   deleteAlgAlgcaseLink: {
     Type: AlgAlgcaseLink;
-    Args: InputType["deleteAlgAlgcaseLink"];
+    Args: InputType["getAlgAlgcaseLink"];
   };
   createAlgAlgcaseLink: {
     Type: AlgAlgcaseLink;
     Args: InputType["createAlgAlgcaseLink"];
   };
-  deleteAlgTagLink: { Type: AlgTagLink; Args: InputType["deleteAlgTagLink"] };
+  deleteAlgTagLink: { Type: AlgTagLink; Args: InputType["getAlgTagLink"] };
   createAlgTagLink: { Type: AlgTagLink; Args: InputType["createAlgTagLink"] };
-  getUserRoleEnumPaginator: { Type: UserRoleEnumPaginator; Args?: undefined };
-  getFilterOperatorEnumPaginator: {
-    Type: FilterOperatorEnumPaginator;
-    Args?: undefined;
-  };
-  getCaseVisualizationEnumPaginator: {
-    Type: CaseVisualizationEnumPaginator;
-    Args?: undefined;
-  };
 };

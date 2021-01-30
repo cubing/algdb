@@ -5,13 +5,13 @@ import {
 } from "./enums";
 import { KenumService, EnumService } from "./core/services";
 
-import { UserService } from "./types/user/service";
-import { AuthService } from "./types/auth/service";
-import { PuzzleService } from "./types/puzzle/service";
-import { AlgsetService } from "./types/algset/service";
-import { AlgcaseService } from "./types/algcase/service";
-import { AlgService } from "./types/alg/service";
-import { TagService } from "./types/tag/service";
+import { UserService } from "./models/user/service";
+import { AuthService } from "./models/auth/service";
+import { PuzzleService } from "./models/puzzle/service";
+import { AlgsetService } from "./models/algset/service";
+import { AlgcaseService } from "./models/algcase/service";
+import { AlgService } from "./models/alg/service";
+import { TagService } from "./models/tag/service";
 
 import { AlgAlgcaseLinkService } from "./links/algAlgcaseLink/service";
 import { AlgTagLinkService } from "./links/algTagLink/service";

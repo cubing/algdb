@@ -6,7 +6,7 @@ admin.initializeApp({
 });
 
 import { initializeJomql } from "jomql";
-import * as schema from "./schema";
+import "./schema";
 import { env, isDev } from "./config";
 import { initializePool } from "./utils/mysql2";
 
@@ -71,7 +71,6 @@ env.pusher && initializePusher(env.pusher);
 env.mysql && initializePool(env.mysql, isDev);
 
 initializeJomql(app, {
-  schema: schema,
   debug: !!isDev,
   lookupValue: true,
   jomqlPath: "/jomql",
@@ -79,7 +78,7 @@ initializeJomql(app, {
 });
 
 app.get("/schema.ts", function (req, res, next) {
-  const tsSchemaGenerator = new CustomSchemaGenerator(schema);
+  const tsSchemaGenerator = new CustomSchemaGenerator();
   tsSchemaGenerator.buildSchema();
   tsSchemaGenerator.processSchema();
   res.send(tsSchemaGenerator.outputSchema());

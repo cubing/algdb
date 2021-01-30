@@ -1,12 +1,18 @@
 import {
-  TypeDefinitionField,
+  ObjectTypeDefinitionField,
   ScalarDefinition,
   InputTypeDefinition,
-  ArgDefinition,
   ResolverFunction,
   RootResolverFunction,
   JomqlArgsError,
   lookupSymbol,
+  objectTypeDefs,
+  JomqlInitializationError,
+  JomqlInputType,
+  JomqlScalarType,
+  JomqlObjectTypeLookup,
+  JomqlObjectType,
+  JomqlInputFieldType,
 } from "jomql";
 import * as Resolver from "./resolver";
 import { deepAssign, isObject, capitalizeString } from "./shared";
@@ -14,9 +20,7 @@ import { DataTypes, Sequelize, DataType } from "sequelize";
 import { BaseService, NormalService, PaginatedService } from "../core/services";
 import { linkDefs } from "../links";
 import * as Scalars from "../scalars";
-import { typeDefs } from "../typeDefs";
-import { JomqlInitializationError } from "jomql/lib/classes";
-import type { TypeDefSqlOptions } from "../../types";
+import type { ObjectTypeDefsqlOptions } from "../../types";
 
 type GenerateFieldParams = {
   name?: string;
@@ -25,8 +29,8 @@ type GenerateFieldParams = {
   hidden?: boolean;
   defaultValue?: unknown;
   sqlDefinition?: Partial<any>;
-  mysqlOptions?: Partial<TypeDefSqlOptions>;
-  typeDefOptions?: Partial<TypeDefinitionField>;
+  mysqlOptions?: Partial<ObjectTypeDefsqlOptions>;
+  typeDefOptions?: Partial<ObjectTypeDefinitionField>;
 };
 
 /*
@@ -37,7 +41,7 @@ type GenerateFieldParams = {
 export function generateStandardField(
   params: {
     sqlType?: DataType;
-    type: ScalarDefinition | string;
+    type: JomqlScalarType | JomqlObjectTypeLookup | JomqlObjectType;
     isArray: boolean;
   } & GenerateFieldParams
 ) {
@@ -54,7 +58,7 @@ export function generateStandardField(
     mysqlOptions,
     typeDefOptions,
   } = params;
-  const typeDef = <TypeDefinitionField>{
+  const typeDef = <ObjectTypeDefinitionField>{
     type,
     description,
     isArray,
@@ -86,7 +90,7 @@ export function generateStandardField(
 // NOT a sql field.
 export function generateGenericScalarField(
   params: {
-    type: ScalarDefinition;
+    type: JomqlScalarType;
     isArray?: boolean;
   } & GenerateFieldParams
 ) {
@@ -118,7 +122,7 @@ export function generateGenericScalarField(
 
 export function generateStringField(
   params: {
-    type?: ScalarDefinition;
+    type?: JomqlScalarType;
   } & GenerateFieldParams
 ) {
   const {
@@ -316,7 +320,7 @@ export function generateBooleanField(params: GenerateFieldParams) {
 // array of strings, stored in mysql as JSON
 export function generateArrayField(
   params: {
-    type: ScalarDefinition;
+    type: JomqlScalarType;
   } & GenerateFieldParams
 ) {
   const {
@@ -354,7 +358,7 @@ export function generateArrayField(
 // should handle kenums too
 export function generateEnumField(
   params: {
-    scalarDefinition: ScalarDefinition;
+    scalarDefinition: JomqlScalarType;
   } & GenerateFieldParams
 ) {
   const {
@@ -376,8 +380,8 @@ export function generateEnumField(
     description,
     allowNull: allowNull,
     defaultValue:
-      scalarDefinition.parseValue && defaultValue !== undefined
-        ? scalarDefinition.parseValue(defaultValue)
+      scalarDefinition.definition.parseValue && defaultValue !== undefined
+        ? scalarDefinition.definition.parseValue(defaultValue)
         : defaultValue,
     hidden,
     isArray: false,
@@ -435,15 +439,11 @@ export function generateTypenameField(service: BaseService) {
     type: Scalars.string,
     typeDefOptions: {
       resolver: () => service.typename,
-      args: {
-        type: {
-          fields: {
-            format: {
-              type: Scalars.number,
-            },
-          },
-        },
-      },
+      args: new JomqlInputFieldType({
+        required: false,
+        isArray: false,
+        type: Scalars.number,
+      }),
       addable: false,
       updateable: false, // not addable or updateable
     },
@@ -483,7 +483,7 @@ export function generateJoinableField(
     defaultValue,
     hidden,
     sqlType: DataTypes.INTEGER,
-    type: service.typename,
+    type: service.typeDefLookup,
     sqlDefinition,
     typeDefOptions,
     mysqlOptions: {
@@ -520,7 +520,7 @@ export function generateDataloadableField(
     hidden,
     isArray: false,
     sqlType: DataTypes.INTEGER,
-    type: service.typename,
+    type: service.typeDefLookup,
     sqlDefinition,
     mysqlOptions,
     typeDefOptions: {
@@ -573,7 +573,7 @@ export function generatePaginatorPivotResolverObject(params: {
     fields: {},
   };
 
-  // populate the fields nextTick, to allow typeDefs to load
+  // populate the fields nextTick, to allow objectTypeDefs to load
   process.nextTick(() => {
     Object.entries(pivotService.filterFieldsMap).reduce(
       (total, [filterKey, filterValue]) => {
@@ -581,62 +581,78 @@ export function generatePaginatorPivotResolverObject(params: {
         // traverse the fields to find the scalarDefinition
         const keyParts = actualFilterKey.split(".");
         let currentType;
-        let currentTypeDef = pivotService.typeDef;
+        let currentTypeDef = pivotService.getTypeDef();
         keyParts.forEach((keyPart, keyIndex) => {
-          if (keyPart in currentTypeDef.fields) {
-            currentType = currentTypeDef.fields[keyPart].type;
+          if (keyPart in currentTypeDef.definition.fields) {
+            currentType = currentTypeDef.definition.fields[keyPart].type;
           } else {
-            // to-do: handle linked types
             // look in link fields and generate required joins
             linkDefs.forEach((linkDef, linkName) => {
               if (
                 linkDef.types.has(keyPart) &&
-                linkDef.types.has(currentTypeDef.name)
+                linkDef.types.has(currentTypeDef.definition.name)
               ) {
-                currentType = keyPart;
+                currentType = linkDef.types.get(keyPart)?.typeDefLookup;
               }
             });
           }
 
           // if currentType undefined, must be an unrecognized field
-          if (!currentType)
+          if (!currentType) {
             throw new JomqlInitializationError({
-              message: `Invalid field '${filterKey}' on '${currentTypeDef.name}'`,
+              message: `Invalid field '${filterKey}' on '${currentTypeDef.definition.name}'`,
             });
+          }
 
-          // if has next field and currentType is string, get and set the next typeDef
-          if (keyParts[keyIndex + 1] && typeof currentType === "string") {
-            const nextTypeDef = typeDefs.get(currentType);
-            if (!nextTypeDef)
-              throw new JomqlInitializationError({
-                message: `Invalid typeDef ${currentType}`,
-              });
-            currentTypeDef = nextTypeDef;
+          // if has next field and currentType is JomqlObjectType, get and set the next typeDef
+          if (keyParts[keyIndex + 1]) {
+            if (currentType instanceof JomqlObjectTypeLookup) {
+              const lookupTypeDef = objectTypeDefs.get(currentType.name);
+
+              if (!lookupTypeDef) {
+                throw new JomqlInitializationError({
+                  message: `Invalid typeDef lookup for '${currentType.name}'`,
+                });
+              }
+
+              currentTypeDef = lookupTypeDef;
+            } else if (currentType instanceof JomqlObjectType) {
+              currentTypeDef = currentType;
+            } else {
+              // must be scalar. should be over
+            }
           }
         });
 
-        total[filterKey] = <ArgDefinition>{
-          type: <InputTypeDefinition>{
-            name: `${pivotService.typename}FilterByField/${filterKey}`,
-            fields: {
-              operator: <ArgDefinition>{
-                type: Scalars.filterOperator,
-                required: false,
-                isArray: false,
-              },
-              value: <ArgDefinition>{
-                type:
-                  typeof currentType === "string"
-                    ? `get${capitalizeString(currentType)}`
-                    : currentType,
-                required: true,
-                isArray: false,
+        // final value must be scalar at the moment
+        if (!(currentType instanceof JomqlScalarType)) {
+          throw new JomqlInitializationError({
+            message: `Final filter field must be a scalar type. Field: '${filterKey}'`,
+          });
+        }
+
+        total[filterKey] = new JomqlInputFieldType({
+          type: new JomqlInputType(
+            {
+              name: `${pivotService.typename}FilterByField/${filterKey}`,
+              fields: {
+                operator: new JomqlInputFieldType({
+                  type: Scalars.filterOperator,
+                  required: false,
+                  isArray: false,
+                }),
+                value: new JomqlInputFieldType({
+                  type: currentType,
+                  required: true,
+                  isArray: false,
+                }),
               },
             },
-          },
+            true
+          ),
           required: false,
           isArray: true,
-        };
+        });
         return total;
       },
       filterByTypeDefinition.fields
@@ -712,84 +728,99 @@ export function generatePaginatorPivotResolverObject(params: {
     rootResolverFunction = (inputs) => pivotService.paginator.getRecord(inputs);
   }
 
-  return <TypeDefinitionField>{
-    type: pivotService.paginator.typename,
+  return <ObjectTypeDefinitionField>{
+    type: new JomqlObjectTypeLookup(pivotService.paginator.typename),
     isArray: false,
     allowNull: false,
-    args: {
+    args: new JomqlInputFieldType({
       required: true,
-      type: {
-        name: "get" + capitalizeString(pivotService.paginator.typename),
-        fields: {
-          first: { type: Scalars.number },
-          last: { type: Scalars.number },
-          after: { type: Scalars.string },
-          before: { type: Scalars.string },
-          sortBy: { type: sortByScalarDefinition, isArray: true },
-          sortDesc: { type: Scalars.boolean, isArray: true },
-          filterBy: { type: filterByTypeDefinition, isArray: false },
-          groupBy: { type: groupByScalarDefinition, isArray: true },
-          search: { type: Scalars.string },
+      type: new JomqlInputType(
+        {
+          name: "get" + capitalizeString(pivotService.paginator.typename),
+          fields: {
+            first: new JomqlInputFieldType({ type: Scalars.number }),
+            last: new JomqlInputFieldType({ type: Scalars.number }),
+            after: new JomqlInputFieldType({ type: Scalars.string }),
+            before: new JomqlInputFieldType({ type: Scalars.string }),
+            sortBy: new JomqlInputFieldType({
+              type: new JomqlScalarType(sortByScalarDefinition, true),
+              isArray: true,
+            }),
+            sortDesc: new JomqlInputFieldType({
+              type: Scalars.boolean,
+              isArray: true,
+            }),
+            filterBy: new JomqlInputFieldType({
+              type: new JomqlInputType(filterByTypeDefinition, true),
+              isArray: false,
+            }),
+            groupBy: new JomqlInputFieldType({
+              type: new JomqlScalarType(groupByScalarDefinition, true),
+              isArray: true,
+            }),
+            search: new JomqlInputFieldType({ type: Scalars.string }),
+          },
+          inputsValidator: (args, fieldPath) => {
+            // check for invalid first/last, before/after combos
+
+            // after
+            if (!isObject(args)) {
+              throw new JomqlArgsError({
+                message: `Args required`,
+                fieldPath,
+              });
+            }
+
+            if ("after" in args) {
+              if (!("first" in args))
+                throw new JomqlArgsError({
+                  message: `Cannot use after without first`,
+                  fieldPath,
+                });
+              if ("last" in args || "before" in args)
+                throw new JomqlArgsError({
+                  message: `Cannot use after with last/before`,
+                  fieldPath,
+                });
+            }
+
+            // first
+            if ("first" in args) {
+              if ("last" in args || "before" in args)
+                throw new JomqlArgsError({
+                  message: `Cannot use after with last/before`,
+                  fieldPath,
+                });
+            }
+
+            // before
+            if ("before" in args) {
+              if (!("last" in args))
+                throw new JomqlArgsError({
+                  message: `Cannot use before without last`,
+                  fieldPath,
+                });
+            }
+
+            // last
+            if ("last" in args) {
+              if (!("before" in args))
+                throw new JomqlArgsError({
+                  message: `Cannot use before without last`,
+                  fieldPath,
+                });
+            }
+
+            if (!("first" in args) && !("last" in args))
+              throw new JomqlArgsError({
+                message: `One of first or last required`,
+                fieldPath,
+              });
+          },
         },
-        inputsValidator: (args, fieldPath) => {
-          // check for invalid first/last, before/after combos
-
-          // after
-          if (!isObject(args)) {
-            throw new JomqlArgsError({
-              message: `Args required`,
-              fieldPath,
-            });
-          }
-
-          if ("after" in args) {
-            if (!("first" in args))
-              throw new JomqlArgsError({
-                message: `Cannot use after without first`,
-                fieldPath,
-              });
-            if ("last" in args || "before" in args)
-              throw new JomqlArgsError({
-                message: `Cannot use after with last/before`,
-                fieldPath,
-              });
-          }
-
-          // first
-          if ("first" in args) {
-            if ("last" in args || "before" in args)
-              throw new JomqlArgsError({
-                message: `Cannot use after with last/before`,
-                fieldPath,
-              });
-          }
-
-          // before
-          if ("before" in args) {
-            if (!("last" in args))
-              throw new JomqlArgsError({
-                message: `Cannot use before without last`,
-                fieldPath,
-              });
-          }
-
-          // last
-          if ("last" in args) {
-            if (!("before" in args))
-              throw new JomqlArgsError({
-                message: `Cannot use before without last`,
-                fieldPath,
-              });
-          }
-
-          if (!("first" in args) && !("last" in args))
-            throw new JomqlArgsError({
-              message: `One of first or last required`,
-              fieldPath,
-            });
-        },
-      },
-    },
+        true
+      ),
+    }),
     resolver: rootResolverFunction ?? resolverFunction,
   };
 }

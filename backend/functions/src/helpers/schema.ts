@@ -1,26 +1,20 @@
 import { TsSchemaGenerator } from "jomql";
 
 export class CustomSchemaGenerator extends TsSchemaGenerator {
-  constructor(schema) {
-    super(schema);
+  constructor() {
+    super();
     this.scaffoldStr += `
 type Edge<T> = {
-  __typename: string;
-  node: Omit<T, args>;
-  cursor: string;
-};
-
-type FilterByObject<T> = {
-  field: T;
-  operator?: string;
-  value: unknown;
+  __typename: Field<string, undefined>;
+  node: Field<T, undefined>;
+  cursor: Field<string, undefined>;
 };\n\n`;
   }
 
   // additional post-processing of the schema
   processSchema() {
     // loop through this.inputTypeTsTypeFields and find places to simplify
-    this.inputTypeTsTypeFields.forEach((value, key) => {
+    this.inputTypeTsTypeFields.value.forEach((value, key) => {
       // if inputDefName is ends in FilterByObject, process differently
       /*       if (key.match(/FilterByObject$/)) {
         // replace the value
@@ -37,16 +31,14 @@ type FilterByObject<T> = {
     });
 
     // loop through types and find places to simplify
-    this.typeDocumentRoot.forEach((value, key) => {
+    this.typeDocumentRoot.value.forEach((value, key) => {
       // if typeDefKey ends in Edge, simplify to generic to save space
       if (key.match(/Edge$/)) {
-        this.typeDocumentRoot.set(key, {
-          value: {
-            value: `Edge<${key.replace(/Edge$/, "")}>`,
-            isArray: false,
-            isNullable: false,
-            isOptional: false,
-          },
+        this.typeDocumentRoot.value.set(key, {
+          value: `Edge<${key.replace(/Edge$/, "")}>`,
+          isArray: false,
+          isNullable: false,
+          isOptional: false,
         });
       }
     });

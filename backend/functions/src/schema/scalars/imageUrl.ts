@@ -1,4 +1,4 @@
-import { ScalarDefinition } from "jomql";
+import { JomqlScalarType } from "jomql";
 
 function validate(value) {
   if (typeof value !== "string") throw true;
@@ -15,10 +15,10 @@ function validate(value) {
   return value;
 }
 
-export const imageUrl: ScalarDefinition = {
+export const imageUrl = new JomqlScalarType({
   name: "imageUrl",
   types: ["string"],
   description: "Image URL Field",
   serialize: validate,
   parseValue: validate,
-};
+});

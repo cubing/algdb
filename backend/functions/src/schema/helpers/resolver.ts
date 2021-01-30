@@ -2,27 +2,25 @@ import {
   generateAnonymousRootResolver,
   generateJomqlResolverTree,
   processJomqlResolverTree,
-  TypeDefinition,
   JomqlResolverNode,
   validateResultFields,
   JomqlQueryError,
+  JomqlObjectType,
+  objectTypeDefs,
+  JomqlObjectTypeLookup,
+  isRootResolverDefinition,
 } from "jomql";
 
 import * as mysqlHelper from "./mysql";
-import { typeDefs } from "../typeDefs";
 import {
   SqlQuerySelectObject,
   SqlWhereObject,
   SqlParams,
   SqlSelectQueryOutput,
-  TypeDefSqlOptions,
-  DataloaderFunction,
 } from "../../types";
 
 import { isObject } from "../helpers/shared";
-import { scalars } from "..";
 import type { Request } from "express";
-
 export type CustomResolver = {
   resolver: Function;
   value?: any;
@@ -86,7 +84,7 @@ export async function addTableRow(
   rawFields = {},
   ignore = false
 ) {
-  const typeDef: TypeDefinition | undefined = typeDefs.get(typename);
+  const typeDef = objectTypeDefs.get(typename);
   if (!typeDef)
     throw new Error(`Invalid TypeDefinition for type '${typename}'`);
 
@@ -97,7 +95,7 @@ export async function addTableRow(
   const customResolvers: CustomResolverMap = {};
 
   for (const field in args) {
-    if (field in typeDef.fields) {
+    if (field in typeDef.definition.fields) {
       // we are only checking this is args
       /*
       if (!typeDef.fields[field].addable) {
@@ -106,15 +104,17 @@ export async function addTableRow(
       */
 
       // if finalValue is null, see if that is allowed -- also a failsafe
-      validateResultFields(args[field], typeDef.fields[field], [field]);
+      validateResultFields(args[field], typeDef.definition.fields[field], [
+        field,
+      ]);
 
       // if it is a mysql field, add to mysqlFields
-      if (typeDef.fields[field].mysqlOptions) {
+      if (typeDef.definition.fields[field].mysqlOptions) {
         sqlFields[field] = args[field];
       }
 
       // if it has a custom updater, add to customResolvers
-      const customResolver = typeDef.fields[field].updater;
+      const customResolver = typeDef.definition.fields[field].updater;
       if (customResolver) {
         customResolvers[field] = {
           resolver: customResolver,
@@ -163,7 +163,7 @@ export async function updateTableRow(
   whereObject: SqlWhereObject
 ) {
   //resolve the setters
-  const typeDef: TypeDefinition | undefined = typeDefs.get(typename);
+  const typeDef = objectTypeDefs.get(typename);
   if (!typeDef) throw new Error("Invalid TypeDef: " + typename);
 
   //assemble the mysql fields
@@ -173,17 +173,19 @@ export async function updateTableRow(
   const customResolvers: CustomResolverMap = {};
 
   for (const field in args) {
-    if (field in typeDef.fields) {
+    if (field in typeDef.definition.fields) {
       // if finalValue is null, see if that is allowed -- also a failsafe
-      validateResultFields(args[field], typeDef.fields[field], [field]);
+      validateResultFields(args[field], typeDef.definition.fields[field], [
+        field,
+      ]);
 
       // if it is a mysql field, add to mysqlFields
-      if (typeDef.fields[field].mysqlOptions) {
+      if (typeDef.definition.fields[field].mysqlOptions) {
         sqlFields[field] = args[field];
       }
 
       // if it has a custom updater, add to customResolvers
-      const customResolver = typeDef.fields[field].updater;
+      const customResolver = typeDef.definition.fields[field].updater;
       if (customResolver) {
         customResolvers[field] = {
           resolver: customResolver,
@@ -229,15 +231,15 @@ export async function deleteTableRow(
   whereObject: SqlWhereObject
 ) {
   //resolve the deleters
-  const typeDef: TypeDefinition | undefined = typeDefs.get(typename);
+  const typeDef = objectTypeDefs.get(typename);
   if (!typeDef) throw new Error("Invalid TypeDef: " + typename);
 
   //handle the custom deleters
   const customResolvers: CustomResolverMap = {};
 
-  for (const field in typeDef.fields) {
+  for (const field in typeDef.definition.fields) {
     // if it has a custom deleter, add to customResolvers
-    const customResolver = typeDef.fields[field].deleter;
+    const customResolver = typeDef.definition.fields[field].deleter;
     if (customResolver) {
       customResolvers[field] = {
         resolver: customResolver,
@@ -267,13 +269,13 @@ export async function resolveTableRows(
   externalQuery: { [x: string]: any },
   sqlParams: SqlParams,
   data = {},
-  externalTypeDef?: TypeDefinition
+  externalTypeDef?: JomqlObjectType
 ) {
   // shortcut: if no fields were requested, simply return empty object
   if (Object.keys(externalQuery).length < 1) return [{}];
 
   const anonymousRootResolver = generateAnonymousRootResolver(
-    externalTypeDef ?? typename
+    externalTypeDef ?? new JomqlObjectTypeLookup(typename)
   );
 
   // build an anonymous root resolver
@@ -333,7 +335,13 @@ function generateSqlQuerySelectObject(
   fieldPath: string[]
 ) {
   const sqlSelectObjectArray: SqlQuerySelectObject[] = [];
+
+  // if root resolver object, skip.
+  if (isRootResolverDefinition(jomqlResolverNode.typeDef)) {
+    return sqlSelectObjectArray;
+  }
   const nested = jomqlResolverNode.nested;
+
   const mysqlOptions = jomqlResolverNode.typeDef.mysqlOptions;
 
   if (parentFields.length < 1 || mysqlOptions) {
@@ -397,7 +405,13 @@ async function handleAggregatedQueries(
 ) {
   for (const field in nestedResolverNodeMap) {
     const currentFieldPath = fieldPath.concat(field);
-    const dataloaderFn = nestedResolverNodeMap[field].typeDef.dataloader;
+    // if root resolver object, skip.
+    const typeDef = nestedResolverNodeMap[field].typeDef;
+    if (isRootResolverDefinition(typeDef)) {
+      continue;
+    }
+
+    const dataloaderFn = typeDef.dataloader;
     const nestedResolver = nestedResolverNodeMap[field].nested;
     if (dataloaderFn && nestedResolverNodeMap[field].query) {
       const keySet = new Set();

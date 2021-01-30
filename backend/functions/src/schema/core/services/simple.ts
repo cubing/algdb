@@ -1,19 +1,15 @@
 import { BaseService } from ".";
-import { TypeDefinition } from "jomql";
+import { JomqlObjectType } from "jomql";
 import * as Resolver from "../../helpers/resolver";
 import * as errorHelper from "../../helpers/error";
-import { typeDefs } from "../../typeDefs";
 import { ServiceFunctionInputs } from "../../../types";
 
 export class SimpleService extends BaseService {
-  typeDef!: TypeDefinition;
+  typeDef!: JomqlObjectType;
 
   // set typeDef
-  initialize(typeDef: TypeDefinition) {
+  setTypeDef(typeDef: JomqlObjectType) {
     this.typeDef = typeDef;
-
-    // register the typeDef
-    typeDefs.set(this.typename, this.typeDef);
   }
 
   async getRecord({

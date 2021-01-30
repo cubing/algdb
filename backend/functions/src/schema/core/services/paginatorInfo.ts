@@ -2,22 +2,21 @@ import { NormalService, SimpleService } from ".";
 import * as Resolver from "../../helpers/resolver";
 import { itemNotFoundError } from "../../helpers/error";
 import { generatePaginatorInfoTypeDef } from "../generators";
-import { typeDefs } from "../../typeDefs";
 import { ServiceFunctionInputs } from "../../../types";
-import { lookupSymbol } from "jomql";
+import { lookupSymbol, JomqlObjectType } from "jomql";
 
 export class PaginatorInfoService extends SimpleService {
   constructor(service: NormalService) {
     super("paginatorInfo");
-    this.typeDef = generatePaginatorInfoTypeDef(service, this);
+    this.typeDef = new JomqlObjectType(
+      generatePaginatorInfoTypeDef(service, this),
+      true
+    );
     this.presets = {
       default: {
         "*": lookupSymbol,
       },
     };
-
-    // register the typeDef if not exists
-    if (!typeDefs.has(this.typename)) typeDefs.set(this.typename, this.typeDef);
 
     this.getRecord = async ({
       req,

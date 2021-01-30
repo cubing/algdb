@@ -6,7 +6,7 @@ import {
 } from "../services";
 
 import { generateTypenameField } from "../../helpers/typeDef";
-import type { TypeDefinitionField, TypeDefinition } from "jomql";
+import type { ObjectTypeDefinition } from "jomql";
 
 export function generatePaginatorTypeDef(
   service: PaginatedService,
@@ -16,13 +16,13 @@ export function generatePaginatorTypeDef(
 
   const Edge = new EdgeService(service);
 
-  return <TypeDefinition>{
+  return <ObjectTypeDefinition>{
     name: currentService.typename,
     description: "Paginator",
     fields: {
       ...generateTypenameField(currentService),
-      paginatorInfo: <TypeDefinitionField>{
-        type: PaginatorInfo.typename,
+      paginatorInfo: {
+        type: PaginatorInfo.typeDef,
         isArray: false,
         allowNull: false,
         resolver: ({ req, fieldPath, args, query, data }) => {
@@ -35,8 +35,8 @@ export function generatePaginatorTypeDef(
           });
         },
       },
-      edges: <TypeDefinitionField>{
-        type: Edge.typename,
+      edges: {
+        type: Edge.typeDef,
         isArray: true,
         allowNull: false,
         resolver: async ({ req, fieldPath, args, query, data }) => {

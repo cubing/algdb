@@ -1,4 +1,4 @@
-import { ScalarDefinition } from "jomql";
+import { JomqlScalarType } from "jomql";
 
 function validate(value) {
   const parsedValue = Number(value);
@@ -7,10 +7,10 @@ function validate(value) {
   return parsedValue;
 }
 
-export const unixTimestamp: ScalarDefinition = {
+export const unixTimestamp = new JomqlScalarType({
   name: "unixTimestamp",
   types: ["number"],
   description: "UNIX Timestamp (Seconds since Epoch Time)",
   serialize: validate,
   parseValue: validate,
-};
+});

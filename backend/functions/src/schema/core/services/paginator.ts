@@ -5,12 +5,12 @@ import { itemNotFoundError, badPermissionsError } from "../../helpers/error";
 import { generatePaginatorTypeDef } from "../generators";
 import { ServiceFunctionInputs } from "../../../types";
 
-import { lookupSymbol } from "jomql";
+import { lookupSymbol, JomqlObjectType } from "jomql";
 
 export class PaginatorService extends SimpleService {
   constructor(service: PaginatedService) {
     super(service.typename + "Paginator");
-    this.typeDef = generatePaginatorTypeDef(service, this);
+    this.typeDef = new JomqlObjectType(generatePaginatorTypeDef(service, this));
     this.presets = {
       default: {
         paginatorInfo: {
@@ -23,7 +23,7 @@ export class PaginatorService extends SimpleService {
       },
     };
 
-    this.initialize(this.typeDef);
+    this.setTypeDef(this.typeDef);
 
     this.getRecord = async ({
       req,

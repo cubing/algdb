@@ -2,19 +2,19 @@ import { BaseService, NormalService } from "../services";
 
 import * as Scalars from "../../scalars";
 import { atob } from "../../helpers/shared";
-import type { TypeDefinitionField, TypeDefinition } from "jomql";
+import type { ObjectTypeDefinition } from "jomql";
 import { generateTypenameField } from "../../helpers/typeDef";
 
 export function generatePaginatorInfoTypeDef(
   service: NormalService,
   currentService: BaseService
 ) {
-  return <TypeDefinition>{
+  return <ObjectTypeDefinition>{
     name: currentService.typename,
     description: "PaginatorInfo Type",
     fields: {
       ...generateTypenameField(currentService),
-      total: <TypeDefinitionField>{
+      total: {
         type: Scalars.number,
         isArray: false,
         allowNull: false,
@@ -29,7 +29,7 @@ export function generatePaginatorInfoTypeDef(
           });
         },
       },
-      count: <TypeDefinitionField>{
+      count: {
         type: Scalars.number,
         isArray: false,
         allowNull: false,
@@ -38,7 +38,7 @@ export function generatePaginatorInfoTypeDef(
           return data.records.length;
         },
       },
-      startCursor: <TypeDefinitionField>{
+      startCursor: {
         type: Scalars.string,
         isArray: false,
         allowNull: true,
@@ -54,7 +54,7 @@ export function generatePaginatorInfoTypeDef(
           );
         },
       },
-      endCursor: <TypeDefinitionField>{
+      endCursor: {
         type: Scalars.string,
         isArray: false,
         allowNull: true,

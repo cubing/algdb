@@ -84,7 +84,7 @@ export type SqlSelectQueryOutput = null | {
   [x: string]: any;
 };
 
-export type TypeDefSqlOptions = {
+export type ObjectTypeDefsqlOptions = {
   joinInfo?: {
     type: string;
     foreignKey?: string;

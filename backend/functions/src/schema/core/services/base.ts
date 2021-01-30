@@ -4,18 +4,24 @@ import {
   ExternalQuery,
 } from "../../../types";
 import { userPermissionEnum } from "../../enums";
-import { lookupSymbol } from "jomql";
+import { lookupSymbol, JomqlRootResolverType } from "jomql";
 
 export abstract class BaseService {
   typename: string;
 
   readonly defaultTypename!: string;
 
+  rootResolvers?: { [x: string]: JomqlRootResolverType };
+
   presets: ExternalQuery = {
     default: {
       "*": lookupSymbol,
     },
   };
+
+  setRootResolvers(rootResolvers: { [x: string]: JomqlRootResolverType }) {
+    this.rootResolvers = rootResolvers;
+  }
 
   permissionsLink?: any;
 

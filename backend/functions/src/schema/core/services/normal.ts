@@ -14,7 +14,16 @@ import * as Resolver from "../../helpers/resolver";
 import {
   generateAnonymousRootResolver,
   generateJomqlResolverTree,
-  TypeDefinition,
+  JomqlObjectType,
+  JomqlRootResolverType,
+  JomqlObjectTypeLookup,
+  objectTypeDefs,
+  JomqlInputType,
+  JomqlArgsError,
+  JomqlInputTypeLookup,
+  JomqlInputFieldType,
+  JomqlInitializationError,
+  JomqlScalarType,
 } from "jomql";
 
 import {
@@ -24,10 +33,7 @@ import {
   ServiceFunctionInputs,
 } from "../../../types";
 
-import { btoa, isObject } from "../../helpers/shared";
-
-import { typeDefs } from "../../typeDefs";
-
+import { btoa, isObject, capitalizeString } from "../../helpers/shared";
 export type JoinFieldObject = {
   field?: string;
   // joinFields?: SqlJoinFieldObject[];
@@ -46,7 +52,15 @@ export type KeyMap = {
 };
 
 export class NormalService extends BaseService {
-  typeDef!: TypeDefinition;
+  typeDef!: JomqlObjectType;
+
+  typeDefLookup: JomqlObjectTypeLookup;
+
+  inputTypeDef!: JomqlInputType;
+
+  inputTypeDefLookup: JomqlInputTypeLookup;
+
+  rootResolvers!: { [x: string]: JomqlRootResolverType };
 
   filterFieldsMap: FieldMap = {};
 
@@ -63,14 +77,78 @@ export class NormalService extends BaseService {
 
   constructor(typename?: string) {
     super(typename);
+
+    this.typeDefLookup = new JomqlObjectTypeLookup(this.typename);
+
+    this.inputTypeDefLookup = new JomqlInputTypeLookup(
+      "get" + capitalizeString(this.typename)
+    );
+
+    process.nextTick(() => {
+      const uniqueKeyMap = {};
+      Object.entries(this.uniqueKeyMap).forEach(([uniqueKeyName, entry]) => {
+        entry.forEach((key) => {
+          const fieldType = this.getTypeDef().definition.fields[key].type;
+          if (!(fieldType instanceof JomqlScalarType)) {
+            throw new JomqlInitializationError({
+              message: `Unique key map must lead to scalar value`,
+            });
+          }
+          uniqueKeyMap[key] = new JomqlInputFieldType({
+            type: fieldType,
+          });
+        });
+      });
+
+      this.inputTypeDef = new JomqlInputType({
+        name: "get" + capitalizeString(this.typename),
+
+        fields: uniqueKeyMap,
+        inputsValidator: (args, fieldPath) => {
+          // check if a valid combination of key args exist
+          let validKeyCombination = false;
+          if (isObject(args)) {
+            const argsArray = Object.keys(args);
+            for (const keyName in this.uniqueKeyMap) {
+              if (
+                this.uniqueKeyMap[keyName].every((ele) =>
+                  argsArray.includes(ele)
+                ) &&
+                argsArray.every((ele) =>
+                  this.uniqueKeyMap[keyName].includes(ele)
+                )
+              ) {
+                validKeyCombination = true;
+                break;
+              }
+            }
+          }
+
+          if (!validKeyCombination) {
+            throw new JomqlArgsError({
+              message: `Invalid combination of args`,
+              fieldPath,
+            });
+          }
+        },
+      });
+    });
   }
 
   // set typeDef
-  initialize(typeDef: TypeDefinition) {
+  setTypeDef(typeDef: JomqlObjectType) {
     this.typeDef = typeDef;
+  }
 
-    // register the typeDef
-    typeDefs.set(this.typename, this.typeDef);
+  getTypeDef() {
+    if (this.typeDef) return this.typeDef;
+
+    const typeDefLookup = objectTypeDefs.get(this.typeDefLookup.name);
+
+    if (!typeDefLookup)
+      throw new Error(`TypeDef not found '${this.typeDefLookup.name}'`);
+
+    return typeDefLookup;
   }
 
   @permissionsCheck("get")
@@ -491,23 +569,15 @@ export class NormalService extends BaseService {
       : results;
   }
 
-  @permissionsCheck("create")
-  async createRecord({
-    req,
-    fieldPath,
-    args,
-    query,
-    data = {},
-    isAdmin = false,
-  }: ServiceFunctionInputs) {
-    // convert any lookup/joined fields into IDs
+  // convert any lookup/joined fields into IDs, in place.
+  async handleLookupArgs(args) {
     for (const key in args) {
-      const type = this.typeDef.fields[key].type;
-      if (typeof type === "string" && isObject(args[key])) {
+      const typeField = this.getTypeDef().definition.fields[key].type;
+      if (typeField instanceof JomqlObjectTypeLookup && isObject(args[key])) {
         // get record ID of type, replace object with the ID
         const results = await mysqlHelper.fetchTableRows({
           select: [{ field: "id" }],
-          from: type,
+          from: typeField.name,
           where: {
             connective: "AND",
             fields: Object.entries(args[key]).map(([field, value]) => ({
@@ -518,13 +588,25 @@ export class NormalService extends BaseService {
         });
 
         if (results.length < 1) {
-          throw new Error(`${type} not found`);
+          throw new Error(`${typeField.name} not found`);
         }
 
         // replace args[key] with the item ID
         args[key] = results[0].id;
       }
     }
+  }
+
+  @permissionsCheck("create")
+  async createRecord({
+    req,
+    fieldPath,
+    args,
+    query,
+    data = {},
+    isAdmin = false,
+  }: ServiceFunctionInputs) {
+    this.handleLookupArgs(args);
 
     const addResults = await Resolver.addTableRow(
       this.typename,
@@ -598,30 +680,7 @@ export class NormalService extends BaseService {
     const itemId = records[0].id;
 
     // convert any lookup/joined fields into IDs
-    for (const key in args.fields) {
-      const type = this.typeDef.fields[key].type;
-      if (typeof type === "string" && isObject(args.fields[key])) {
-        // get record ID of type, replace object with the ID
-        const results = await mysqlHelper.fetchTableRows({
-          select: [{ field: "id" }],
-          from: type,
-          where: {
-            connective: "AND",
-            fields: Object.entries(args.fields[key]).map(([field, value]) => ({
-              field,
-              value,
-            })),
-          },
-        });
-
-        if (results.length < 1) {
-          throw new Error(`${type} not found`);
-        }
-
-        // replace args[key] with the item ID
-        args.fields[key] = results[0].id;
-      }
-    }
+    this.handleLookupArgs(args.fields);
 
     await Resolver.updateTableRow(
       this.typename,

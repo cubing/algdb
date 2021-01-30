@@ -1,18 +1,18 @@
 import { BaseService, EnumService } from "../services";
 import * as Scalars from "../../scalars";
-import type { TypeDefinitionField, TypeDefinition } from "jomql";
+import type { ObjectTypeDefinition } from "jomql";
 import { generateTypenameField } from "../../helpers/typeDef";
 
 export function generateEnumPaginatorTypeDef(
   service: EnumService,
   currentService: BaseService
 ) {
-  return <TypeDefinition>{
+  return <ObjectTypeDefinition>{
     name: currentService.typename,
     description: "EnumPaginator",
     fields: {
       ...generateTypenameField(currentService),
-      values: <TypeDefinitionField>{
+      values: {
         type: Scalars[service.typename],
         isArray: true,
         allowNull: false,

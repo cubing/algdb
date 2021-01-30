@@ -1,27 +1,27 @@
-import { BaseService } from "../services";
+import { BaseService, NormalService } from "../services";
 
 import * as Scalars from "../../scalars";
 import { generateTypenameField } from "../../helpers/typeDef";
 import { atob } from "../../helpers/shared";
-import type { TypeDefinitionField, TypeDefinition } from "jomql";
+import type { ObjectTypeDefinition } from "jomql";
 
 export function generateEdgeTypeDef(
-  service: BaseService,
+  service: NormalService,
   currentService: BaseService
 ) {
-  return <TypeDefinition>{
+  return <ObjectTypeDefinition>{
     name: currentService.typename,
     fields: {
       ...generateTypenameField(currentService),
-      node: <TypeDefinitionField>{
-        type: service.typename,
+      node: {
+        type: service.typeDefLookup,
         isArray: false,
         allowNull: false,
         resolver: ({ data }) => {
           return data.item;
         },
       },
-      cursor: <TypeDefinitionField>{
+      cursor: {
         type: Scalars.string,
         isArray: false,
         allowNull: false,

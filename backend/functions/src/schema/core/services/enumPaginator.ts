@@ -1,16 +1,18 @@
 import { EnumService, SimpleService } from ".";
 import { generateEnumPaginatorTypeDef } from "../generators";
+import { JomqlObjectType } from "jomql";
 
 export class EnumPaginatorService extends SimpleService {
   constructor(service: EnumService) {
     super(service.typename + "EnumPaginator");
-    this.typeDef = generateEnumPaginatorTypeDef(service, this);
     this.presets = {
       default: {
         values: true,
       },
     };
 
-    this.initialize(this.typeDef);
+    this.setTypeDef(
+      new JomqlObjectType(generateEnumPaginatorTypeDef(service, this))
+    );
   }
 }
