@@ -7,7 +7,16 @@ export default (context) => {
   return new Promise((resolve) => {
     if (store.getters['auth/token'] && !store.getters['auth/user']) {
       // fetch the user info
-      executeJomql('getCurrentUser', userFragment)
+      executeJomql(null, {
+        getCurrentUser: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          permissions: true,
+          all_permissions: true,
+        },
+      })
         .then((data) => {
           if (!data) {
             return resolve()

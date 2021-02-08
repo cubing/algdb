@@ -1,31 +1,43 @@
-import sharedService from '~/services/shared.js'
-import { executeJomql, executeJomqlSubscription } from '~/services/jomql.js'
-import { unsubscribeChannels } from '~/services/pusher.js'
+import sharedService from '~/services/shared'
+import { executeJomql, executeJomqlSubscription } from '~/services/jomql'
+import { unsubscribeChannels } from '~/services/pusher'
 import EditRecordDialog from '~/components/dialog/editRecordDialog.vue'
 import DeleteRecordDialog from '~/components/dialog/deleteRecordDialog.vue'
+import CrudRecordInterface from '~/components/interface/crud/crudRecordInterface.vue'
 
 export default {
-  components: {
-    EditRecordDialog,
-    DeleteRecordDialog,
-  },
+  components: {},
 
   props: {
     recordInfo: {
-      type: Object,
       required: true,
     },
     useSubscription: {
       type: Boolean,
       default: false,
     },
+    // raw filters that must also be in recordInfo.filters
     filters: {
-      type: Object,
-      default: () => ({}),
+      type: Array,
+      default: () => [],
     },
+    // raw filters that do not need to be in recordInfo.filters
+    lockedFilters: {
+      type: Array,
+      default: () => [],
+    },
+    // raw filters that are applied to the addRecordDialog
+    addFilters: {
+      type: Array,
+      default: () => [],
+    },
+    // array of filter keys (recordInfo.filters) that should be hidden
     hiddenFilters: {
-      type: Object,
-      default: () => ({}),
+      type: Array,
+      default: () => [],
+    },
+    search: {
+      type: String,
     },
     groupBy: {
       type: Array,
@@ -44,6 +56,8 @@ export default {
   data() {
     return {
       filterInputs: {},
+      filterInputsArray: [],
+      searchInput: '',
       filterChanged: false,
       filterOptions: {},
 
@@ -60,70 +74,114 @@ export default {
 
       loading: {
         loadData: false,
+        exportData: false,
       },
 
       records: [],
 
-      recordsTotal: null,
-
       options: {
-        previousPage: null,
         page: 1,
-        itemsPerPage: 10,
+        itemsPerPage: 25,
         sortBy: [],
         sortDesc: [],
         groupBy: [],
         groupDesc: [],
         mustSort: true,
         initialLoad: true,
-        positivePageDelta: true,
+      },
+
+      previousPage: null,
+      positivePageDelta: true,
+
+      nextPaginatorInfo: {
+        total: null,
+        startCursor: null,
+        endCursor: null,
+      },
+
+      currentPaginatorInfo: {
+        total: null,
+        startCursor: null,
+        endCursor: null,
       },
 
       footerOptions: {
         'items-per-page-options': [5, 10, 25, 50],
       },
+
+      // expandable
+      expandedItems: [],
+      additionalSubFilters: [],
+      subSearchInput: '',
     }
   },
 
   computed: {
+    childInterfaceComponent() {
+      return this.hasNested
+        ? this.recordInfo.nested.interfaceComponent || CrudRecordInterface
+        : null
+    },
+
+    currentAddRecordComponent() {
+      return this.recordInfo.addRecordComponent || EditRecordDialog
+    },
+    currentEditRecordComponent() {
+      return this.recordInfo.editRecordComponent || EditRecordDialog
+    },
+    currentDeleteRecordComponent() {
+      return this.recordInfo.deleteRecordComponent || DeleteRecordDialog
+    },
+    currentViewRecordComponent() {
+      return this.recordInfo.viewRecordComponent || EditRecordDialog
+    },
     capitalizedType() {
       return sharedService.capitalizeString(this.recordInfo.type)
     },
-    visibleFilters() {
-      if (this.hiddenFilters.length < 1) return this.recordInfo.filters
-
-      const retObject = {}
-
-      for (const prop in this.recordInfo.filters) {
-        if (!(prop in this.hiddenFilters)) {
-          retObject[prop] = this.recordInfo.filters[prop]
-        }
-      }
-
-      return { ...retObject }
+    visibleFiltersArray() {
+      return this.filterInputsArray.filter(
+        (ele) => !this.hiddenFilters.includes(ele.fieldInfo.field)
+      )
     },
-    validFilterParams() {
-      const retObject = {}
-      for (const prop in this.recordInfo.filters) {
-        // allow 0 or truthy only
-        if (
-          prop in this.filters &&
-          (this.filters[prop] === 0 || this.filters[prop])
-        ) {
-          // convert 'null' into null (only way to get null on RHS)
-          retObject[prop] =
-            this.filters[prop] === 'null' ? null : this.filters[prop]
-        }
-      }
+    visibleRawFiltersArray() {
+      return this.filters.filter(
+        (ele) => !this.hiddenFilters.includes(ele.field)
+      )
+    },
 
-      return { ...retObject }
+    hasNested() {
+      return !!this.recordInfo.nested
+    },
+
+    // expanded
+    lockedSubFilters() {
+      return this.expandedItems.length
+        ? [
+            {
+              field: this.recordInfo.type.toLowerCase(),
+              operator: 'eq',
+              value: this.expandedItems[0].id,
+            },
+          ]
+        : []
+    },
+
+    addSubFilters() {
+      return this.lockedSubFilters
+    },
+
+    hiddenSubFilters() {
+      return [this.recordInfo.type.toLowerCase()]
     },
   },
 
   watch: {
     filters() {
-      this.loadData()
       this.syncFilters()
+      this.loadData()
+    },
+    lockedFilters() {
+      this.reset(true)
     },
   },
 
@@ -137,42 +195,134 @@ export default {
   },
 
   methods: {
+    // expanded
+    handleSubFiltersUpdated(searchInput, filterInputsArray) {
+      this.subSearchInput = searchInput
+
+      // parse filterInputsArray
+      this.additionalSubFilters = filterInputsArray
+        .filter((ele) => ele.value !== undefined && ele.value !== null)
+        .map((ele) => ({
+          field: ele.fieldInfo.field,
+          operator: ele.fieldInfo.operator,
+          value: ele.value,
+        }))
+    },
+
+    // expanded
+    handleItemExpanded() {
+      // when item expanded, reset the filters
+      this.additionalSubFilters = []
+    },
+
+    handleRowClick(item) {
+      if (this.recordInfo.handleRowClick)
+        this.recordInfo.handleRowClick(this, item)
+    },
+
     generateTimeStringFromUnix: sharedService.generateTimeStringFromUnix,
 
+    copyToClipboard(content) {
+      sharedService.copyToClipboard(this, content)
+    },
+
+    getTableRowData(headerItem, item) {
+      // need to go deeper if nested
+      return this.getNestedProperty(item, headerItem.value)
+    },
+
+    renderTableRowData(headerItem, item) {
+      // need to go deeper if nested
+      const value = this.getNestedProperty(item, headerItem.value)
+      return headerItem.renderFn ? headerItem.renderFn(value) : value
+    },
+
+    getNestedProperty(obj, path) {
+      const pathArray = path.split(/\./)
+      let currentValue = obj
+      for (const prop of pathArray) {
+        // if not object, return null;
+        if (!(currentValue && typeof currentValue === 'object')) {
+          return null
+        }
+        currentValue = currentValue[prop]
+      }
+      return currentValue
+    },
+
+    async exportData() {
+      this.loading.exportData = true
+      try {
+        // fetch data
+        const results = await this.getRecords(false)
+
+        const data = results.edges.map((ele) => ele.node)
+
+        if (data.length < 1) {
+          throw sharedService.generateError('No results to export')
+        }
+
+        // download as CSV
+        sharedService.downloadCSV(
+          this,
+          data,
+          'Export' + this.capitalizedType + sharedService.getCurrentDate()
+        )
+      } catch (err) {
+        sharedService.handleError(err, this.$root)
+      }
+      this.loading.exportData = false
+    },
+
     updateFilters() {
-      const validatedFilterObject = Object.keys(this.filterInputs).reduce(
-        (total, key) => {
-          // convert '' to null
-          total[key] =
-            this.filterInputs[key] === '' ? null : this.filterInputs[key]
-          return total
-        },
-        {}
-      )
-      this.$emit('filters-updated', validatedFilterObject)
+      this.$emit('filters-updated', this.searchInput, this.filterInputsArray)
       this.filterChanged = false
     },
 
     openAddRecordDialog() {
-      this.openDialog('addRecord', this.validFilterParams)
+      const initializedRecord = {}
+
+      this.addFilters.forEach((addFilter) => {
+        initializedRecord[addFilter.field] = addFilter.value
+      })
+
+      console.log(initializedRecord)
+
+      this.openDialog('addRecord', initializedRecord)
     },
 
     handleUpdateOptions(options) {
       if (options.initialLoad) {
+        // this is here because update:options event triggers when loading the table for the first time
         options.initialLoad = false
       } else {
-        // this.reset();
-        if (options.previousPage !== options.page) {
-          options.positivePageDelta = options.previousPage < options.page
-          options.previousPage = options.page
-        }
-
-        this.loadData()
+        // defer the action to next tick, since we possibly need to wait for handlePageReset and handleUpdatePage to complete
+        this.$nextTick(this.loadData)
       }
     },
 
-    addItem() {
-      this.reset()
+    handlePageReset() {
+      // reset pageOptions
+      this.previousPage = null
+      this.positivePageDelta = true
+
+      // reset paginatorInfos
+      this.nextPaginatorInfo = {
+        total: null,
+        startCursor: null,
+        endCursor: null,
+      }
+
+      this.currentPaginatorInfo = this.nextPaginatorInfo
+    },
+
+    handleUpdatePage() {
+      if (this.previousPage !== this.options.page) {
+        this.positivePageDelta = this.previousPage < this.options.page
+        this.previousPage = this.options.page
+
+        this.currentPaginatorInfo = this.nextPaginatorInfo
+      }
     },
 
     openDialog(dialogName, item) {
@@ -182,50 +332,72 @@ export default {
       }
     },
 
-    async getRecords() {
-      const data = await executeJomql(
-        'getMultiple' + this.capitalizedType,
-        {
+    async getRecords(paginated = true) {
+      const paginationArgs = paginated
+        ? {
+            [this.positivePageDelta ? 'first' : 'last']: this.options
+              .itemsPerPage,
+            ...(this.options.page > 1 &&
+              this.positivePageDelta && {
+                after: this.currentPaginatorInfo.endCursor,
+              }),
+            ...(!this.positivePageDelta && {
+              before: this.currentPaginatorInfo.startCursor,
+            }),
+          }
+        : {
+            first: 100, // first 100 rows only
+          }
+      const data = await executeJomql(this, {
+        ['get' + this.capitalizedType + 'Paginator']: {
           paginatorInfo: {
             total: true,
+            startCursor: true,
+            endCursor: true,
           },
-          data: this.recordInfo.headers.reduce(
-            (total, val) => {
-              // if null, skip
-              if (!val.value) return total
+          edges: {
+            node: this.recordInfo.headers.reduce(
+              (total, val) => {
+                // if null, skip
+                if (!val.value) return total
 
-              // if nested, process (only supporting one level of nesting)
-              if (val.value.includes('.')) {
-                const parts = val.value.split(/\./)
+                // if nested, process (only supporting one level of nesting)
+                if (val.value.includes('.')) {
+                  const parts = val.value.split(/\./)
 
-                if (!total[parts[0]]) {
-                  total[parts[0]] = {}
+                  if (!total[parts[0]]) {
+                    total[parts[0]] = {}
+                  }
+
+                  total[parts[0]][parts[1]] = true
+                } else {
+                  total[val.value] = true
                 }
-
-                total[parts[0]][parts[1]] = true
-              } else {
-                total[val.value] = true
-              }
-              return total
-            },
-            { id: true }
-          ),
+                return total
+              },
+              { id: true }
+            ),
+            cursor: true,
+          },
+          __args: {
+            ...paginationArgs,
+            sortBy: this.options.sortBy,
+            sortDesc: this.options.sortDesc,
+            filterBy: this.filters
+              .concat(this.lockedFilters)
+              .reduce((total, ele) => {
+                if (!total[ele.field]) total[ele.field] = []
+                total[ele.field].push({
+                  operator: ele.operator,
+                  value: ele.value, // assuming this value has been parsed already
+                })
+                return total
+              }, {}),
+            ...(this.search && { search: this.search }),
+            ...(this.groupBy && { groupBy: this.groupBy }),
+          },
         },
-        {
-          first: this.options.itemsPerPage,
-          ...(this.options.page > 1 && {
-            after: this.records[this.records.length - 1].id,
-            reverse: !this.options.positivePageDelta,
-          }),
-          sortBy: this.options.sortBy,
-          sortDesc:
-            this.options.positivePageDelta === true || this.options.page === 1
-              ? this.options.sortDesc
-              : this.options.sortDesc.map((ele) => !ele),
-          filterBy: this.validFilterParams,
-          ...(this.groupBy && { groupBy: this.groupBy }),
-        }
-      )
+      })
 
       return data
     },
@@ -235,8 +407,9 @@ export default {
       try {
         const results = await this.getRecords()
 
-        this.records = results.data
-        this.recordsTotal = results.paginatorInfo.total
+        this.records = results.edges.map((ele) => ele.node)
+
+        this.nextPaginatorInfo = results.paginatorInfo
       } catch (err) {
         sharedService.handleError(err, this.$root)
       }
@@ -245,9 +418,13 @@ export default {
 
     async subscribeEvents() {
       const channelName = await executeJomqlSubscription(
-        this.recordInfo.type + 'ListUpdated',
-        { id: true },
-        {},
+        this,
+        {
+          [this.recordInfo.type + 'ListUpdated']: {
+            id: true,
+            __args: {},
+          },
+        },
         (data) => {
           console.log(data)
           this.reset()
@@ -258,8 +435,28 @@ export default {
     },
 
     syncFilters() {
-      // Object.assign(this.filterInputs, this.filters)
-      this.filterInputs = { ...this.filters }
+      const inputFieldsSet = new Set(this.filterInputsArray)
+
+      // parses filter into filterInputArray
+      // loads the value into an existing filterInput, if one exists.
+      this.filters.forEach((ele) => {
+        const matchingInputObject = this.filterInputsArray.find(
+          (input) =>
+            input.fieldInfo.field === ele.field &&
+            input.fieldInfo.operator === ele.operator
+        )
+
+        if (matchingInputObject) {
+          matchingInputObject.value = ele.value
+
+          // remove from set
+          inputFieldsSet.delete(matchingInputObject)
+        }
+      })
+
+      // clears any input fields with no filterObject
+      inputFieldsSet.forEach((ele) => (ele.value = null))
+
       this.filterChanged = false
     },
 
@@ -274,25 +471,23 @@ export default {
       if (hardReset) {
         if (this.useSubscription) this.subscribeEvents()
 
+        // populate filters
+        this.filterInputsArray = this.recordInfo.filters.map((ele) => {
+          const filterObject = {
+            fieldInfo: ele,
+            options: [],
+            value: null,
+          }
+          ele.getOptions &&
+            ele.getOptions(this).then((res) => (filterObject.options = res))
+          return filterObject
+        })
+
+        // sync filters with initial filters
         this.syncFilters()
 
-        // populate filters
-        for (const prop in this.recordInfo.filters) {
-          // only set if not already set
-          if (!(prop in this.filterInputs))
-            this.$set(this.filterInputs, prop, null)
-
-          // populate filter options (for dropdowns)
-          if (this.recordInfo.filters[prop].getOptions) {
-            this.recordInfo.filters[prop]
-              .getOptions()
-              .then((res) => this.$set(this.filterOptions, prop, res))
-          }
-        }
-
-        // populate options
+        // populate sort/page options
         if (this.recordInfo.options?.sortBy) {
-          this.options.initialLoad = true
           this.options.sortBy = this.recordInfo.options.sortBy
           this.options.sortDesc = this.recordInfo.options.sortDesc
         }

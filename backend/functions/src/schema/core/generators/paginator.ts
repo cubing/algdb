@@ -23,7 +23,6 @@ export function generatePaginatorTypeDef(
       ...generateTypenameField(currentService),
       paginatorInfo: {
         type: PaginatorInfo.typeDef,
-        isArray: false,
         allowNull: false,
         resolver: ({ req, fieldPath, args, query, data }) => {
           return PaginatorInfo.getRecord({
@@ -37,7 +36,9 @@ export function generatePaginatorTypeDef(
       },
       edges: {
         type: Edge.typeDef,
-        isArray: true,
+        arrayOptions: {
+          allowNullElement: false,
+        },
         allowNull: false,
         resolver: async ({ req, fieldPath, args, query, data }) => {
           // data.records should contain the results

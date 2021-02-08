@@ -8,7 +8,7 @@ export type PusherEnv = {
   readonly cluster: string;
 };
 
-export type MysqlEnv = {
+export type SqlEnv = {
   readonly database: string;
   readonly user: string;
   readonly password: string;
@@ -84,7 +84,7 @@ export type SqlSelectQueryOutput = null | {
   [x: string]: any;
 };
 
-export type ObjectTypeDefsqlOptions = {
+export type ObjectTypeDefSqlOptions = {
   joinInfo?: {
     type: string;
     foreignKey?: string;
@@ -93,8 +93,24 @@ export type ObjectTypeDefsqlOptions = {
   setter?: (value: string) => string;
   parseValue?: (value: unknown) => unknown; // performed before inserts/updates
   joinHidden?: boolean;
-  sqlDefinition: any;
+  sqlDefinition: SqlDefinition;
 };
+
+export type SqlDefinition = {
+  type: SqlType;
+  defaultValue?: any;
+  unique?: boolean | string;
+};
+
+export type SqlType =
+  | "string"
+  | "integer"
+  | "dateTime"
+  | "text"
+  | "float"
+  | "decimal"
+  | "boolean"
+  | "json";
 
 export type ExternalQuery = {
   [x: string]: any;

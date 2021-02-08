@@ -3,12 +3,14 @@
     <v-layout column justify-left align-left>
       <v-flex xs12 sm8 md6>
         <div class="pt-2">
-          <CrudRecordInterface
+          <component
+            :is="interfaceComponent"
             :record-info="recordInfo"
-            :filters="$route.query"
+            :search="$route.query.search"
+            :filters="filters"
             dense
             @filters-updated="handleFiltersUpdated"
-          ></CrudRecordInterface>
+          ></component>
         </div>
       </v-flex>
     </v-layout>
@@ -16,15 +18,10 @@
 </template>
 
 <script>
-import crudPageMixin from '~/mixins/crudPage.js'
-import CrudRecordInterface from '~/components/interface/crud/crudAlgsetInterface.vue'
-import { algsetRecordInfo } from '~/services/type'
+import crudPageMixin from '~/mixins/crudPage'
+import algsetRecordInfo from '~/services/types/algset'
 
 export default {
-  components: {
-    CrudRecordInterface,
-  },
-
   mixins: [crudPageMixin],
 
   data() {
@@ -34,5 +31,3 @@ export default {
   },
 }
 </script>
-
-<style scoped></style>

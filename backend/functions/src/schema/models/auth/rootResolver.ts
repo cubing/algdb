@@ -9,10 +9,12 @@ import {
 export default {
   socialLogin: new JomqlRootResolverType({
     name: "socialLogin",
-    method: "post",
-    route: "/socialLogin",
+    restOptions: {
+      method: "post",
+      route: "/socialLogin",
+      query: Auth.presets.default,
+    },
     type: Auth.typeDef,
-    isArray: false,
     allowNull: false,
     args: new JomqlInputFieldType({
       type: new JomqlInputType({

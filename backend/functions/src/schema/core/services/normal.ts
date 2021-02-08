@@ -1,6 +1,6 @@
 import * as errorHelper from "../../helpers/error";
 import { BaseService } from ".";
-import * as mysqlHelper from "../../helpers/mysql";
+import * as sqlHelper from "../../helpers/sql";
 import { permissionsCheck } from "../../helpers/permissions";
 import {
   handleJqlSubscription,
@@ -12,8 +12,6 @@ import {
 import * as Resolver from "../../helpers/resolver";
 
 import {
-  generateAnonymousRootResolver,
-  generateJomqlResolverTree,
   JomqlObjectType,
   JomqlRootResolverType,
   JomqlObjectTypeLookup,
@@ -166,7 +164,7 @@ export class NormalService extends BaseService {
     const selectQuery = query || Object.assign({}, this.presets.default);
 
     //check if the record and query is fetchable
-    const results = await Resolver.resolveTableRows(
+    const results = await Resolver.getObjectType(
       this.typename,
       req,
       fieldPath,
@@ -265,7 +263,7 @@ export class NormalService extends BaseService {
       }))
     );
 
-    const results = await Resolver.resolveTableRows(
+    const results = await Resolver.getObjectType(
       this.typename,
       req,
       fieldPath,
@@ -331,8 +329,9 @@ export class NormalService extends BaseService {
       whereObject.fields.push(whereSubObject);
     }
 
-    const resultsCount = await Resolver.countTableRows(
+    const resultsCount = await Resolver.countObjectType(
       this.typename,
+      fieldPath,
       whereObject
     );
 
@@ -535,7 +534,7 @@ export class NormalService extends BaseService {
     // always add id as the last sort key
     orderBy.push({ field: "id", desc: isBeforeQuery ? true : false });
 
-    const results = await Resolver.resolveTableRows(
+    const results = await Resolver.getObjectType(
       this.typename,
       req,
       fieldPath,
@@ -575,7 +574,7 @@ export class NormalService extends BaseService {
       const typeField = this.getTypeDef().definition.fields[key].type;
       if (typeField instanceof JomqlObjectTypeLookup && isObject(args[key])) {
         // get record ID of type, replace object with the ID
-        const results = await mysqlHelper.fetchTableRows({
+        const results = await sqlHelper.fetchTableRows({
           select: [{ field: "id" }],
           from: typeField.name,
           where: {
@@ -606,22 +605,20 @@ export class NormalService extends BaseService {
     data = {},
     isAdmin = false,
   }: ServiceFunctionInputs) {
-    this.handleLookupArgs(args);
+    await this.handleLookupArgs(args);
 
-    const addResults = await Resolver.addTableRow(
-      this.typename,
+    const addResults = await Resolver.createObjectType({
+      typename: this.typename,
+      addFields: {
+        ...args,
+        created_by: req.user!.id,
+      },
       req,
       fieldPath,
-      {
-        ...args,
-      },
-      {
-        created_by: req.user?.id,
-      }
-    );
+    });
 
     // args that will be compared with subscription args
-    const subscriptionFilterableArgs = {
+    /*     const subscriptionFilterableArgs = {
       created_by: req.user?.id,
     };
 
@@ -639,7 +636,7 @@ export class NormalService extends BaseService {
       this.typename + "ListUpdated",
       subscriptionFilterableArgs,
       { id: addResults.id }
-    );
+    ); */
 
     return this.getRecord({
       req,
@@ -661,7 +658,7 @@ export class NormalService extends BaseService {
     isAdmin = false,
   }: ServiceFunctionInputs) {
     // check if record exists, get ID
-    const records = await mysqlHelper.fetchTableRows({
+    const records = await sqlHelper.fetchTableRows({
       select: [{ field: "id" }],
       from: this.typename,
       where: {
@@ -680,21 +677,20 @@ export class NormalService extends BaseService {
     const itemId = records[0].id;
 
     // convert any lookup/joined fields into IDs
-    this.handleLookupArgs(args.fields);
+    await this.handleLookupArgs(args.fields);
 
-    await Resolver.updateTableRow(
-      this.typename,
+    await Resolver.updateObjectType({
+      typename: this.typename,
+      id: itemId,
+      updateFields: {
+        ...args.fields,
+        updated_at: 1,
+      },
       req,
       fieldPath,
-      {
-        ...args.fields,
-        updated_at: 1, // this will automatically get converted to now()
-      },
-      {},
-      { fields: [{ field: "id", value: itemId }] }
-    );
+    });
 
-    const returnData = this.getRecord({
+    const returnData = await this.getRecord({
       req,
       args: { id: itemId },
       query,
@@ -703,7 +699,7 @@ export class NormalService extends BaseService {
       data,
     });
 
-    handleJqlSubscriptionTrigger(req, this, this.typename + "Updated", {
+    /*     handleJqlSubscriptionTrigger(req, this, this.typename + "Updated", {
       id: itemId,
     });
 
@@ -718,7 +714,7 @@ export class NormalService extends BaseService {
       this.typename + "ListUpdated",
       subscriptionFilterableArgs,
       { id: itemId }
-    );
+    ); */
 
     return returnData;
   }
@@ -733,7 +729,7 @@ export class NormalService extends BaseService {
     isAdmin = false,
   }: ServiceFunctionInputs) {
     // confirm existence of item and get ID
-    const results = await mysqlHelper.fetchTableRows({
+    const results = await sqlHelper.fetchTableRows({
       select: [{ field: "id" }],
       from: this.typename,
       where: {
@@ -761,7 +757,7 @@ export class NormalService extends BaseService {
       data,
     });
 
-    await handleJqlSubscriptionTrigger(req, this, this.typename + "Deleted", {
+    /*     await handleJqlSubscriptionTrigger(req, this, this.typename + "Deleted", {
       id: itemId,
     });
 
@@ -776,31 +772,21 @@ export class NormalService extends BaseService {
       this.typename + "ListUpdated",
       subscriptionFilterableArgs,
       { id: itemId }
-    );
+    ); */
 
-    await Resolver.deleteTableRow(this.typename, req, fieldPath, args, {
-      fields: [{ field: "id", value: itemId }],
+    await Resolver.deleteObjectType({
+      typename: this.typename,
+      id: itemId,
+      req,
+      fieldPath,
     });
 
     //cleanup
 
     //also need to delete all subscriptions for this item
-    await deleteJqlSubscription(req, this.typename + "Deleted", {
+    /*     await deleteJqlSubscription(req, this.typename + "Deleted", {
       id: itemId,
-    });
-
-    //also need to delete all permissions attached to this item
-    if (this.permissionsLink) {
-      await Resolver.deleteTableRow(
-        this.permissionsLink.typename,
-        req,
-        fieldPath,
-        args,
-        {
-          fields: [{ field: this.typename, value: itemId }],
-        }
-      );
-    }
+    }); */
 
     return requestedResults;
   }

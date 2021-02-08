@@ -15,7 +15,6 @@ export function generateEdgeTypeDef(
       ...generateTypenameField(currentService),
       node: {
         type: service.typeDefLookup,
-        isArray: false,
         allowNull: false,
         resolver: ({ data }) => {
           return data.item;
@@ -23,7 +22,6 @@ export function generateEdgeTypeDef(
       },
       cursor: {
         type: Scalars.string,
-        isArray: false,
         allowNull: false,
         resolver: ({ data }) => {
           return atob(

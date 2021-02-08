@@ -13,11 +13,12 @@ import { BaseScalars, JomqlScalarType } from "jomql";
 
 // base scalars
 export const string = BaseScalars.string;
-export const number = BaseScalars.number;
+// export const number = BaseScalars.number;
 export const boolean = BaseScalars.boolean;
 export const unknown = BaseScalars.unknown;
 
 // added scalars
+export { number } from "./number"; // replacing the built-in number type to automatically parse Number-like strings
 export { imageUrl } from "./imageUrl";
 export { unixTimestamp } from "./unixTimestamp";
 export { jsonAsString } from "./jsonAsString";

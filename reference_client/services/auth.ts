@@ -9,6 +9,8 @@ export default {
   },
 
   goToWcaAuth() {
-    window.location = process.env.wcaAuthUrl
+    if (process.env.wcaAuthUrl) {
+      window.location.href = process.env.wcaAuthUrl
+    }
   },
 }

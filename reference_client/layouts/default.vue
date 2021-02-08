@@ -30,7 +30,7 @@
       <v-divider></v-divider>
       <v-list dense>
         <v-list-group
-          v-for="item in featureItems"
+          v-for="item in visibleFeatureGroups"
           :key="item.title"
           v-model="item.active"
           :prepend-icon="item.action"
@@ -43,7 +43,7 @@
           </template>
           <template v-for="child in item.items">
             <v-list-item
-              v-if="canSee(child.roles)"
+              v-if="canSee(child.roles, child.permissions)"
               :key="child.title"
               :to="child.to"
             >
@@ -81,7 +81,7 @@
                       user.email
                     }}</v-list-item-subtitle>
                     <v-list-item-subtitle
-                      >Role: {{ user.role.name }}</v-list-item-subtitle
+                      >Role: {{ user.role }}</v-list-item-subtitle
                     >
                   </v-list-item-content>
                 </v-list-item>
@@ -100,7 +100,7 @@
                         user.email
                       }}</v-list-item-subtitle>
                       <v-list-item-subtitle
-                        >Role: {{ user.role.name }}</v-list-item-subtitle
+                        >Role: {{ user.role }}</v-list-item-subtitle
                       >
                     </v-list-item-content>
                   </v-list-item>
@@ -132,11 +132,16 @@
           </template>
 
           <div v-else>
-            <v-list-item to="/login" router exact>
+            <v-list-item @click="goToWcaAuth()">
               <v-list-item-action>
-                <v-icon>mdi-login</v-icon>
+                <img
+                  src="~static/WCAlogo_notext.svg"
+                  alt=""
+                  style="width: 32px"
+                  class="pr-2"
+                />
               </v-list-item-action>
-              <v-list-item-content>Login</v-list-item-content>
+              <v-list-item-content>WCA Login</v-list-item-content>
             </v-list-item>
           </div>
         </client-only>
@@ -164,6 +169,10 @@
     <v-footer :absolute="!fixed" app>
       <a @click="copyIdTokenToClipboard()">{{ getBuildInfo() }}</a>
       <span>&nbsp;&copy; {{ new Date().getFullYear() }}</span>
+      <v-spacer> </v-spacer>
+      <v-btn small text @click="toggleTheme()"
+        >Dark Mode: {{ $vuetify.theme.dark ? 'On' : 'Off' }}</v-btn
+      >
     </v-footer>
     <Snackbar />
   </v-app>
@@ -172,8 +181,8 @@
 <script>
 import { mapGetters } from 'vuex'
 import Snackbar from '~/components/snackbar/snackbar'
-import authService from '~/services/auth.js'
-import sharedService from '~/services/shared.js'
+import authService from '~/services/auth'
+import sharedService from '~/services/shared'
 
 export default {
   components: {
@@ -193,13 +202,47 @@ export default {
       ],
       featureItems: [
         {
-          action: 'mdi-silverware-fork-knife',
+          action: 'mdi-star',
           active: true,
+          roles: ['NORMAL', 'ADMIN'],
+          permissions: [],
           items: [
-            { title: 'Puzzles', to: 'puzzles', roles: [undefined, 1, 2, 3] },
-            { title: 'Algsets', to: 'algsets', roles: [undefined, 1, 2, 3] },
-            { title: 'Algcases', to: 'algcases', roles: [undefined, 1, 2, 3] },
-            { title: 'Algs', to: 'algs', roles: [undefined, 1, 2, 3] },
+            {
+              title: 'Users',
+              to: 'users',
+              roles: ['NORMAL', 'ADMIN'],
+              permissions: [],
+            },
+            {
+              title: 'Puzzles',
+              to: 'puzzles',
+              roles: ['NORMAL', 'ADMIN'],
+              permissions: [],
+            },
+            {
+              title: 'Algsets',
+              to: 'algsets',
+              roles: ['NORMAL', 'ADMIN'],
+              permissions: [],
+            },
+            {
+              title: 'Algcases',
+              to: 'algcases',
+              roles: ['NORMAL', 'ADMIN'],
+              permissions: [],
+            },
+            {
+              title: 'Algs',
+              to: 'algs',
+              roles: ['NORMAL', 'ADMIN'],
+              permissions: [],
+            },
+            {
+              title: 'Tags',
+              to: 'tags',
+              roles: ['NORMAL', 'ADMIN'],
+              permissions: [],
+            },
           ],
           title: 'Features',
         },
@@ -216,11 +259,31 @@ export default {
     ...mapGetters({
       user: 'auth/user',
     }),
+
+    visibleFeatureGroups() {
+      return this.featureItems.filter((item) =>
+        this.canSee(item.roles, item.permissions)
+      )
+    },
   },
 
   methods: {
-    canSee(allowedRoles) {
-      return allowedRoles.includes(this.$store.getters['auth/user']?.role?.id)
+    goToWcaAuth() {
+      authService.goToWcaAuth()
+    },
+
+    toggleTheme() {
+      this.$vuetify.theme.dark = !this.$vuetify.theme.dark
+      localStorage.setItem('theme', this.$vuetify.theme.dark ? 'dark' : 'light')
+    },
+
+    canSee(allowedRoles, allowedPermissions) {
+      return (
+        allowedRoles.includes(this.$store.getters['auth/user']?.role) ||
+        allowedPermissions.some((ele) =>
+          this.$store.getters['auth/user']?.all_permissions.includes(ele)
+        )
+      )
     },
     copyIdTokenToClipboard() {
       if (this.$store.getters['auth/token']) {

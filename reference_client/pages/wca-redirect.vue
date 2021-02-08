@@ -15,10 +15,9 @@
 </template>
 
 <script>
-import sharedService from '~/services/shared.js'
-import authService from '~/services/auth.js'
-import { executeJomql } from '~/services/jomql.js'
-import { LOGIN_MUTATION } from '~/jomql/mutation/auth.js'
+import sharedService from '~/services/shared'
+import authService from '~/services/auth'
+import { executeJomql } from '~/services/jomql'
 
 export default {
   components: {},
@@ -47,10 +46,24 @@ export default {
           )
         }
 
-        const data = await executeJomql('socialLogin', LOGIN_MUTATION, {
-          provider: 'wca',
-          code: this.$route.query.code,
-          redirect_uri: window.location.href,
+        const data = await executeJomql(this, {
+          socialLogin: {
+            token: true,
+            type: true,
+            user: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
+              permissions: true,
+              all_permissions: true,
+            },
+            __args: {
+              provider: 'wca',
+              code: this.$route.query.code,
+              redirect_uri: window.location.href,
+            },
+          },
         })
 
         await authService.handleLogin(this, data)

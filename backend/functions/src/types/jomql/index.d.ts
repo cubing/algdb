@@ -1,17 +1,16 @@
-import type { ObjectTypeDefsqlOptions, DataloaderFunction } from "..";
+import type { ObjectTypeDefSqlOptions, DataloaderFunction } from "..";
 
 declare global {
   namespace Jomql {
     interface ObjectTypeDefinitionField {
-      mysqlOptions?: ObjectTypeDefsqlOptions;
+      // mysqlOptions?: ObjectTypeDefsqlOptions;
+      sqlOptions?: ObjectTypeDefSqlOptions;
       addable?: boolean;
       updateable?: boolean;
       dataloader?: DataloaderFunction;
-    }
-  }
-  namespace baz {
-    interface foo {
-      bar: string;
+      deleter?: Function;
+      setter?: Function;
+      updater?: Function;
     }
   }
 }

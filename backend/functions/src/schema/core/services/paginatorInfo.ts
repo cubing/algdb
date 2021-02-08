@@ -28,7 +28,7 @@ export class PaginatorInfoService extends SimpleService {
     }: ServiceFunctionInputs) => {
       const selectQuery = query || Object.assign({}, this.presets.default);
 
-      const results = await Resolver.resolveTableRows(
+      const results = await Resolver.getObjectType(
         this.typename,
         req,
         fieldPath,

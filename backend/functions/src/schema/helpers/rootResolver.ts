@@ -39,12 +39,13 @@ export function generateBaseRootResolvers(
         methodName = method + capitalizedClass;
         rootResolvers[methodName] = new JomqlRootResolverType({
           name: methodName,
-          method: "get" as const,
-          route: "/" + service.typename + "/:id",
+          restOptions: {
+            method: "get",
+            route: "/" + service.typename + "/:id",
+            query: service.presets.default,
+          },
           type: service.typeDefLookup,
-          isArray: false,
           allowNull: false,
-          query: service.presets.default,
           args: new JomqlInputFieldType({
             required: true,
             type: service.inputTypeDefLookup,
@@ -66,8 +67,11 @@ export function generateBaseRootResolvers(
             "get" + capitalizeString(service.paginator.typename)
           ] = new JomqlRootResolverType(<RootResolverDefinition>{
             name: methodName,
-            method: "get" as const,
-            route: "/" + service.typename,
+            restOptions: {
+              method: "get",
+              route: "/" + service.typename,
+              query: service.paginator.presets.default,
+            },
             ...generatePaginatorPivotResolverObject({
               pivotService: service,
             }),
@@ -82,10 +86,12 @@ export function generateBaseRootResolvers(
         methodName = method + capitalizedClass;
         rootResolvers[methodName] = new JomqlRootResolverType({
           name: methodName,
-          method: "delete" as const,
-          route: "/" + service.typename + "/:id",
+          restOptions: {
+            method: "delete",
+            route: "/" + service.typename + "/:id",
+            query: service.presets.default,
+          },
           type: service.typeDefLookup,
-          isArray: false,
           allowNull: false,
           args: new JomqlInputFieldType({
             required: true,
@@ -123,18 +129,20 @@ export function generateBaseRootResolvers(
               updateArgs[key] = new JomqlInputFieldType({
                 type: typeField,
                 required: false,
-                isArray: typeDefField.isArray,
+                allowNull: typeDefField.allowNull,
+                arrayOptions: typeDefField.arrayOptions,
               });
             }
           }
         );
         rootResolvers[methodName] = new JomqlRootResolverType({
           name: methodName,
-          method: "put" as const,
-          route: "/" + service.typename + "/:id",
-          query: service.presets.default,
+          restOptions: {
+            method: "put",
+            route: "/" + service.typename + "/:id",
+            query: service.presets.default,
+          },
           type: service.typeDefLookup,
-          isArray: false,
           allowNull: false,
           args: new JomqlInputFieldType({
             required: true,
@@ -191,17 +199,20 @@ export function generateBaseRootResolvers(
               createArgs[key] = new JomqlInputFieldType({
                 type: typeField,
                 required: typeDefField.required,
-                isArray: typeDefField.isArray,
+                allowNull: typeDefField.allowNull,
+                arrayOptions: typeDefField.arrayOptions,
               });
             }
           }
         );
         rootResolvers[methodName] = new JomqlRootResolverType({
           name: methodName,
-          method: "post" as const,
-          route: "/" + service.typename,
+          restOptions: {
+            method: "post",
+            route: "/" + service.typename,
+            query: service.presets.default,
+          },
           type: service.typeDefLookup,
-          isArray: false,
           allowNull: false,
           args: new JomqlInputFieldType({
             required: true,
@@ -223,10 +234,12 @@ export function generateBaseRootResolvers(
         methodName = service.typename + capitalizedMethod;
         rootResolvers[methodName] = new JomqlRootResolverType({
           name: methodName,
-          method: "post" as const,
-          route: "/subscribe/" + service.typename + capitalizedMethod,
+          restOptions: {
+            method: "post",
+            route: "/subscribe/" + service.typename + capitalizedMethod,
+            query: service.presets.default,
+          },
           type: service.typeDefLookup,
-          isArray: false,
           allowNull: false,
           resolver: ({ req, query, args, fieldPath }) =>
             service.subscribeToMultipleItem(
@@ -244,10 +257,12 @@ export function generateBaseRootResolvers(
         methodName = service.typename + capitalizedMethod;
         rootResolvers[methodName] = new JomqlRootResolverType({
           name: methodName,
-          method: "post" as const,
-          route: "/subscribe/" + service.typename + capitalizedMethod,
+          restOptions: {
+            method: "post",
+            route: "/subscribe/" + service.typename + capitalizedMethod,
+            query: service.presets.default,
+          },
           type: service.typeDefLookup,
-          isArray: false,
           allowNull: false,
           resolver: ({ req, query, args, fieldPath }) =>
             service.subscribeToSingleItem(
@@ -265,10 +280,12 @@ export function generateBaseRootResolvers(
         methodName = service.typename + capitalizedMethod;
         rootResolvers[methodName] = new JomqlRootResolverType({
           name: methodName,
-          method: "post" as const,
-          route: "/subscribe/" + service.typename + capitalizedMethod,
+          restOptions: {
+            method: "post",
+            route: "/subscribe/" + service.typename + capitalizedMethod,
+            query: service.presets.default,
+          },
           type: service.typeDefLookup,
-          isArray: false,
           allowNull: false,
           resolver: ({ req, query, args, fieldPath }) =>
             service.subscribeToSingleItem(
@@ -286,10 +303,12 @@ export function generateBaseRootResolvers(
         methodName = service.typename + capitalizedMethod;
         rootResolvers[methodName] = new JomqlRootResolverType({
           name: methodName,
-          method: "post" as const,
-          route: "/subscribe/" + service.typename + capitalizedMethod,
+          restOptions: {
+            method: "post",
+            route: "/subscribe/" + service.typename + capitalizedMethod,
+            query: service.presets.default,
+          },
           type: service.typeDefLookup,
-          isArray: false,
           allowNull: false,
           resolver: ({ req, query, args, fieldPath }) =>
             service.subscribeToMultipleItem(
@@ -317,9 +336,11 @@ export function generateEnumRootResolver(enumService: EnumService) {
   const rootResolvers = {
     [methodName]: new JomqlRootResolverType({
       name: methodName,
-      method: "get" as const,
-      route: "/" + enumService.paginator.typename,
-      isArray: false,
+      restOptions: {
+        method: "get",
+        route: "/" + enumService.paginator.typename,
+        query: enumService.presets.default,
+      },
       allowNull: false,
       type: enumService.paginator.typeDef,
       resolver: ({ req, args, query, fieldPath }) =>

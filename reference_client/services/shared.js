@@ -15,20 +15,21 @@ export default {
 
   handleError(err, root = null) {
     if (root) {
-      if (err.response && err.response.data.message) {
+      if (err.response && err.response.data.error.message) {
         root.$notifier.showSnackbar({
-          message: err.response.data.message,
+          message: err.response.data.error.message,
           variant: 'error',
         })
+        console.log(err.response.data.error)
       } else {
         // sanitize error message
         root.$notifier.showSnackbar({
           message: this.sanitizeErrorMessage(err.message),
           variant: 'error',
         })
+        console.log(err)
       }
     }
-    console.log(err)
   },
 
   sanitizeErrorMessage(errMessage) {

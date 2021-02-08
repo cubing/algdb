@@ -4,31 +4,35 @@
       :headers="recordInfo.headers"
       :items="records"
       class="elevation-1"
+      :class="{ 'expanded-table-bg': isChildComponent }"
       :loading="loading.loadData"
       :options.sync="options"
       loading-text="Loading... Please wait"
-      :server-items-length="recordsTotal"
+      :server-items-length="nextPaginatorInfo.total"
       :footer-props="footerOptions"
       :dense="dense"
+      :expanded.sync="expandedItems"
+      :show-expand="hasNested"
+      :single-expand="hasNested"
+      @update:sort-by="handlePageReset"
+      @update:sort-desc="handlePageReset"
+      @update:page="handleUpdatePage"
       @update:options="handleUpdateOptions"
-      @click:row=""
     >
       <template v-slot:top>
         <v-toolbar flat color="accent">
-          <v-icon v-if="isChildComponent" left
-            >mdi-subdirectory-arrow-right</v-icon
-          >
           <v-icon left>mdi-domain</v-icon>
           <v-toolbar-title
             >{{ capitalizedType }}s
-            <span v-for="(item, i) in validFilterParams" :key="i"
-              >[{{ i }}: {{ item }}]</span
+            <span v-for="(item, i) in visibleRawFiltersArray" :key="i"
+              >[{{ item.field }}-{{ item.operator }}-{{ item.value }}]</span
             ></v-toolbar-title
           >
           <v-divider class="mx-4" inset vertical></v-divider>
           <v-btn
+            v-if="recordInfo.addRecordComponent !== null"
             color="primary"
-            dark
+            darks
             class="mb-2"
             @click="openAddRecordDialog()"
           >
@@ -36,37 +40,51 @@
             New {{ capitalizedType }}
           </v-btn>
           <v-spacer></v-spacer>
+          <v-btn icon :loading="loading.exportData" @click="exportData()">
+            <v-icon>mdi-download</v-icon>
+          </v-btn>
           <v-btn icon @click="reset()">
             <v-icon>mdi-refresh</v-icon>
           </v-btn>
         </v-toolbar>
         <v-container class="pb-0">
           <v-row>
+            <v-col v-if="recordInfo.hasSearch" :key="-1" cols="3" class="py-0">
+              <v-text-field
+                v-model="searchInput"
+                label="Search"
+                placeholder="Type to search"
+                outlined
+                prepend-icon="mdi-magnify"
+                @change="filterChanged = true"
+              ></v-text-field>
+            </v-col>
             <v-col
-              v-for="(item, i) in visibleFilters"
+              v-for="(item, i) in visibleFiltersArray"
               :key="i"
               cols="3"
               class="py-0"
             >
               <v-select
-                v-if="item.getOptions"
-                v-model="filterInputs[i]"
-                :items="filterOptions[i]"
+                v-if="item.fieldInfo.getOptions"
+                v-model="item.value"
+                :items="item.options"
                 filled
-                :label="item.label"
+                :label="item.fieldInfo.label"
                 style="width: 300px"
-                :prepend-icon="item.icon"
+                :prepend-icon="item.fieldInfo.icon"
                 clearable
+                item-text="name"
+                item-value="id"
                 @change="filterChanged = true"
               ></v-select>
               <v-text-field
                 v-else
-                v-model="filterInputs[i]"
-                :label="item.label"
+                v-model="item.value"
+                :label="item.fieldInfo.label"
                 placeholder="Type to search"
                 outlined
-                :prepend-icon="item.icon"
-                clearable
+                :prepend-icon="item.fieldInfo.icon"
                 @change="filterChanged = true"
               ></v-text-field>
             </v-col>
@@ -80,71 +98,118 @@
           </v-btn>
         </v-toolbar>
       </template>
-      <template v-slot:item.created_at="props">
-        {{ generateTimeStringFromUnix(props.item.created_at) }}
+      <template v-slot:item="props">
+        <tr
+          :class="{ 'expanded-row-bg': props.isExpanded }"
+          :key="props.item.id"
+          @click="handleRowClick(props.item)"
+        >
+          <td v-if="hasNested">
+            <v-btn icon @click.stop="props.expand(!props.isExpanded)">
+              <v-icon
+                >mdi-chevron-{{ props.isExpanded ? 'up' : 'down' }}</v-icon
+              >
+            </v-btn>
+          </td>
+          <td v-for="(headerItem, i) in recordInfo.headers" :key="i">
+            <div v-if="headerItem.value === null">
+              <v-icon small @click.stop="openDialog('viewRecord', props.item)"
+                >mdi-eye</v-icon
+              >
+              <v-icon small @click.stop="openDialog('editRecord', props.item)"
+                >mdi-pencil</v-icon
+              >
+              <v-icon small @click.stop="openDialog('deleteRecord', props.item)"
+                >mdi-delete</v-icon
+              >
+            </div>
+            <span v-else>
+              {{ renderTableRowData(headerItem, props.item) }}
+              <v-icon
+                v-if="headerItem.copyable"
+                small
+                @click.stop="
+                  copyToClipboard(getTableRowData(headerItem, props.item))
+                "
+                >mdi-content-copy</v-icon
+              >
+            </span>
+          </td>
+        </tr>
       </template>
-      <template v-slot:item.updated_at="props">
-        {{ generateTimeStringFromUnix(props.item.updated_at) }}
-      </template>
-      <template v-slot:item.null="props">
-        <v-icon small @click.stop="openDialog('viewRecord', props.item)"
-          >mdi-eye</v-icon
-        >
-        <v-icon small @click.stop="openDialog('editRecord', props.item)"
-          >mdi-pencil</v-icon
-        >
-        <v-icon small @click.stop="openDialog('deleteRecord', props.item)"
-          >mdi-delete</v-icon
-        >
+      <template v-if="hasNested" v-slot:expanded-item="{ headers }">
+        <td :colspan="headers.length" class="pr-0">
+          <component
+            :is="childInterfaceComponent"
+            class="pb-2"
+            :record-info="recordInfo.nested"
+            :locked-filters="lockedSubFilters"
+            :add-filters="addSubFilters"
+            :filters="additionalSubFilters"
+            :hidden-filters="hiddenSubFilters"
+            :search="subSearchInput"
+            is-child-component
+            :dense="dense"
+            @filters-updated="handleSubFiltersUpdated"
+          ></component>
+        </td>
       </template>
       <template v-slot:no-data>No records</template>
     </v-data-table>
-    <EditRecordDialog
+    <component
+      :is="currentAddRecordComponent"
       :status="dialogs.addRecord"
       :record-info="recordInfo"
       :selected-item="dialogs.selectedItem"
       add-mode
       @close="dialogs.addRecord = false"
       @submit="handleListChange()"
-    ></EditRecordDialog>
-    <EditRecordDialog
+    ></component>
+    <component
+      :is="currentEditRecordComponent"
       :status="dialogs.editRecord"
       :record-info="recordInfo"
       :selected-item="dialogs.selectedItem"
       @close="dialogs.editRecord = false"
       @submit="handleListChange()"
-    ></EditRecordDialog>
-    <DeleteRecordDialog
+    ></component>
+    <component
+      :is="currentDeleteRecordComponent"
       :status="dialogs.deleteRecord"
       :record-info="recordInfo"
       :selected-item="dialogs.selectedItem"
       @close="dialogs.deleteRecord = false"
       @submit="handleListChange()"
-    ></DeleteRecordDialog>
-    <EditRecordDialog
+    ></component>
+    <component
+      :is="currentViewRecordComponent"
       :status="dialogs.viewRecord"
       :record-info="recordInfo"
       :selected-item="dialogs.selectedItem"
       view-mode
       @close="dialogs.viewRecord = false"
-    ></EditRecordDialog>
+    ></component>
   </div>
 </template>
 
 <script>
-import crudMixin from '~/mixins/crud.js'
+import crudMixin from '~/mixins/crud'
 
 export default {
+  name: 'crud-record-interface',
+
   mixins: [crudMixin],
 }
 </script>
 
 <style scoped>
-.pointer-cursor {
-  cursor: pointer;
+.expanded-row-bg {
+  background-color: green;
 }
 
-.selected-bg {
-  background-color: green;
+.expanded-table-bg {
+  border-left: 5px solid green;
+  border-bottom: 5px solid green;
+  border-radius: 0px;
 }
 </style>

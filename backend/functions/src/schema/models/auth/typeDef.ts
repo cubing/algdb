@@ -54,13 +54,14 @@ export default new JomqlObjectType(<ObjectTypeDefinition>{
       type: User.typeDefLookup,
       isArray: false,
       allowNull: false,
-      resolver: ({ req, args, query, fieldPath }) => {
+      resolver: ({ req, args, query, fieldPath, data }) => {
         return User.getRecord({
           req,
-          args,
+          args: { id: data.id },
           query,
           fieldPath,
           isAdmin: true,
+          data,
         });
       },
     },

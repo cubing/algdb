@@ -1,56 +1,82 @@
 import "../schema";
 import { objectTypeDefs } from "jomql";
-import { typeDef as subscriptionTypeDef } from "../schema/helpers/subscription";
-import { MysqlEnv } from "../types";
-import { env } from "../config";
-import { initializeSequelize, getSequelizeInstance } from "../utils/sequelize";
+// import { typeDef as subscriptionTypeDef } from "../schema/helpers/subscription";
+// import { env } from "../config";
+import { knex } from "../utils/knex";
 
-syncDatabase(env.mysql);
+syncDatabase();
 
-function syncDatabase(
-  mysqlEnv: MysqlEnv,
-  initSubscriptions = true,
-  force = false
-) {
-  //loop through objectTypeDefs to identify needed mysql tables
-  initializeSequelize(mysqlEnv);
-  const sequelize = getSequelizeInstance();
-
-  objectTypeDefs.forEach((typeDef, typeKey) => {
-    const definition = {};
-
-    for (const prop in typeDef.definition.fields) {
-      const sqlDefinition =
-        typeDef.definition.fields[prop].mysqlOptions?.sqlDefinition;
-      if (prop !== "id" && sqlDefinition) {
-        definition[prop] = sqlDefinition;
-      }
+async function syncDatabase(initSubscriptions = true, force = false) {
+  objectTypeDefs.forEach(async (typeDef, typeKey) => {
+    // does every field not have a sql field?
+    if (
+      Object.values(typeDef.definition.fields).every(
+        (typeDefField) => typeDefField.sqlOptions === undefined
+      )
+    ) {
+      // if yes, skip
+      return;
     }
 
-    if (Object.keys(definition).length > 0) {
-      sequelize.define(typeKey, definition, {
-        timestamps: false,
-        freezeTableName: true,
+    await knex.schema
+      .createTable(typeDef.definition.name, (table) => {
+        const indicesMap: Map<string, Set<string>> = new Map();
+        Object.entries(typeDef.definition.fields).forEach(
+          ([fieldName, typeDefField]) => {
+            const sqlDefinition = typeDefField.sqlOptions?.sqlDefinition;
+
+            // if has no sqlDefinition, skip
+            if (!sqlDefinition) return;
+
+            // if ID field, set ID and return
+            if (fieldName === "id") {
+              table.increments();
+              return;
+            }
+
+            // set type
+            const tableReference = table[sqlDefinition.type](fieldName);
+
+            // handle (not) nullable
+            typeDefField.allowNull
+              ? tableReference.nullable()
+              : tableReference.notNullable();
+
+            // set default value
+            if (sqlDefinition.defaultValue !== undefined)
+              tableReference.defaultTo(sqlDefinition.defaultValue);
+
+            // assemble unique indices
+            if (sqlDefinition.unique !== undefined) {
+              // if true, apply unique constraint to that column only
+              if (sqlDefinition.unique === true) {
+                tableReference.unique();
+              }
+
+              // if string, add to indicesMap
+              if (typeof sqlDefinition.unique === "string") {
+                if (!indicesMap.has(sqlDefinition.unique)) {
+                  indicesMap.set(sqlDefinition.unique, new Set());
+                }
+
+                const index = indicesMap.get(sqlDefinition.unique);
+                index!.add(fieldName);
+              }
+            }
+          }
+        );
+
+        // add indices with names
+        indicesMap.forEach((indexFields, indexName) => {
+          table.unique([...indexFields]);
+        });
+      })
+      .then(() => {
+        console.log(`table '${typeDef.definition.name}' created`);
+      })
+      .catch((err) => {
+        console.log(`table '${typeDef.definition.name}' FAILED`);
+        console.log(err);
       });
-    }
   });
-
-  if (initSubscriptions)
-    // define the jql subscription table
-    sequelize.define("jqlSubscription", subscriptionTypeDef, {
-      timestamps: false,
-      freezeTableName: true,
-    });
-
-  return sequelize
-    .sync({ [force ? "force" : "alter"]: true })
-    .then(() => {
-      console.log("Done syncing DB");
-      sequelize.close();
-    })
-    .catch((err) => {
-      console.log("An error occurred with syncing.");
-      console.log(err);
-      sequelize.close();
-    });
 }

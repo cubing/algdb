@@ -1,5 +1,7 @@
 import { linkDefs } from "../links";
-import * as mysql from "../../utils/mysql2";
+import { executeDBQuery, knex } from "../../utils/knex";
+import { isDev } from "../../config";
+
 import type {
   SqlQueryObject,
   SqlWhereObject,
@@ -9,7 +11,7 @@ import type {
   SqlSortFieldObject,
   SqlWhereFieldObject,
 } from "../../types";
-import { JomqlObjectType, objectTypeDefs } from "jomql";
+import { JomqlBaseError, JomqlObjectType, objectTypeDefs } from "jomql";
 
 export type JoinsMap = {
   [x: string]: string[];
@@ -24,306 +26,279 @@ export type AssemblyFunction = (
   currentTypeDef: JomqlObjectType
 ) => string;
 
-export function fetchTableRows(sqlQuery: SqlQueryObject) {
-  if (sqlQuery.select.length < 1) {
-    return [{}];
-  }
+function generateError(err: Error, fieldPath?: string[]) {
+  const errMessage = isDev ? err.message : "A SQL error has occurred";
+  console.log(err);
+  return new JomqlBaseError({
+    message: errMessage,
+    fieldPath,
+  });
+}
 
-  let whereStatement = "";
-  let orderStatement = "";
-  let limitStatement = "";
-  let groupByStatement = "";
-  let joinStatement = "";
+export async function fetchTableRows(
+  sqlQuery: SqlQueryObject,
+  fieldPath?: string[]
+) {
+  try {
+    if (sqlQuery.select.length < 1) {
+      return [{}];
+    }
 
-  const params = {};
+    let whereStatement = "";
+    let orderStatement = "";
+    let limitStatement = "";
+    let groupByStatement = "";
+    let joinStatement = "";
 
-  const previousJoins: JoinsMap = {};
+    const params = {};
 
-  // handle select statements
-  const selectResults = processSelectArray(
-    sqlQuery.from,
-    sqlQuery.select.concat(sqlQuery.rawSelect ?? []),
-    previousJoins
-  );
+    const previousJoins: JoinsMap = {};
 
-  if (selectResults.statements.length < 1) throw new Error("Invalid SQL");
-
-  joinStatement += selectResults.joinStatement;
-
-  const selectStatement = selectResults.statements.join(", ");
-
-  // handle where statements
-  if (sqlQuery.where) {
-    const whereResults = processWhereObject(
+    // handle select statements
+    const selectResults = processSelectArray(
       sqlQuery.from,
-      sqlQuery.where,
-      previousJoins,
-      params
-    );
-
-    whereStatement = whereResults.whereStatement;
-    joinStatement += whereResults.joinStatement;
-  }
-
-  if (!whereStatement) {
-    whereStatement = "1";
-  }
-
-  //handle orderBy statements
-  //field MUST be pre-validated
-  if (sqlQuery.orderBy) {
-    const orderResults = processSortArray(
-      sqlQuery.from,
-      sqlQuery.orderBy,
+      sqlQuery.select.concat(sqlQuery.rawSelect ?? []),
       previousJoins
     );
 
-    orderStatement += orderResults.statements.join(", ");
-    joinStatement += orderResults.joinStatement;
-  }
+    if (selectResults.statements.length < 1) throw new Error("Invalid SQL");
 
-  //handle limit statement
-  if (sqlQuery.limit) {
-    limitStatement += " LIMIT " + sqlQuery.limit ?? 0;
-  }
+    joinStatement += selectResults.joinStatement;
 
-  //handle limit/offset statements
-  if (sqlQuery.groupBy) {
-    const groupResults = processGroupArray(
-      sqlQuery.from,
-      sqlQuery.groupBy,
-      previousJoins
-    );
+    const selectStatement = selectResults.statements.join(", ");
 
-    groupByStatement += groupResults.statements.join(", ");
-    joinStatement += groupResults.joinStatement;
-  }
+    // handle where statements
+    if (sqlQuery.where) {
+      const whereResults = processWhereObject(
+        sqlQuery.from,
+        sqlQuery.where,
+        previousJoins,
+        params
+      );
 
-  /*
+      whereStatement = whereResults.whereStatement;
+      joinStatement += whereResults.joinStatement;
+    }
+
+    if (!whereStatement) {
+      whereStatement = "true";
+    }
+
+    //handle orderBy statements
+    //field MUST be pre-validated
+    if (sqlQuery.orderBy) {
+      const orderResults = processSortArray(
+        sqlQuery.from,
+        sqlQuery.orderBy,
+        previousJoins
+      );
+
+      orderStatement += orderResults.statements.join(", ");
+      joinStatement += orderResults.joinStatement;
+    }
+
+    //handle limit statement
+    if (sqlQuery.limit) {
+      limitStatement += " LIMIT " + sqlQuery.limit ?? 0;
+    }
+
+    //handle limit/offset statements
+    if (sqlQuery.groupBy) {
+      const groupResults = processGroupArray(
+        sqlQuery.from,
+        sqlQuery.groupBy,
+        previousJoins
+      );
+
+      groupByStatement += groupResults.statements.join(", ");
+      joinStatement += groupResults.joinStatement;
+    }
+
+    /*
   if(jqlQuery.offset) {
     limitStatement += " OFFSET " + parseInt(jqlQuery.offset) || 0;
   }
   */
 
-  const sqlQueryString =
-    "SELECT " +
-    selectStatement +
-    " FROM " +
-    sqlQuery.from +
-    joinStatement +
-    " WHERE " +
-    whereStatement +
-    (groupByStatement ? " GROUP BY " + groupByStatement : "") +
-    (orderStatement ? " ORDER BY " + orderStatement : "") +
-    limitStatement;
+    const sqlQueryString =
+      `SELECT ${selectStatement} FROM "${sqlQuery.from}" AS "${
+        sqlQuery.from + "0"
+      }"${joinStatement} WHERE ${whereStatement}` +
+      (groupByStatement ? " GROUP BY " + groupByStatement : "") +
+      (orderStatement ? " ORDER BY " + orderStatement : "") +
+      limitStatement;
 
-  return mysql.executeDBQuery(sqlQueryString, params);
+    const results = await executeDBQuery(sqlQueryString, params);
+    return results;
+  } catch (err) {
+    throw generateError(err, fieldPath);
+  }
 }
 
 export async function countTableRows(
   table: string,
-  whereObject: SqlWhereObject
+  whereObject: SqlWhereObject,
+  fieldPath?: string[]
 ) {
-  let whereStatement = "";
-  let joinStatement = "";
-  const previousJoins: JoinsMap = {};
-  const params = {};
+  try {
+    let whereStatement = "";
+    let joinStatement = "";
+    const previousJoins: JoinsMap = {};
+    const params = {};
 
-  const selectStatement = "count(*) AS count";
+    const selectStatement = "count(*) AS count";
 
-  //handle where statements
-  const whereResults = processWhereObject(
-    table,
-    whereObject,
-    previousJoins,
-    params
-  );
+    //handle where statements
+    const whereResults = processWhereObject(
+      table,
+      whereObject,
+      previousJoins,
+      params
+    );
 
-  whereStatement += whereResults.whereStatement;
-  joinStatement += whereResults.joinStatement;
+    whereStatement += whereResults.whereStatement;
+    joinStatement += whereResults.joinStatement;
 
-  if (!whereStatement) {
-    whereStatement = "1";
+    if (!whereStatement) {
+      whereStatement = "true";
+    }
+
+    const sqlQuery = `SELECT ${selectStatement} FROM "${table}" AS "${
+      table + "0"
+    }"${joinStatement} WHERE ${whereStatement}`;
+
+    const results = await executeDBQuery(sqlQuery, params);
+
+    return Number(results[0].count);
+  } catch (err) {
+    throw generateError(err, fieldPath);
   }
-
-  const sqlQuery =
-    "SELECT " +
-    selectStatement +
-    " FROM " +
-    table +
-    joinStatement +
-    " WHERE " +
-    whereStatement;
-
-  const results = await mysql.executeDBQuery(sqlQuery, params);
-
-  return results[0].count;
 }
 
-export function insertTableRow(
+export async function insertTableRow(
   table: string,
   setFields,
-  rawSetFields = {},
+  fieldPath?: string[],
   ignore = false
 ) {
-  let setStatement = "";
-  const params = {};
-
-  // check if there is a mysql setter on the field
-  const currentTypeDef = objectTypeDefs.get(table);
-  if (!currentTypeDef) {
-    throw new Error(`TypeDef for ${table} not found`);
-  }
-
-  for (const fieldname in setFields) {
-    const setter =
-      currentTypeDef.definition.fields[fieldname].mysqlOptions?.setter;
-
-    const parseValue =
-      currentTypeDef.definition.fields[fieldname].mysqlOptions?.parseValue;
-
-    if (setter) {
-      setStatement += `${fieldname} = ${setter(":" + fieldname)}, `;
-    } else {
-      setStatement += fieldname + " = :" + fieldname + ", ";
+  try {
+    // check if there is a mysql setter on the field
+    const currentTypeDef = objectTypeDefs.get(table);
+    if (!currentTypeDef) {
+      throw new Error(`TypeDef for ${table} not found`);
     }
 
-    params[fieldname] = parseValue
-      ? parseValue(setFields[fieldname])
-      : setFields[fieldname];
+    // handle set fields
+    for (const fieldname in setFields) {
+      const parseValue =
+        currentTypeDef.definition.fields[fieldname].sqlOptions?.parseValue;
+
+      setFields[fieldname] = parseValue
+        ? parseValue(setFields[fieldname])
+        : setFields[fieldname];
+    }
+
+    const results = await knex(table).insert(setFields).returning(["id"]);
+    return results;
+  } catch (err) {
+    throw generateError(err, fieldPath);
   }
-
-  // raw fields MUST be sanitized or internally added
-  for (const fieldname in rawSetFields) {
-    setStatement += fieldname + " = " + rawSetFields[fieldname] + ", ";
-  }
-
-  if (setStatement) {
-    // remove trailing comma
-    setStatement = setStatement.slice(0, -2);
-  } else {
-    throw new Error("Invalid SQL");
-  }
-
-  const query =
-    "INSERT " +
-    (ignore ? "IGNORE " : "") +
-    "INTO " +
-    table +
-    " SET " +
-    setStatement;
-
-  return mysql.executeDBQuery(query, params);
 }
 
-export function updateTableRow(
+export async function updateTableRow(
   table: string,
   setFields,
-  rawSetFields = {},
-  whereObject: SqlWhereObject
+  whereObject: SqlWhereObject,
+  fieldPath?: string[]
 ) {
-  let setStatement = "";
-  let whereStatement = "";
-  let joinStatement = "";
-  const previousJoins: JoinsMap = {};
-  const params = {};
+  try {
+    let whereStatement = "";
+    let joinStatement = "";
+    const previousJoins: JoinsMap = {};
+    const params = {};
 
-  // check if there is a mysql setter on the field
-  const currentTypeDef = objectTypeDefs.get(table);
-  if (!currentTypeDef) {
-    throw new Error(`TypeDef for ${table} not found`);
-  }
-
-  // handle set fields
-  for (const fieldname in setFields) {
-    const setter =
-      currentTypeDef.definition.fields[fieldname].mysqlOptions?.setter;
-
-    const parseValue =
-      currentTypeDef.definition.fields[fieldname].mysqlOptions?.parseValue;
-
-    if (setter) {
-      setStatement += `${fieldname} = ${setter(":" + fieldname)}, `;
-    } else {
-      setStatement += fieldname + " = :" + fieldname + ", ";
+    // check if there is a mysql setter on the field
+    const currentTypeDef = objectTypeDefs.get(table);
+    if (!currentTypeDef) {
+      throw new Error(`TypeDef for ${table} not found`);
     }
-    params[fieldname] = parseValue
-      ? parseValue(setFields[fieldname])
-      : setFields[fieldname];
+
+    // handle set fields
+    for (const fieldname in setFields) {
+      const parseValue =
+        currentTypeDef.definition.fields[fieldname].sqlOptions?.parseValue;
+
+      setFields[fieldname] = parseValue
+        ? parseValue(setFields[fieldname])
+        : setFields[fieldname];
+    }
+
+    // handle where statements
+    if (whereObject) {
+      const whereResults = processWhereObject(
+        table,
+        whereObject,
+        previousJoins,
+        params
+      );
+
+      whereStatement += whereResults.whereStatement;
+      joinStatement += whereResults.joinStatement;
+    }
+
+    if (!whereStatement) {
+      throw new Error("Invalid SQL");
+    }
+
+    const results = await knex({ [table + "0"]: table })
+      .joinRaw(joinStatement)
+      .whereRaw(whereStatement, params)
+      .update(setFields);
+    return results;
+  } catch (err) {
+    throw generateError(err, fieldPath);
   }
-
-  // raw fields MUST be sanitized or internally added
-  for (const fieldname in rawSetFields) {
-    setStatement += fieldname + " = " + rawSetFields[fieldname] + ", ";
-  }
-
-  if (setStatement) {
-    // remove trailing comma
-    setStatement = setStatement.slice(0, -2);
-  } else {
-    throw new Error("Invalid SQL");
-  }
-
-  // handle where statements
-  if (whereObject) {
-    const whereResults = processWhereObject(
-      table,
-      whereObject,
-      previousJoins,
-      params
-    );
-
-    whereStatement += whereResults.whereStatement;
-    joinStatement += whereResults.joinStatement;
-  }
-
-  if (!whereStatement) {
-    throw new Error("Invalid SQL");
-  }
-
-  //combine statements
-  const query =
-    "UPDATE " +
-    table +
-    joinStatement +
-    " SET " +
-    setStatement +
-    " WHERE " +
-    whereStatement;
-
-  return mysql.executeDBQuery(query, params);
 }
 
-export function removeTableRow(table: string, whereObject: SqlWhereObject) {
-  let whereStatement = "";
-  let joinStatement = "";
-  const previousJoins: JoinsMap = {};
-  const params = {};
+export async function removeTableRow(
+  table: string,
+  whereObject: SqlWhereObject,
+  fieldPath?: string[]
+) {
+  try {
+    let whereStatement = "";
+    let joinStatement = "";
+    const previousJoins: JoinsMap = {};
+    const params = {};
 
-  //handle where statements
-  if (whereObject) {
-    const whereResults = processWhereObject(
-      table,
-      whereObject,
-      previousJoins,
-      params
-    );
+    //handle where statements
+    if (whereObject) {
+      const whereResults = processWhereObject(
+        table,
+        whereObject,
+        previousJoins,
+        params
+      );
 
-    whereStatement += whereResults.whereStatement;
-    joinStatement += whereResults.joinStatement;
+      whereStatement += whereResults.whereStatement;
+      joinStatement += whereResults.joinStatement;
+    }
+
+    if (!whereStatement) {
+      throw new Error("Invalid SQL");
+    }
+
+    const results = await knex({ [table + "0"]: table })
+      .joinRaw(joinStatement)
+      .whereRaw(whereStatement, params)
+      .delete();
+    return results;
+  } catch (err) {
+    throw generateError(err, fieldPath);
   }
-
-  if (!whereStatement) {
-    throw new Error("Invalid SQL");
-  }
-
-  const query =
-    "DELETE FROM " + table + joinStatement + " WHERE " + whereStatement;
-
-  return mysql.executeDBQuery(query, params);
 }
 
-export function processSelectArray(
+function processSelectArray(
   table: string,
   selectFieldsArray: SqlSelectFieldObject[],
   previousJoins: JoinsMap
@@ -341,12 +316,12 @@ export function processSelectArray(
       currentTypeDef
     ) => {
       const getter =
-        currentTypeDef.definition.fields[fieldname].mysqlOptions?.getter;
+        currentTypeDef.definition.fields[fieldname].sqlOptions?.getter;
 
       return (
         (getter
-          ? getter(tableAlias + "." + fieldname)
-          : tableAlias + "." + fieldname) +
+          ? getter(`"${tableAlias}".${fieldname}`)
+          : `"${tableAlias}".${fieldname}`) +
         ' AS "' +
         (fieldObject.as ?? fieldObject.field) +
         '"'
@@ -361,7 +336,7 @@ function isSqlWhereObject(
   return (obj as SqlWhereObject).fields !== undefined;
 }
 
-export function processWhereObject(
+function processWhereObject(
   table: string,
   whereObject: SqlWhereObject,
   previousJoins: JoinsMap,
@@ -403,11 +378,11 @@ export function processWhereObject(
         const placeholder = fieldname + subIndexString + "_" + subIndex;
 
         const getter =
-          currentTypeDef.definition.fields[fieldname].mysqlOptions?.getter;
+          currentTypeDef.definition.fields[fieldname].sqlOptions?.getter;
 
         let whereSubstatement = getter
-          ? getter(tableAlias + "." + fieldname)
-          : tableAlias + "." + fieldname;
+          ? getter(`"${tableAlias}".${fieldname}`)
+          : `"${tableAlias}".${fieldname}`;
 
         switch (operator) {
           case "eq":
@@ -444,8 +419,12 @@ export function processWhereObject(
             break;
           case "in":
             if (Array.isArray(fieldObject.value)) {
-              whereSubstatement += " IN (:" + placeholder + ")";
-              params[placeholder] = fieldObject.value;
+              whereSubstatement += ` IN (${fieldObject.value.map(
+                (ele, index) => `:${placeholder}_${index}`
+              )})`;
+              fieldObject.value.forEach((ele, index) => {
+                params[placeholder + "_" + index] = ele;
+              });
             } else {
               throw new Error("Must provide array for in/nin operators");
             }
@@ -514,7 +493,7 @@ export function processWhereObject(
   };
 }
 
-export function processSortArray(
+function processSortArray(
   table: string,
   sortFieldsArray: SqlSortFieldObject[],
   previousJoins: JoinsMap
@@ -531,11 +510,13 @@ export function processSortArray(
       fieldIndex,
       currentTypeDef
     ) =>
-      tableAlias + "." + fieldname + " " + (fieldObject.desc ? "DESC" : "ASC")
+      `"${tableAlias}".${fieldname} ${
+        fieldObject.desc ? "DESC NULLS LAST" : "ASC NULLS FIRST"
+      }`
   );
 }
 
-export function processGroupArray(
+function processGroupArray(
   table: string,
   groupFieldsArray: SqlGroupFieldObject[],
   previousJoins: JoinsMap
@@ -551,11 +532,11 @@ export function processGroupArray(
       fieldObject,
       fieldIndex,
       currentTypeDef
-    ) => tableName + "." + fieldname
+    ) => `"${tableAlias}.${fieldname}`
   );
 }
 
-export function processJoins(
+function processJoins(
   table: string,
   fieldsArray: { [x: string]: any; joinFields?: SqlJoinFieldObject[] }[],
   previousJoins: JoinsMap,
@@ -567,7 +548,7 @@ export function processJoins(
   fieldsArray.forEach((fieldObject, fieldIndex) => {
     const fieldPath = fieldObject.field.split(".");
     let currentTypeDef = objectTypeDefs.get(table);
-    let tableAlias = table;
+    let tableAlias = table + "0";
     let tableName = table;
 
     if (!currentTypeDef)
@@ -632,7 +613,7 @@ export function processJoins(
         //join with this type
         const joinTableName =
           ele.joinTableName ??
-          currentTypeDef!.definition.fields[ele.field].mysqlOptions?.joinInfo
+          currentTypeDef!.definition.fields[ele.field].sqlOptions?.joinInfo
             ?.type;
 
         //if it requires a join, check if it was joined previously
@@ -658,23 +639,11 @@ export function processJoins(
         }
 
         //always set the alias.
-        joinTableAlias = joinTableName + index;
+        joinTableAlias = joinTableName + (index + 1);
 
         if (newJoin) {
           //assemble join statement, if required
-          joinStatement +=
-            " LEFT JOIN " +
-            joinTableName +
-            " " +
-            joinTableAlias +
-            " ON " +
-            tableAlias +
-            "." +
-            ele.field +
-            " = " +
-            joinTableAlias +
-            "." +
-            ele.foreignField;
+          joinStatement += ` LEFT JOIN "${joinTableName}" AS "${joinTableAlias}" ON "${tableAlias}".${ele.field} = "${joinTableAlias}".${ele.foreignField}`;
         }
 
         // shift the typeDef, tableAlias, and tableName
@@ -698,8 +667,6 @@ export function processJoins(
         "Field: " + fieldname + " does not exist in table: " + tableName
       );
 
-    // to-do: if it does not exist, also check Links containing "alg", then
-
     statements.push(
       assemblyFn(
         tableName,
@@ -718,4 +685,4 @@ export function processJoins(
   };
 }
 
-export const executeDBQuery = mysql.executeDBQuery;
+export { executeDBQuery };

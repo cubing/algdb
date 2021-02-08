@@ -4,38 +4,41 @@
       :headers="recordInfo.headers"
       :items="records"
       class="elevation-1"
+      :class="{ 'expanded-table-bg': isChildComponent }"
       :loading="loading.loadData"
       :options.sync="options"
       loading-text="Loading... Please wait"
-      :server-items-length="recordsTotal"
+      :server-items-length="nextPaginatorInfo.total"
       :footer-props="footerOptions"
-      :expanded.sync="expandedItems"
-      show-expand
-      single-expand
       :dense="dense"
+      :expanded.sync="expandedItems"
+      :show-expand="hasNested"
+      :single-expand="hasNested"
+      @update:sort-by="handlePageReset"
+      @update:sort-desc="handlePageReset"
+      @update:page="handleUpdatePage"
       @update:options="handleUpdateOptions"
-      @item-expanded="handleItemExpanded"
-      @click:row="handleRowClick"
     >
       <template v-slot:top>
         <v-toolbar flat color="accent">
-          <v-icon v-if="isChildComponent" left
-            >mdi-subdirectory-arrow-right</v-icon
-          >
           <v-btn v-if="parentPath.length > 0" icon @click="goToParent()">
             <v-icon>mdi-arrow-left</v-icon></v-btn
           >
           <v-icon left>mdi-domain</v-icon>
           <v-toolbar-title
             >{{ capitalizedType }}s
-            <span v-for="(item, i) in validFilterParams" :key="i"
-              >[{{ i }}: {{ item }}]</span
-            ></v-toolbar-title
-          >
+            <span v-for="(item, i) in visibleRawFiltersArray" :key="i"
+              >[{{ item.field }}-{{ item.operator }}-{{ item.value }}]</span
+            >
+            <span v-if="parentPath.length"
+              >[{{ parentPath.map((ele) => ele.name).join(' / ') }}]</span
+            >
+          </v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
           <v-btn
+            v-if="recordInfo.addRecordComponent !== null"
             color="primary"
-            dark
+            darks
             class="mb-2"
             @click="openAddRecordDialog()"
           >
@@ -43,37 +46,51 @@
             New {{ capitalizedType }}
           </v-btn>
           <v-spacer></v-spacer>
+          <v-btn icon :loading="loading.exportData" @click="exportData()">
+            <v-icon>mdi-download</v-icon>
+          </v-btn>
           <v-btn icon @click="reset()">
             <v-icon>mdi-refresh</v-icon>
           </v-btn>
         </v-toolbar>
         <v-container class="pb-0">
           <v-row>
+            <v-col v-if="recordInfo.hasSearch" :key="-1" cols="3" class="py-0">
+              <v-text-field
+                v-model="searchInput"
+                label="Search"
+                placeholder="Type to search"
+                outlined
+                prepend-icon="mdi-magnify"
+                @change="filterChanged = true"
+              ></v-text-field>
+            </v-col>
             <v-col
-              v-for="(item, i) in visibleFilters"
+              v-for="(item, i) in visibleFiltersArray"
               :key="i"
               cols="3"
               class="py-0"
             >
               <v-select
-                v-if="item.getOptions"
-                v-model="filterInputs[i]"
-                :items="filterOptions[i]"
+                v-if="item.fieldInfo.getOptions"
+                v-model="item.value"
+                :items="item.options"
                 filled
-                :label="item.label"
+                :label="item.fieldInfo.label"
                 style="width: 300px"
-                :prepend-icon="item.icon"
+                :prepend-icon="item.fieldInfo.icon"
                 clearable
+                item-text="name"
+                item-value="id"
                 @change="filterChanged = true"
               ></v-select>
               <v-text-field
                 v-else
-                v-model="filterInputs[i]"
-                :label="item.label"
+                v-model="item.value"
+                :label="item.fieldInfo.label"
                 placeholder="Type to search"
                 outlined
-                :prepend-icon="item.icon"
-                clearable
+                :prepend-icon="item.fieldInfo.icon"
                 @change="filterChanged = true"
               ></v-text-field>
             </v-col>
@@ -87,119 +104,242 @@
           </v-btn>
         </v-toolbar>
       </template>
-      <template v-slot:item.created_at="props">
-        {{ generateTimeStringFromUnix(props.item.created_at) }}
+      <template v-slot:item="props">
+        <tr
+          :class="{ 'expanded-row-bg': props.isExpanded }"
+          :key="props.item.id"
+          @click="handleRowClick(props.item)"
+        >
+          <td v-if="hasNested">
+            <v-btn icon @click.stop="props.expand(!props.isExpanded)">
+              <v-icon
+                >mdi-chevron-{{ props.isExpanded ? 'up' : 'down' }}</v-icon
+              >
+            </v-btn>
+          </td>
+          <td v-for="(headerItem, i) in recordInfo.headers" :key="i">
+            <div v-if="headerItem.value === null">
+              <v-icon small @click.stop="goToChild(props.item.id)"
+                >mdi-arrow-right-circle</v-icon
+              >
+              <v-icon small @click.stop="openDialog('viewRecord', props.item)"
+                >mdi-eye</v-icon
+              >
+              <v-icon small @click.stop="openDialog('editRecord', props.item)"
+                >mdi-pencil</v-icon
+              >
+              <v-icon small @click.stop="openDialog('deleteRecord', props.item)"
+                >mdi-delete</v-icon
+              >
+            </div>
+            <span v-else>
+              {{ renderTableRowData(headerItem, props.item) }}
+              <v-icon
+                v-if="headerItem.copyable"
+                small
+                @click.stop="
+                  copyToClipboard(getTableRowData(headerItem, props.item))
+                "
+                >mdi-content-copy</v-icon
+              >
+            </span>
+          </td>
+        </tr>
       </template>
-      <template v-slot:item.updated_at="props">
-        {{ generateTimeStringFromUnix(props.item.updated_at) }}
-      </template>
-      <template v-slot:item.null="props">
-        <v-icon small @click.stop="goToChild(props.item.id)"
-          >mdi-arrow-right-circle</v-icon
-        >
-        <v-icon small @click.stop="openDialog('viewRecord', props.item)"
-          >mdi-eye</v-icon
-        >
-        <v-icon small @click.stop="openDialog('editRecord', props.item)"
-          >mdi-pencil</v-icon
-        >
-        <v-icon small @click.stop="openDialog('deleteRecord', props.item)"
-          >mdi-delete</v-icon
-        >
-      </template>
-      <template v-slot:expanded-item="{ headers, item }">
+      <template v-if="hasNested" v-slot:expanded-item="{ headers }">
         <td :colspan="headers.length" class="pr-0">
-          <CrudAlgcaseInterface
-            class="py-2"
-            :record-info="subRecordInfo"
-            :filters="subFilter"
+          <component
+            :is="childInterfaceComponent"
+            class="pb-2"
+            :record-info="recordInfo.nested"
+            :locked-filters="lockedSubFilters"
+            :add-filters="addSubFilters"
+            :filters="additionalSubFilters"
             :hidden-filters="hiddenSubFilters"
+            :search="subSearchInput"
             is-child-component
             :dense="dense"
-            @filters-updated="handleFiltersUpdated"
-          ></CrudAlgcaseInterface>
+            @filters-updated="handleSubFiltersUpdated"
+          ></component>
         </td>
       </template>
       <template v-slot:no-data>No records</template>
     </v-data-table>
-    <EditRecordDialog
+    <component
+      :is="currentAddRecordComponent"
       :status="dialogs.addRecord"
       :record-info="recordInfo"
       :selected-item="dialogs.selectedItem"
       add-mode
       @close="dialogs.addRecord = false"
       @submit="handleListChange()"
-    ></EditRecordDialog>
-    <EditRecordDialog
+    ></component>
+    <component
+      :is="currentEditRecordComponent"
       :status="dialogs.editRecord"
       :record-info="recordInfo"
       :selected-item="dialogs.selectedItem"
       @close="dialogs.editRecord = false"
       @submit="handleListChange()"
-    ></EditRecordDialog>
-    <DeleteRecordDialog
+    ></component>
+    <component
+      :is="currentDeleteRecordComponent"
       :status="dialogs.deleteRecord"
       :record-info="recordInfo"
       :selected-item="dialogs.selectedItem"
       @close="dialogs.deleteRecord = false"
       @submit="handleListChange()"
-    ></DeleteRecordDialog>
-    <EditRecordDialog
+    ></component>
+    <component
+      :is="currentViewRecordComponent"
       :status="dialogs.viewRecord"
       :record-info="recordInfo"
       :selected-item="dialogs.selectedItem"
       view-mode
       @close="dialogs.viewRecord = false"
-    ></EditRecordDialog>
+    ></component>
   </div>
 </template>
 
 <script>
-import crudExpandableMixin from '~/mixins/crudExpandable.js'
-import { algcaseRecordInfo } from '~/services/type'
-import CrudAlgcaseInterface from '~/components/interface/crud/crudAlgcaseInterface.vue'
+import crudMixin from '~/mixins/crud'
+import { executeJomql } from '~/services/jomql'
 
 export default {
-  components: {
-    CrudAlgcaseInterface,
-  },
-
-  mixins: [crudExpandableMixin],
+  mixins: [crudMixin],
 
   data() {
     return {
-      subRecordInfo: algcaseRecordInfo,
       parentPath: [],
     }
   },
-
-  computed: {},
+  computed: {
+    additionalLockedFilters() {
+      return {
+        field: 'parent',
+        operator: 'eq',
+        value: this.parentPath.length
+          ? this.parentPath[this.parentPath.length - 1].id
+          : null,
+      }
+    },
+  },
 
   methods: {
+    // override
     handleRowClick(item) {
-      this.goToChild(item.id)
+      this.goToChild(item)
     },
 
-    goToChild(id) {
-      this.parentPath.push(this.filterInputs.parent)
-      this.filterInputs.parent = id
+    goToChild(item) {
+      this.parentPath.push(item)
+      // clear the searchInput
+      this.searchInput = ''
       this.updateFilters()
     },
 
     goToParent() {
-      this.filterInputs.parent = this.parentPath.pop()
+      this.parentPath.pop()
+      this.searchInput = ''
       this.updateFilters()
+    },
+
+    // override
+    openAddRecordDialog() {
+      const initializedRecord = {}
+
+      this.addFilters
+        .concat(this.additionalLockedFilters)
+        .forEach((addFilter) => {
+          initializedRecord[addFilter.field] = addFilter.value
+        })
+
+      this.openDialog('addRecord', initializedRecord)
+    },
+
+    // override
+    async getRecords(paginated = true) {
+      const paginationArgs = paginated
+        ? {
+            [this.positivePageDelta ? 'first' : 'last']: this.options
+              .itemsPerPage,
+            ...(this.options.page > 1 &&
+              this.positivePageDelta && {
+                after: this.currentPaginatorInfo.endCursor,
+              }),
+            ...(!this.positivePageDelta && {
+              before: this.currentPaginatorInfo.startCursor,
+            }),
+          }
+        : {
+            first: 100, // first 100 rows only
+          }
+      const data = await executeJomql(this, {
+        ['get' + this.capitalizedType + 'Paginator']: {
+          paginatorInfo: {
+            total: true,
+            startCursor: true,
+            endCursor: true,
+          },
+          edges: {
+            node: this.recordInfo.headers.reduce(
+              (total, val) => {
+                // if null, skip
+                if (!val.value) return total
+
+                // if nested, process (only supporting one level of nesting)
+                if (val.value.includes('.')) {
+                  const parts = val.value.split(/\./)
+
+                  if (!total[parts[0]]) {
+                    total[parts[0]] = {}
+                  }
+
+                  total[parts[0]][parts[1]] = true
+                } else {
+                  total[val.value] = true
+                }
+                return total
+              },
+              { id: true }
+            ),
+            cursor: true,
+          },
+          __args: {
+            ...paginationArgs,
+            sortBy: this.options.sortBy,
+            sortDesc: this.options.sortDesc,
+            filterBy: this.filters
+              .concat(this.lockedFilters)
+              .concat(this.additionalLockedFilters)
+              .reduce((total, ele) => {
+                if (!total[ele.field]) total[ele.field] = []
+                total[ele.field].push({
+                  operator: ele.operator,
+                  value: ele.value, // assuming this value has been parsed already
+                })
+                return total
+              }, {}),
+            ...(this.search && { search: this.search }),
+            ...(this.groupBy && { groupBy: this.groupBy }),
+          },
+        },
+      })
+
+      return data
     },
   },
 }
 </script>
 
 <style scoped>
-.pointer-cursor {
-  cursor: pointer;
+.expanded-row-bg {
+  background-color: green;
 }
 
-.selected-bg {
-  background-color: green;
+.expanded-table-bg {
+  border-left: 5px solid green;
+  border-bottom: 5px solid green;
+  border-radius: 0px;
 }
 </style>

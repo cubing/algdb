@@ -44,6 +44,8 @@
                 :label="recordInfo.inputs[i].text"
                 :readonly="viewMode || recordInfo.inputs[i].readonly"
                 :clearable="!viewMode && !recordInfo.inputs[i].readonly"
+                item-text="name"
+                item-value="id"
                 class="py-0"
               ></v-select>
               <v-text-field
@@ -76,7 +78,7 @@
 </template>
 
 <script>
-import editRecordDialogMixin from '~/mixins/editRecordDialog.js'
+import editRecordDialogMixin from '~/mixins/editRecordDialog'
 
 export default {
   mixins: [editRecordDialogMixin],

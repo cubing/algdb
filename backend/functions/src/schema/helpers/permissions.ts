@@ -1,4 +1,4 @@
-import * as mysqlHelper from "./mysql";
+import * as sqlHelper from "./sql";
 import { User } from "../services";
 import { userRoleKenum, userPermissionEnum } from "../enums";
 import { BaseService, NormalService } from "../core/services";
@@ -19,7 +19,7 @@ export function generateItemCreatedByUserGuard(
     if (!req.user) return false;
 
     try {
-      const results = await mysqlHelper.fetchTableRows({
+      const results = await sqlHelper.fetchTableRows({
         select: [{ field: "created_by" }],
         from: service.typename,
         where: {
@@ -28,46 +28,6 @@ export function generateItemCreatedByUserGuard(
       });
 
       return results[0]?.created_by === req.user.id;
-    } catch (err) {
-      return false;
-    }
-  };
-}
-
-export function generateCheckPermissionsLink(
-  method: string,
-  service: BaseService
-): AccessControlFunction {
-  return async function ({ req, fieldPath, args, query }) {
-    //check if logged in
-    if (!req.user) return false;
-    if (!service.permissionsLink) return false;
-    try {
-      //check the permissionsLink entry
-      const records = await mysqlHelper.executeDBQuery(
-        "SELECT permissions, admin FROM " +
-          service.permissionsLink.typename +
-          " WHERE user = :user AND " +
-          service.typename +
-          " = :" +
-          service.typename,
-        {
-          user: req.user.id,
-          [service.typename]: args.id,
-        }
-      );
-
-      if (records.length < 1) return false;
-
-      //if admin==1, allow
-      if (records[0].admin > 0) return true;
-
-      //decode
-      const permissions = JSON.parse(records[0].permissions);
-
-      if (!permissions) return false;
-
-      return permissions[method] > 0;
     } catch (err) {
       return false;
     }
@@ -88,7 +48,7 @@ export function generateUserRoleGuard(
     try {
       // role is loaded in helpers/auth on token decode
       /*
-      const userRecords = await mysqlHelper.fetchTableRows({
+      const userRecords = await sqlHelper.fetchTableRows({
         select: [{ field: "role" }],
         from: User.typename,
         where: {

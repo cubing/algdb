@@ -14,7 +14,9 @@ export function generateEnumPaginatorTypeDef(
       ...generateTypenameField(currentService),
       values: {
         type: Scalars[service.typename],
-        isArray: true,
+        arrayOptions: {
+          allowNullElement: false,
+        },
         allowNull: false,
         resolver: ({ req, fieldPath, args, query, data }) => {
           return service.getAllRecords({

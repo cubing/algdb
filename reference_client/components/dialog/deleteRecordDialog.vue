@@ -7,7 +7,7 @@
       </v-card-title>
       <v-card-text class="py-0">
         <v-alert v-if="selectedItem" type="error">
-          Confirm Delete: {{ selectedItem.name }}
+          Confirm Delete: {{ selectedItem.name || selectedItem }}
         </v-alert>
       </v-card-text>
       <v-card-actions>
@@ -26,8 +26,8 @@
 </template>
 
 <script>
-import sharedService from '~/services/shared.js'
-import { executeJomql } from '~/services/jomql.js'
+import sharedService from '~/services/shared'
+import { executeJomql } from '~/services/jomql'
 
 export default {
   props: {
@@ -73,15 +73,14 @@ export default {
     async deleteRecord() {
       this.loading.deleteRecord = true
       try {
-        const data = await executeJomql(
-          'delete' + this.capitalizedType,
-          {
+        const data = await executeJomql(this, {
+          ['delete' + this.capitalizedType]: {
             id: true,
+            __args: {
+              id: this.selectedItem.id,
+            },
           },
-          {
-            id: this.selectedItem.id,
-          }
-        )
+        })
 
         this.$notifier.showSnackbar({
           message: this.capitalizedType + ' Deleted',

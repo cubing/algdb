@@ -13,14 +13,19 @@ import {
   JomqlObjectTypeLookup,
   JomqlObjectType,
   JomqlInputFieldType,
+  ArrayOptions,
 } from "jomql";
+import { knex } from "../../utils/knex";
 import * as Resolver from "./resolver";
 import { deepAssign, isObject, capitalizeString } from "./shared";
-import { DataTypes, Sequelize, DataType } from "sequelize";
 import { BaseService, NormalService, PaginatedService } from "../core/services";
 import { linkDefs } from "../links";
 import * as Scalars from "../scalars";
-import type { ObjectTypeDefsqlOptions } from "../../types";
+import type {
+  ObjectTypeDefSqlOptions,
+  SqlDefinition,
+  SqlType,
+} from "../../types";
 
 type GenerateFieldParams = {
   name?: string;
@@ -28,8 +33,8 @@ type GenerateFieldParams = {
   allowNull: boolean;
   hidden?: boolean;
   defaultValue?: unknown;
-  sqlDefinition?: Partial<any>;
-  mysqlOptions?: Partial<ObjectTypeDefsqlOptions>;
+  sqlDefinition?: Partial<SqlDefinition>;
+  sqlOptions?: Partial<ObjectTypeDefSqlOptions>;
   typeDefOptions?: Partial<ObjectTypeDefinitionField>;
 };
 
@@ -40,39 +45,38 @@ type GenerateFieldParams = {
 // generic field builder
 export function generateStandardField(
   params: {
-    sqlType?: DataType;
+    sqlType?: SqlType;
     type: JomqlScalarType | JomqlObjectTypeLookup | JomqlObjectType;
-    isArray: boolean;
+    arrayOptions?: ArrayOptions;
   } & GenerateFieldParams
 ) {
   const {
     name,
     description,
     allowNull,
-    isArray = false,
+    arrayOptions,
     hidden = false,
     defaultValue,
     sqlType,
     type,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
   } = params;
   const typeDef = <ObjectTypeDefinitionField>{
     type,
     description,
-    isArray,
+    arrayOptions,
     allowNull,
     required: defaultValue === undefined && !allowNull,
-    mysqlOptions: sqlType
+    sqlOptions: sqlType
       ? {
           sqlDefinition: {
             type: sqlType,
-            allowNull,
-            ...(!!defaultValue && { defaultValue: defaultValue }),
+            ...(defaultValue !== undefined && { defaultValue: defaultValue }),
             ...sqlDefinition,
           },
-          ...mysqlOptions,
+          ...sqlOptions,
         }
       : undefined,
     hidden,
@@ -91,31 +95,31 @@ export function generateStandardField(
 export function generateGenericScalarField(
   params: {
     type: JomqlScalarType;
-    isArray?: boolean;
+    arrayOptions?: ArrayOptions;
   } & GenerateFieldParams
 ) {
   const {
     name,
     description,
     allowNull = true,
-    isArray = false,
+    arrayOptions,
     defaultValue,
     hidden,
     type,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
   } = params;
   return generateStandardField({
     name,
     description,
     allowNull,
-    isArray,
+    arrayOptions,
     defaultValue,
     hidden,
     type: type ?? Scalars.string,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
   });
 }
@@ -133,20 +137,19 @@ export function generateStringField(
     hidden,
     type,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
   } = params;
   return generateStandardField({
     name,
     description,
     allowNull,
-    isArray: false,
     defaultValue,
     hidden,
-    sqlType: DataTypes.STRING,
+    sqlType: "string",
     type: type ?? Scalars.string,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
   });
 }
@@ -164,26 +167,29 @@ export function generateDateField(
     defaultValue,
     hidden,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
     nowOnly,
   } = params;
   return generateStandardField({
     name,
     description,
-    allowNull: allowNull,
-    isArray: false,
+    allowNull,
     defaultValue,
     hidden,
-    sqlType: DataTypes.DATE,
+    sqlType: "dateTime",
     type: Scalars.unixTimestamp,
     sqlDefinition,
-    mysqlOptions: {
-      getter: (field) => "UNIX_TIMESTAMP(" + field + ")",
-      setter: nowOnly
-        ? () => "now()"
-        : (field) => "FROM_UNIXTIME(" + field + ")",
-      ...mysqlOptions,
+    sqlOptions: {
+      getter: (field) => "extract(epoch from " + field + ")",
+      parseValue: nowOnly
+        ? () => knex.fn.now()
+        : (value: unknown) => {
+            console.log(value);
+            if (typeof value !== "number") throw 1; // should never happen
+            return new Date(value);
+          },
+      ...sqlOptions,
     },
     typeDefOptions,
   });
@@ -196,19 +202,18 @@ export function generateTextField(params: GenerateFieldParams) {
     allowNull = true,
     hidden,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
   } = params;
   return generateStandardField({
     name,
     description,
     allowNull: allowNull,
-    isArray: false,
     hidden,
-    sqlType: DataTypes.TEXT,
+    sqlType: "text",
     type: Scalars.string,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
   });
 }
@@ -221,7 +226,7 @@ export function generateIntegerField(params: GenerateFieldParams) {
     defaultValue,
     hidden,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
   } = params;
   return generateStandardField({
@@ -230,11 +235,10 @@ export function generateIntegerField(params: GenerateFieldParams) {
     allowNull,
     defaultValue,
     hidden,
-    isArray: false,
-    sqlType: DataTypes.INTEGER,
+    sqlType: "integer",
     type: Scalars.number,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
   });
 }
@@ -247,7 +251,7 @@ export function generateFloatField(params: GenerateFieldParams) {
     defaultValue,
     hidden,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
   } = params;
   return generateStandardField({
@@ -256,11 +260,10 @@ export function generateFloatField(params: GenerateFieldParams) {
     allowNull,
     defaultValue,
     hidden,
-    isArray: false,
-    sqlType: DataTypes.FLOAT(11, 1),
+    sqlType: "float",
     type: Scalars.number,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
   });
 }
@@ -273,7 +276,7 @@ export function generateDecimalField(params: GenerateFieldParams) {
     defaultValue,
     hidden,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
   } = params;
   return generateStandardField({
@@ -282,11 +285,10 @@ export function generateDecimalField(params: GenerateFieldParams) {
     allowNull,
     defaultValue,
     hidden,
-    isArray: false,
-    sqlType: DataTypes.DECIMAL(11, 2),
+    sqlType: "decimal",
     type: Scalars.number,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
   });
 }
@@ -299,7 +301,7 @@ export function generateBooleanField(params: GenerateFieldParams) {
     defaultValue,
     hidden,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
   } = params;
   return generateStandardField({
@@ -308,11 +310,10 @@ export function generateBooleanField(params: GenerateFieldParams) {
     allowNull,
     defaultValue,
     hidden,
-    isArray: false,
-    sqlType: DataTypes.BOOLEAN,
+    sqlType: "boolean",
     type: Scalars.boolean,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
   });
 }
@@ -321,35 +322,37 @@ export function generateBooleanField(params: GenerateFieldParams) {
 export function generateArrayField(
   params: {
     type: JomqlScalarType;
+    allowNullElement?: boolean;
   } & GenerateFieldParams
 ) {
   const {
     name,
     description,
     allowNull = true,
+    allowNullElement = false,
     hidden,
     type,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
   } = params;
   return generateStandardField({
     name,
     description,
-    isArray: true,
-    allowNull: allowNull,
+    arrayOptions: {
+      allowNullElement,
+    },
+    allowNull,
     hidden,
-    sqlType: DataTypes.TEXT,
+    sqlType: "json",
     type,
     sqlDefinition,
-    mysqlOptions: {
+    sqlOptions: {
+      // necessary for inserting JSON into DB properly
       parseValue: (val) => JSON.stringify(val),
-      ...mysqlOptions,
+      ...sqlOptions,
     },
     typeDefOptions: {
-      resolver({ fieldPath, fieldValue }): ResolverFunction {
-        return fieldValue ? JSON.parse(fieldValue) : [];
-      },
       ...typeDefOptions,
     },
   });
@@ -369,7 +372,7 @@ export function generateEnumField(
     hidden,
     scalarDefinition,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
   } = params;
 
@@ -384,11 +387,10 @@ export function generateEnumField(
         ? scalarDefinition.definition.parseValue(defaultValue)
         : defaultValue,
     hidden,
-    isArray: false,
-    sqlType: DataTypes.STRING,
+    sqlType: "string",
     type: scalarDefinition,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
   });
 }
@@ -402,7 +404,7 @@ export function generateCreatedAtField() {
     name: "created_at",
     description: "When the record was created",
     allowNull: false,
-    defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+    defaultValue: knex.fn.now(),
     typeDefOptions: { addable: false, updateable: false }, // not addable or updateable
   });
 }
@@ -422,8 +424,7 @@ export function generateIdField() {
     name: "id",
     description: "The unique ID of the field",
     allowNull: false,
-    isArray: false,
-    sqlType: DataTypes.INTEGER,
+    sqlType: "integer",
     type: Scalars.id,
     sqlDefinition: undefined, // not in sql
     typeDefOptions: { addable: false, updateable: false }, // not addable or updateable
@@ -435,13 +436,12 @@ export function generateTypenameField(service: BaseService) {
     name: "__typename",
     description: "The typename of the record",
     allowNull: false,
-    isArray: false,
     type: Scalars.string,
     typeDefOptions: {
       resolver: () => service.typename,
       args: new JomqlInputFieldType({
         required: false,
-        isArray: false,
+        allowNull: false,
         type: Scalars.number,
       }),
       addable: false,
@@ -470,7 +470,7 @@ export function generateJoinableField(
     allowNull = true,
     defaultValue,
     hidden,
-    mysqlOptions,
+    sqlOptions,
     sqlDefinition,
     typeDefOptions,
     service,
@@ -479,18 +479,17 @@ export function generateJoinableField(
     name,
     description,
     allowNull,
-    isArray: false,
     defaultValue,
     hidden,
-    sqlType: DataTypes.INTEGER,
+    sqlType: "integer",
     type: service.typeDefLookup,
     sqlDefinition,
     typeDefOptions,
-    mysqlOptions: {
+    sqlOptions: {
       joinInfo: {
         type: service.typename,
       },
-      ...mysqlOptions,
+      ...sqlOptions,
     },
   });
 }
@@ -509,7 +508,7 @@ export function generateDataloadableField(
     hidden,
     service,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions,
   } = params;
   return generateStandardField({
@@ -518,16 +517,17 @@ export function generateDataloadableField(
     allowNull,
     defaultValue,
     hidden,
-    isArray: false,
-    sqlType: DataTypes.INTEGER,
+    sqlType: "integer",
     type: service.typeDefLookup,
     sqlDefinition,
-    mysqlOptions,
+    sqlOptions,
     typeDefOptions: {
       defer: true,
       dataloader: ({ req, args, query, currentObject, fieldPath, data }) => {
+        // if data.idArray empty, return empty array
+        if (!data.idArray.length) return [];
         // aggregator function that must accept data.idArray = [1, 2, 3, ...]
-        return Resolver.resolveTableRows(
+        return Resolver.getObjectType(
           service.typename,
           req,
           fieldPath,
@@ -581,10 +581,13 @@ export function generatePaginatorPivotResolverObject(params: {
         // traverse the fields to find the scalarDefinition
         const keyParts = actualFilterKey.split(".");
         let currentType;
+        let allowNull = false;
+        let currentObjectTypeField;
         let currentTypeDef = pivotService.getTypeDef();
         keyParts.forEach((keyPart, keyIndex) => {
           if (keyPart in currentTypeDef.definition.fields) {
             currentType = currentTypeDef.definition.fields[keyPart].type;
+            currentObjectTypeField = currentTypeDef.definition.fields[keyPart];
           } else {
             // look in link fields and generate required joins
             linkDefs.forEach((linkDef, linkName) => {
@@ -593,6 +596,7 @@ export function generatePaginatorPivotResolverObject(params: {
                 linkDef.types.has(currentTypeDef.definition.name)
               ) {
                 currentType = linkDef.types.get(keyPart)?.typeDefLookup;
+                currentObjectTypeField = linkDef.types.get(keyPart);
               }
             });
           }
@@ -603,6 +607,9 @@ export function generatePaginatorPivotResolverObject(params: {
               message: `Invalid field '${filterKey}' on '${currentTypeDef.definition.name}'`,
             });
           }
+
+          // if one in the chain has allowNull === true, then allowNull
+          if (currentObjectTypeField.allowNull) allowNull = true;
 
           // if has next field and currentType is JomqlObjectType, get and set the next typeDef
           if (keyParts[keyIndex + 1]) {
@@ -639,19 +646,21 @@ export function generatePaginatorPivotResolverObject(params: {
                 operator: new JomqlInputFieldType({
                   type: Scalars.filterOperator,
                   required: false,
-                  isArray: false,
                 }),
                 value: new JomqlInputFieldType({
                   type: currentType,
                   required: true,
-                  isArray: false,
+                  allowNull,
                 }),
               },
             },
             true
           ),
           required: false,
-          isArray: true,
+          allowNull: false,
+          arrayOptions: {
+            allowNullElement: false,
+          },
         });
         return total;
       },
@@ -728,6 +737,10 @@ export function generatePaginatorPivotResolverObject(params: {
     rootResolverFunction = (inputs) => pivotService.paginator.getRecord(inputs);
   }
 
+  const hasSearchFields =
+    pivotService.searchFieldsMap &&
+    Object.keys(pivotService.searchFieldsMap).length > 0;
+
   return <ObjectTypeDefinitionField>{
     type: new JomqlObjectTypeLookup(pivotService.paginator.typename),
     isArray: false,
@@ -738,27 +751,44 @@ export function generatePaginatorPivotResolverObject(params: {
         {
           name: "get" + capitalizeString(pivotService.paginator.typename),
           fields: {
-            first: new JomqlInputFieldType({ type: Scalars.number }),
-            last: new JomqlInputFieldType({ type: Scalars.number }),
-            after: new JomqlInputFieldType({ type: Scalars.string }),
-            before: new JomqlInputFieldType({ type: Scalars.string }),
+            first: new JomqlInputFieldType({
+              type: Scalars.number,
+            }),
+            last: new JomqlInputFieldType({
+              type: Scalars.number,
+            }),
+            after: new JomqlInputFieldType({
+              type: Scalars.string,
+            }),
+            before: new JomqlInputFieldType({
+              type: Scalars.string,
+            }),
             sortBy: new JomqlInputFieldType({
               type: new JomqlScalarType(sortByScalarDefinition, true),
-              isArray: true,
+              arrayOptions: {
+                allowNullElement: false,
+              },
             }),
             sortDesc: new JomqlInputFieldType({
               type: Scalars.boolean,
-              isArray: true,
+              arrayOptions: {
+                allowNullElement: false,
+              },
             }),
             filterBy: new JomqlInputFieldType({
               type: new JomqlInputType(filterByTypeDefinition, true),
-              isArray: false,
             }),
             groupBy: new JomqlInputFieldType({
               type: new JomqlScalarType(groupByScalarDefinition, true),
-              isArray: true,
+              arrayOptions: {
+                allowNullElement: false,
+              },
             }),
-            search: new JomqlInputFieldType({ type: Scalars.string }),
+            ...(hasSearchFields && {
+              search: new JomqlInputFieldType({
+                type: Scalars.string,
+              }),
+            }),
           },
           inputsValidator: (args, fieldPath) => {
             // check for invalid first/last, before/after combos

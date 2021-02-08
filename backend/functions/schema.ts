@@ -1,13 +1,7 @@
-// Query builder
-const queryResult = executeJomql({
+// Query builder (Typescript version >= 4.1.3 required)
+/* const queryResult = executeJomql({
   // Start typing here to get hints
-  getAlg: {
-    id: true,
-    __args: {
-      id: 1,
-    },
-  },
-});
+}); */
 
 export function executeJomql<Key extends keyof Root>(
   query: GetQuery<Key>
@@ -43,9 +37,9 @@ type Queryize<T> = T extends Field<infer Type, infer Args>
     ? never
     : Type extends Primitive
     ? Args extends undefined // Args is undefined
-      ? true
+      ? LookupValue
       : Args extends [infer Arg]
-      ? true | { __args: Arg } // Args is a tuple
+      ? LookupValue | { __args: Arg } // Args is a tuple
       : { __args: Args }
     : Type extends (infer U)[]
     ? Queryize<Field<U, Args>>
@@ -58,6 +52,8 @@ type Queryize<T> = T extends Field<infer Type, infer Args>
     : { [P in keyof Type]?: Queryize<Type[P]> } & { __args: Args }
   : never;
 
+type LookupValue = true;
+
 type Edge<T> = {
   __typename: Field<string, undefined>;
   node: Field<T, undefined>;
@@ -67,7 +63,7 @@ type Edge<T> = {
 /**All Scalar values*/ export type Scalars = {
   /**String value*/ string: string;
   /**True or False*/ boolean: boolean;
-  /**Numerical value*/ number: number;
+  /**Numeric value*/ number: number;
   /**Unknown value*/ unknown: unknown;
   /**Image URL Field*/ imageUrl: string;
   /**UNIX Timestamp (Seconds since Epoch Time)*/ unixTimestamp: number;
@@ -151,23 +147,23 @@ type Edge<T> = {
   createUser: {
     provider: Scalars["string"];
     provider_id: Scalars["string"];
-    wca_id?: Scalars["string"];
+    wca_id?: Scalars["string"] | null;
     email: Scalars["string"];
     name: Scalars["string"];
-    avatar?: Scalars["string"];
-    country?: Scalars["string"];
+    avatar?: Scalars["string"] | null;
+    country?: Scalars["string"] | null;
     is_public?: Scalars["boolean"];
     role?: Scalars["userRole"];
-    permissions?: Scalars["userPermission"][];
+    permissions?: Scalars["userPermission"][] | null;
   };
   updateUserFields: {
     email?: Scalars["string"];
     name?: Scalars["string"];
-    avatar?: Scalars["string"];
-    country?: Scalars["string"];
+    avatar?: Scalars["string"] | null;
+    country?: Scalars["string"] | null;
     is_public?: Scalars["boolean"];
     role?: Scalars["userRole"];
-    permissions?: Scalars["userPermission"][];
+    permissions?: Scalars["userPermission"][] | null;
   };
   updateUser: {
     item: InputType["getUser"];
@@ -247,12 +243,22 @@ type Edge<T> = {
     operator?: Scalars["filterOperator"];
     value: Scalars["string"];
   };
+  "algsetFilterByField/puzzle": {
+    operator?: Scalars["filterOperator"];
+    value: Scalars["id"];
+  };
+  "algsetFilterByField/parent": {
+    operator?: Scalars["filterOperator"];
+    value: Scalars["id"] | null;
+  };
   algsetFilterByObject: {
     id?: InputType["algsetFilterByField/id"][];
     created_by?: InputType["algsetFilterByField/created_by"][];
     code?: InputType["algsetFilterByField/code"][];
     is_public?: InputType["algsetFilterByField/is_public"][];
     name?: InputType["algsetFilterByField/name"][];
+    puzzle?: InputType["algsetFilterByField/puzzle"][];
+    parent?: InputType["algsetFilterByField/parent"][];
   };
   getAlgsetPaginator: {
     first?: Scalars["number"];
@@ -268,9 +274,9 @@ type Edge<T> = {
   createAlgset: {
     name: Scalars["string"];
     code: Scalars["string"];
-    parent?: InputType["getAlgset"];
+    parent?: InputType["getAlgset"] | null;
     puzzle: InputType["getPuzzle"];
-    mask?: Scalars["string"];
+    mask?: Scalars["string"] | null;
     visualization?: Scalars["caseVisualization"];
     score?: Scalars["number"];
     is_public?: Scalars["boolean"];
@@ -278,9 +284,9 @@ type Edge<T> = {
   updateAlgsetFields: {
     name?: Scalars["string"];
     code?: Scalars["string"];
-    parent?: InputType["getAlgset"];
+    parent?: InputType["getAlgset"] | null;
     puzzle?: InputType["getPuzzle"];
-    mask?: Scalars["string"];
+    mask?: Scalars["string"] | null;
     visualization?: Scalars["caseVisualization"];
     score?: Scalars["number"];
     is_public?: Scalars["boolean"];
@@ -298,9 +304,14 @@ type Edge<T> = {
     operator?: Scalars["filterOperator"];
     value: Scalars["id"];
   };
+  "algcaseFilterByField/algset": {
+    operator?: Scalars["filterOperator"];
+    value: Scalars["id"];
+  };
   algcaseFilterByObject: {
     id?: InputType["algcaseFilterByField/id"][];
     created_by?: InputType["algcaseFilterByField/created_by"][];
+    algset?: InputType["algcaseFilterByField/algset"][];
   };
   getAlgcasePaginator: {
     first?: Scalars["number"];
@@ -549,7 +560,7 @@ export type TagEdge = Edge<Tag>;
   country: { Type: Scalars["string"] | null; Args: undefined };
   is_public: { Type: Scalars["boolean"]; Args: undefined };
   role: { Type: Scalars["userRole"]; Args: undefined };
-  permissions: { Type: (Scalars["userPermission"] | null)[]; Args: undefined };
+  permissions: { Type: Scalars["userPermission"][] | null; Args: undefined };
   all_permissions: { Type: Scalars["userPermission"][]; Args: undefined };
   /**When the record was created*/ created_at: {
     Type: Scalars["unixTimestamp"];

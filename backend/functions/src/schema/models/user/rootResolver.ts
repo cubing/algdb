@@ -5,20 +5,24 @@ import { JomqlRootResolverType } from "jomql";
 export default {
   getCurrentUser: new JomqlRootResolverType({
     name: "getCurrentUser",
-    method: "get",
-    route: "/currentUser",
+    restOptions: {
+      method: "get",
+      route: "/currentUser",
+      query: User.presets.default,
+    },
     allowNull: false,
-    isArray: false,
     type: User.typeDefLookup,
-    resolver: ({ req, fieldPath, args, query }) =>
-      User.getRecord({
+    resolver: ({ req, fieldPath, args, query }) => {
+      if (!req.user?.id) throw new Error("Login required");
+      return User.getRecord({
         req,
         fieldPath,
         args: { id: req.user?.id },
         query,
         isAdmin: true,
-      }),
-    // always allow user to get own user
+      });
+      // always allow user to get own user
+    },
   }),
   ...generateBaseRootResolvers(User, [
     "get",

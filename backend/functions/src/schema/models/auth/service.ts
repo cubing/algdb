@@ -2,10 +2,11 @@ import { SimpleService } from "../../core/services";
 import * as bcrypt from "bcryptjs";
 import * as errorHelper from "../../helpers/error";
 import { User } from "../../services";
-import * as mysqlHelper from "../../helpers/mysql";
 import { env } from "../../../config";
 import axios from "axios";
 import { ServiceFunctionInputs } from "../../../types";
+import * as sqlHelper from "../../helpers/sql";
+import * as Resolver from "../../helpers/resolver";
 
 export class AuthService extends SimpleService {
   defaultTypename = "auth";
@@ -22,7 +23,7 @@ export class AuthService extends SimpleService {
     isAdmin = false,
   }: ServiceFunctionInputs) {
     // lookup hashed password by email
-    const userResults = await mysqlHelper.fetchTableRows({
+    const userResults = await sqlHelper.fetchTableRows({
       select: [{ field: "id" }, { field: "email" }, { field: "password" }],
       from: User.typename,
       where: {
@@ -98,20 +99,25 @@ export class AuthService extends SimpleService {
       },
     });
 
-    //lookup user by provider + provider_id
-    const userResults = await mysqlHelper.executeDBQuery(
-      "SELECT id, email FROM user WHERE provider = :provider AND provider_id = :provider_id",
-      {
-        provider: args.provider,
-        provider_id: wcaData.me.id,
-      }
-    );
+    // lookup user by provider + provider_id
+    const userResults = await sqlHelper.fetchTableRows({
+      select: [{ field: "id" }, { field: "email" }],
+      from: User.typename,
+      where: {
+        fields: [
+          { field: "provider", value: args.provider },
+          { field: "provider_id", value: wcaData.me.id },
+        ],
+      },
+    });
 
-    //not found, create a new user (copied from user.service)
+    let userInfo;
+
+    //not found, create a new user
     if (userResults.length < 1) {
-      return User.createRecord({
-        req,
-        args: {
+      const addResults = await Resolver.createObjectType({
+        typename: User.typename,
+        addFields: {
           provider: args.provider,
           provider_id: wcaData.me.id,
           wca_id: wcaData.me.wca_id,
@@ -119,11 +125,29 @@ export class AuthService extends SimpleService {
           name: wcaData.me.name,
           avatar: wcaData.me.avatar.url,
           country: wcaData.me.country_iso2,
+          created_by: 0,
         },
-        query,
+        req,
         fieldPath,
-        isAdmin: true,
       });
+
+      // set created_by to id
+      await sqlHelper.updateTableRow(
+        User.typename,
+        {
+          created_by: addResults.id,
+        },
+        {
+          fields: [{ field: "id", value: addResults.id }],
+        }
+      );
+
+      userInfo = {
+        id: addResults.id,
+        email: wcaData.me.email,
+      };
+    } else {
+      userInfo = userResults[0];
     }
 
     //if OK, return auth payload
@@ -133,8 +157,8 @@ export class AuthService extends SimpleService {
       fieldPath,
       query,
       data: {
-        id: userResults[0].id,
-        email: userResults[0].email,
+        id: userInfo.id,
+        email: userInfo.email,
       },
     });
   }

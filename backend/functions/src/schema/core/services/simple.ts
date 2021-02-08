@@ -25,7 +25,7 @@ export class SimpleService extends BaseService {
     // if no fields requested, can skip the permissions check
     if (Object.keys(selectQuery).length < 1) return { typename: this.typename };
 
-    const results = await Resolver.resolveTableRows(
+    const results = await Resolver.getObjectType(
       this.typename,
       req,
       fieldPath,

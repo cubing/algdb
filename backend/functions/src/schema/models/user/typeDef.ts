@@ -25,14 +25,14 @@ export default new JomqlObjectType(<ObjectTypeDefinition>{
     ...generateTypenameField(User),
     provider: generateStringField({
       allowNull: false,
-      mysqlOptions: { joinHidden: true },
+      sqlOptions: { joinHidden: true },
       typeDefOptions: { addable: true, updateable: false },
       sqlDefinition: { unique: "compositeIndex" },
       hidden: true,
     }),
     provider_id: generateStringField({
       allowNull: false,
-      mysqlOptions: { joinHidden: true },
+      sqlOptions: { joinHidden: true },
       typeDefOptions: { addable: true, updateable: false },
       sqlDefinition: { unique: "compositeIndex" },
       hidden: true,
@@ -62,16 +62,18 @@ export default new JomqlObjectType(<ObjectTypeDefinition>{
       scalarDefinition: Scalars.userRole,
       allowNull: false,
       defaultValue: "NONE",
-      mysqlOptions: { joinHidden: true },
+      sqlOptions: { joinHidden: true },
     }),
     permissions: generateArrayField({
       allowNull: true,
       type: Scalars.userPermission,
-      mysqlOptions: { joinHidden: true },
+      sqlOptions: { joinHidden: true },
     }),
     all_permissions: {
       type: Scalars.userPermission,
-      isArray: true,
+      arrayOptions: {
+        allowNullElement: false,
+      },
       allowNull: false,
       async resolver({ req, args, fieldPath, parentValue, fieldValue, data }) {
         let role = parentValue.role;
@@ -107,25 +109,25 @@ export default new JomqlObjectType(<ObjectTypeDefinition>{
       },
     },
     /*
-  // using wca auth
-  password: {
-    type: dataTypes.STRING,
-    isArray: false,
-    allowNull: true,
-    mysqlOptions: {
-      type: DataTypes.STRING,
+    // using wca auth
+    password: {
+      type: dataTypes.STRING,
+      isArray: false,
+      allowNull: true,
+      mysqlOptions: {
+        type: DataTypes.STRING,
+      },
+      addable: true,
+      updateable: true,
+      hidden: true,
+      transform: {
+        setter: (value) =>
+          bcrypt.hash(value, 10).catch(() => {
+            throw new Error("Invalid password");
+          }),
+      },
     },
-    addable: true,
-    updateable: true,
-    hidden: true,
-    transform: {
-      setter: (value) =>
-        bcrypt.hash(value, 10).catch(() => {
-          throw new Error("Invalid password");
-        }),
-    },
-  },
-  */
+    */
     ...generateCreatedAtField(),
     ...generateUpdatedAtField(),
     ...generateCreatedByField(User),

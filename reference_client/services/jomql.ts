@@ -1,12 +1,16 @@
 import axios from 'axios'
 import Cookie from 'js-cookie'
-import { pusher } from './pusher.js'
+import { pusher } from './pusher'
+import { Root, GetQuery, GetResponse } from '~/types/schema'
 
 const prodResource = axios.create({
   baseURL: process.env.apiUrl,
 })
 
-export async function executeJomql(action, query, args = {}) {
+export async function executeJomql<Key extends keyof Root>(
+  that,
+  query: GetQuery<Key>
+): Promise<GetResponse<Key>> {
   // fetches the idToken directly from the cookies, if available
   const idToken = Cookie.get('auth-token')
 
@@ -16,29 +20,14 @@ export async function executeJomql(action, query, args = {}) {
           Authorization: 'Bearer ' + idToken,
         },
       }
-    : null
+    : undefined
 
-  const { data } = await prodResource.post(
-    '/jomql',
-    {
-      action,
-      query: {
-        ...query,
-        __args: args,
-      },
-    },
-    request
-  )
+  const { data } = await prodResource.post('/jomql', query, request)
 
   return data.data
 }
 
-export async function executeJomqlSubscription(
-  action,
-  query,
-  args = {},
-  callbackFn
-) {
+export async function executeJomqlSubscription(that, query, callbackFn) {
   // fetches the idToken directly from the cookies, if available
   const idToken = Cookie.get('auth-token')
 
@@ -48,19 +37,9 @@ export async function executeJomqlSubscription(
           Authorization: 'Bearer ' + idToken,
         },
       }
-    : null
+    : undefined
 
-  const { data } = await prodResource.post(
-    '/jomql',
-    {
-      action,
-      query: {
-        ...query,
-        __args: args,
-      },
-    },
-    request
-  )
+  const { data } = await prodResource.post('/jomql', query, request)
 
   const channel = pusher.subscribe(data.data.channel_name)
 

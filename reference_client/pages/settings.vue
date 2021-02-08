@@ -32,9 +32,9 @@
 </template>
 
 <script>
-import { userFragment } from '~/jomql/fragments.js'
-import { executeJomql } from '~/services/jomql.js'
-import sharedService from '~/services/shared.js'
+import { userFragment } from '~/jomql/fragments'
+import { executeJomql } from '~/services/jomql'
+import sharedService from '~/services/shared'
 
 export default {
   components: {},

@@ -1,5 +1,5 @@
-import sharedService from '~/services/shared.js'
-import { executeJomql } from '~/services/jomql.js'
+import sharedService from '~/services/shared'
+import { executeJomql } from '~/services/jomql'
 
 export default {
   props: {
@@ -98,16 +98,44 @@ export default {
     async submit() {
       this.loading.editRecord = true
       try {
-        const data = await executeJomql(
-          (this.addMode ? 'create' : 'update') + this.capitalizedType,
-          {
-            id: true,
-          },
-          {
-            ...(!this.addMode && { id: this.selectedItem.id }),
-            ...this.inputs,
+        // identify inputs that need to be overwritten (due to entity)
+        const overwriteInputs = {}
+        for (const prop in this.inputs) {
+          const parsevalueFn = this.recordInfo.inputs[prop]?.parseValue
+          if (parsevalueFn) {
+            overwriteInputs[prop] = parsevalueFn(this.inputs[prop])
           }
-        )
+        }
+
+        // add mode
+        let query
+        if (this.addMode) {
+          query = {
+            ['create' + this.capitalizedType]: {
+              id: true,
+              __args: {
+                ...this.inputs,
+                ...overwriteInputs,
+              },
+            },
+          }
+        } else {
+          query = {
+            ['update' + this.capitalizedType]: {
+              id: true,
+              __args: {
+                item: {
+                  id: this.selectedItem.id,
+                },
+                fields: {
+                  ...this.inputs,
+                  ...overwriteInputs,
+                },
+              },
+            },
+          }
+        }
+        const data = await executeJomql(this, query)
 
         this.$notifier.showSnackbar({
           message:
@@ -127,24 +155,31 @@ export default {
     async loadRecord() {
       this.loading.loadRecord = true
       try {
-        const data = await executeJomql(
-          'get' + this.capitalizedType,
-          {
+        const data = await executeJomql(this, {
+          ['get' + this.capitalizedType]: {
             id: true,
-            ...Object.keys(this.validInputs).reduce((total, item) => {
-              total[item] = true
+            ...Object.keys(this.validInputs).reduce((total, key) => {
+              // exclude if view mode and not viewable
+              if (!this.validInputs[key].viewable) return total
+
+              total[key] = true
               return total
             }, {}),
+            __args: {
+              id: this.selectedItem.id,
+            },
           },
-          {
-            id: this.selectedItem.id,
-          }
-        )
+        })
 
-        this.inputs = Object.keys(this.validInputs).reduce((total, item) => {
-          this.$set(total, item, data[item])
-          return total
-        }, {})
+        this.inputs = {
+          ...Object.keys(this.validInputs).reduce((total, key) => {
+            const serializeFn = this.recordInfo.inputs[key]?.serialize
+
+            total[key] = serializeFn ? serializeFn(data[key]) : data[key]
+
+            return total
+          }, {}),
+        }
       } catch (err) {
         sharedService.handleError(err, this.$root)
       }
@@ -159,7 +194,7 @@ export default {
           this.recordInfo.inputs[prop].getOptions &&
           !this.inputOptions[prop]
         ) {
-          const data = await this.recordInfo.inputs[prop].getOptions()
+          const data = await this.recordInfo.inputs[prop].getOptions(this)
           this.$set(this.inputOptions, prop, data)
         }
       }
@@ -179,17 +214,12 @@ export default {
       // load dropdowns in this.inputOptions
       this.loadDropdowns()
 
-      // clear misc inputs
-      for (const prop in this.miscInputs) {
-        this.miscInputs[prop] = null
-      }
-
       // initialize inputs
       if (this.addMode) {
         this.inputs = {
-          ...Object.keys(this.recordInfo.inputs).reduce((total, item) => {
-            total[item] = this.recordInfo.inputs[item].default
-              ? this.recordInfo.inputs[item].default()
+          ...Object.keys(this.recordInfo.inputs).reduce((total, key) => {
+            total[key] = this.recordInfo.inputs[key].default
+              ? this.recordInfo.inputs[key].default()
               : null
             return total
           }, {}),

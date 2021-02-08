@@ -1,8 +1,7 @@
 import { TsSchemaGenerator } from "jomql";
-
 export class CustomSchemaGenerator extends TsSchemaGenerator {
-  constructor() {
-    super();
+  constructor(jomqlOptions) {
+    super(jomqlOptions);
     this.scaffoldStr += `
 type Edge<T> = {
   __typename: Field<string, undefined>;
@@ -36,7 +35,6 @@ type Edge<T> = {
       if (key.match(/Edge$/)) {
         this.typeDocumentRoot.value.set(key, {
           value: `Edge<${key.replace(/Edge$/, "")}>`,
-          isArray: false,
           isNullable: false,
           isOptional: false,
         });

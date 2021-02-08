@@ -7,8 +7,7 @@ admin.initializeApp({
 
 import { initializeJomql } from "jomql";
 import "./schema";
-import { env, isDev } from "./config";
-import { initializePool } from "./utils/mysql2";
+import { env, jomqlOptions } from "./config";
 
 import { initializePusher } from "./utils/pusher";
 import { handlePusherAuth } from "./helpers/pusher";
@@ -67,18 +66,10 @@ app.options("*", function (req, res, next) {
 // initialize pusher
 env.pusher && initializePusher(env.pusher);
 
-//initialize mysql
-env.mysql && initializePool(env.mysql, isDev);
-
-initializeJomql(app, {
-  debug: !!isDev,
-  lookupValue: true,
-  jomqlPath: "/jomql",
-  customProcessor: true,
-});
+initializeJomql(app, jomqlOptions);
 
 app.get("/schema.ts", function (req, res, next) {
-  const tsSchemaGenerator = new CustomSchemaGenerator();
+  const tsSchemaGenerator = new CustomSchemaGenerator(jomqlOptions);
   tsSchemaGenerator.buildSchema();
   tsSchemaGenerator.processSchema();
   res.send(tsSchemaGenerator.outputSchema());

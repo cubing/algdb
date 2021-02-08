@@ -16,7 +16,6 @@ export function generatePaginatorInfoTypeDef(
       ...generateTypenameField(currentService),
       total: {
         type: Scalars.number,
-        isArray: false,
         allowNull: false,
         resolver: ({ req, fieldPath, args, data }) => {
           // remove any pagination params in order to fetch the total count
@@ -31,7 +30,6 @@ export function generatePaginatorInfoTypeDef(
       },
       count: {
         type: Scalars.number,
-        isArray: false,
         allowNull: false,
         resolver: async ({ req, args, query, data }) => {
           // data.records should be passed down as array from the paginator
@@ -40,7 +38,6 @@ export function generatePaginatorInfoTypeDef(
       },
       startCursor: {
         type: Scalars.string,
-        isArray: false,
         allowNull: true,
         resolver: async ({ data }) => {
           // data.records should be passed down as array from the paginator
@@ -56,7 +53,6 @@ export function generatePaginatorInfoTypeDef(
       },
       endCursor: {
         type: Scalars.string,
-        isArray: false,
         allowNull: true,
         resolver: async ({ data }) => {
           // data.records should be passed down as array from the paginator

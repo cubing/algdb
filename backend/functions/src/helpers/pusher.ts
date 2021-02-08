@@ -1,5 +1,5 @@
 import { getPusher } from "../utils/pusher";
-import { executeDBQuery } from "../utils/mysql2";
+import { executeDBQuery } from "../utils/knex";
 
 export function handlePusherAuth(req: any, res) {
   const socketId = req.body.socket_id;

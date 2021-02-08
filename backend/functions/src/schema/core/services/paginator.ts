@@ -49,7 +49,7 @@ export class PaginatorService extends SimpleService {
             data,
           });
 
-      const results = await Resolver.resolveTableRows(
+      const results = await Resolver.getObjectType(
         this.typename,
         req,
         fieldPath,

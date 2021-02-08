@@ -30,7 +30,11 @@ export default {
   css: [],
 
   // Plugins to run before rendering page (https://go.nuxtjs.dev/config-plugins)
-  plugins: ['@/plugins/notifier.js', '@/plugins/auth.js'],
+  plugins: [
+    '@/plugins/notifier.js',
+    '@/plugins/auth.js',
+    '@/plugins/vuetify.js',
+  ],
 
   // Auto import components (https://go.nuxtjs.dev/config-components)
   components: true,

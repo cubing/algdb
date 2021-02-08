@@ -3,9 +3,7 @@ import { NormalService } from "../core/services";
 
 import * as randomstring from "randomstring";
 
-import * as mysqlHelper from "./mysql";
-
-import { DataTypes } from "sequelize";
+import * as sqlHelper from "./sql";
 
 export async function handleJqlSubscription(
   req,
@@ -14,7 +12,7 @@ export async function handleJqlSubscription(
   query
 ) {
   //check subscriptions table
-  const subscriptionResults = await mysqlHelper.executeDBQuery(
+  const subscriptionResults = await sqlHelper.executeDBQuery(
     "SELECT id, channel FROM jqlSubscription WHERE user = :user AND operation = :operation AND args = :args",
     {
       user: req.user.id,
@@ -29,7 +27,7 @@ export async function handleJqlSubscription(
     const channelName = randomstring.generate(20);
 
     //add new entry
-    await mysqlHelper.executeDBQuery(
+    await sqlHelper.executeDBQuery(
       "INSERT INTO jqlSubscription SET user = :user, operation = :operation, args = :args, query = :query, channel = :channel",
       {
         user: req.user.id,
@@ -43,7 +41,7 @@ export async function handleJqlSubscription(
     channel += channelName;
   } else {
     //entry exists, update the query
-    await mysqlHelper.executeDBQuery(
+    await sqlHelper.executeDBQuery(
       "UPDATE jqlSubscription SET query = :query WHERE id = :id",
       {
         query: JSON.stringify(query),
@@ -63,7 +61,7 @@ export async function handleJqlSubscriptionTrigger(
   operationName: string,
   args: object
 ) {
-  const subscriptionResults = await mysqlHelper.executeDBQuery(
+  const subscriptionResults = await sqlHelper.executeDBQuery(
     "SELECT id, user, args, query, channel FROM jqlSubscription WHERE operation = :operation AND args = :args",
     {
       operation: operationName,
@@ -107,7 +105,7 @@ export async function handleJqlSubscriptionTriggerIterative(
   lookupItemArgs //used to lookup the item
 ) {
   //fetch all subscriptions with the relevant operationName
-  const subscriptionResults = await mysqlHelper.executeDBQuery(
+  const subscriptionResults = await sqlHelper.executeDBQuery(
     "SELECT id, user, args, query, channel FROM jqlSubscription WHERE operation = :operation",
     {
       operation: operationName,
@@ -159,7 +157,7 @@ export async function deleteJqlSubscription(
   operationName: string,
   args: object
 ) {
-  return mysqlHelper.executeDBQuery(
+  return sqlHelper.executeDBQuery(
     "DELETE FROM jqlSubscription WHERE args = :args AND operation = :operation",
     {
       operation: operationName,
@@ -170,18 +168,18 @@ export async function deleteJqlSubscription(
 
 export const typeDef = {
   user: {
-    type: DataTypes.INTEGER,
+    type: "integer",
   },
   operation: {
-    type: DataTypes.STRING,
+    type: "string",
   },
   args: {
-    type: DataTypes.STRING,
+    type: "string",
   },
   query: {
-    type: DataTypes.TEXT,
+    type: "text",
   },
   channel: {
-    type: DataTypes.STRING,
+    type: "string",
   },
 };

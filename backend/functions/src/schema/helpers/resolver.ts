@@ -3,15 +3,16 @@ import {
   generateJomqlResolverTree,
   processJomqlResolverTree,
   JomqlResolverNode,
-  validateResultFields,
   JomqlQueryError,
   JomqlObjectType,
   objectTypeDefs,
   JomqlObjectTypeLookup,
   isRootResolverDefinition,
+  JomqlQuery,
+  JomqlBaseError,
 } from "jomql";
 
-import * as mysqlHelper from "./mysql";
+import * as sqlHelper from "./sql";
 import {
   SqlQuerySelectObject,
   SqlWhereObject,
@@ -21,12 +22,13 @@ import {
 
 import { isObject } from "../helpers/shared";
 import type { Request } from "express";
-export type CustomResolver = {
+
+type CustomResolver = {
   resolver: Function;
   value?: any;
 };
 
-export type CustomResolverMap = {
+type CustomResolverMap = {
   [x: string]: CustomResolver;
 };
 
@@ -76,17 +78,26 @@ function collapseSqlOutputArray(objArray: SqlSelectQueryOutput[]) {
 }
 
 //validates the add fields, and then does the add operation
-export async function addTableRow(
-  typename: string,
+export async function createObjectType({
+  typename,
   req,
-  fieldPath: string[],
-  args,
-  rawFields = {},
-  ignore = false
-) {
+  fieldPath,
+  addFields,
+  ignore = false,
+}: {
+  typename: string;
+  req: Request;
+  fieldPath: string[];
+  addFields: { [x: string]: unknown };
+  ignore?: boolean;
+}) {
   const typeDef = objectTypeDefs.get(typename);
-  if (!typeDef)
-    throw new Error(`Invalid TypeDefinition for type '${typename}'`);
+  if (!typeDef) {
+    throw new JomqlBaseError({
+      message: `Invalid typeDef '${typename}'`,
+      fieldPath,
+    });
+  }
 
   // assemble the mysql fields
   const sqlFields = {};
@@ -94,33 +105,26 @@ export async function addTableRow(
   // handle the custom setters
   const customResolvers: CustomResolverMap = {};
 
-  for (const field in args) {
-    if (field in typeDef.definition.fields) {
-      // we are only checking this is args
-      /*
-      if (!typeDef.fields[field].addable) {
-        throw new Error(`Field not addable: '${field}'`);
-      }
-      */
+  for (const field in addFields) {
+    if (!(field in typeDef.definition.fields)) {
+      throw new JomqlBaseError({
+        message: `Invalid field`,
+        fieldPath,
+      });
+    }
 
-      // if finalValue is null, see if that is allowed -- also a failsafe
-      validateResultFields(args[field], typeDef.definition.fields[field], [
-        field,
-      ]);
+    // if it is a mysql field, add to mysqlFields
+    if (typeDef.definition.fields[field].sqlOptions) {
+      sqlFields[field] = addFields[field];
+    }
 
-      // if it is a mysql field, add to mysqlFields
-      if (typeDef.definition.fields[field].mysqlOptions) {
-        sqlFields[field] = args[field];
-      }
-
-      // if it has a custom updater, add to customResolvers
-      const customResolver = typeDef.definition.fields[field].updater;
-      if (customResolver) {
-        customResolvers[field] = {
-          resolver: customResolver,
-          value: args[field],
-        };
-      }
+    // if it has a custom updater, add to customResolvers
+    const customResolver = typeDef.definition.fields[field].updater;
+    if (customResolver) {
+      customResolvers[field] = {
+        resolver: customResolver,
+        value: addFields[field],
+      };
     }
   }
 
@@ -128,17 +132,15 @@ export async function addTableRow(
 
   // do the mysql fields first, if any
   if (Object.keys(sqlFields).length > 0) {
-    addedResults = await mysqlHelper.insertTableRow(
+    addedResults = await sqlHelper.insertTableRow(
       typename,
       sqlFields,
-      rawFields,
+      fieldPath,
       ignore
     );
   }
 
-  const resultObject = {
-    id: addedResults.insertId,
-  };
+  const resultObject = addedResults ? addedResults[0] : {};
 
   // handle the custom setter functions, which might rely on id of created object
   for (const field in customResolvers) {
@@ -154,17 +156,26 @@ export async function addTableRow(
 }
 
 // validates the update fields, and then does the update operation
-export async function updateTableRow(
-  typename: string,
+export async function updateObjectType({
+  typename,
   req,
-  fieldPath: string[],
-  args,
-  rawFields = {},
-  whereObject: SqlWhereObject
-) {
-  //resolve the setters
+  fieldPath,
+  updateFields,
+  id,
+}: {
+  typename: string;
+  req: Request;
+  fieldPath: string[];
+  updateFields: { [x: string]: unknown };
+  id: number;
+}) {
   const typeDef = objectTypeDefs.get(typename);
-  if (!typeDef) throw new Error("Invalid TypeDef: " + typename);
+  if (!typeDef) {
+    throw new JomqlBaseError({
+      message: `Invalid typeDef '${typename}'`,
+      fieldPath,
+    });
+  }
 
   //assemble the mysql fields
   const sqlFields = {};
@@ -172,41 +183,41 @@ export async function updateTableRow(
   //handle the custom setters
   const customResolvers: CustomResolverMap = {};
 
-  for (const field in args) {
-    if (field in typeDef.definition.fields) {
-      // if finalValue is null, see if that is allowed -- also a failsafe
-      validateResultFields(args[field], typeDef.definition.fields[field], [
-        field,
-      ]);
+  for (const field in updateFields) {
+    if (!(field in typeDef.definition.fields)) {
+      throw new JomqlBaseError({
+        message: `Invalid update field`,
+        fieldPath,
+      });
+    }
 
-      // if it is a mysql field, add to mysqlFields
-      if (typeDef.definition.fields[field].mysqlOptions) {
-        sqlFields[field] = args[field];
-      }
+    // if it is a mysql field, add to mysqlFields
+    if (typeDef.definition.fields[field].sqlOptions) {
+      sqlFields[field] = updateFields[field];
+    }
 
-      // if it has a custom updater, add to customResolvers
-      const customResolver = typeDef.definition.fields[field].updater;
-      if (customResolver) {
-        customResolvers[field] = {
-          resolver: customResolver,
-          value: args[field],
-        };
-      }
+    // if it has a custom updater, add to customResolvers
+    const customResolver = typeDef.definition.fields[field].updater;
+    if (customResolver) {
+      customResolvers[field] = {
+        resolver: customResolver,
+        value: updateFields[field],
+      };
     }
   }
 
   // do the mysql first, if any fields
   if (Object.keys(sqlFields).length > 0) {
-    await mysqlHelper.updateTableRow(
+    await sqlHelper.updateTableRow(
       typename,
       sqlFields,
-      rawFields,
-      whereObject
+      { fields: [{ field: "id", value: id }] },
+      fieldPath
     );
   }
 
   const resultObject = {
-    id: args.id,
+    id,
   };
 
   //handle the custom setter functions, which might rely on primary keys
@@ -223,21 +234,36 @@ export async function updateTableRow(
 }
 
 // performs the delete operation
-export async function deleteTableRow(
-  typename: string,
+export async function deleteObjectType({
+  typename,
   req,
-  fieldPath: string[],
-  args,
-  whereObject: SqlWhereObject
-) {
+  fieldPath,
+  id,
+}: {
+  typename: string;
+  req: Request;
+  fieldPath: string[];
+  id: number;
+}) {
   //resolve the deleters
   const typeDef = objectTypeDefs.get(typename);
-  if (!typeDef) throw new Error("Invalid TypeDef: " + typename);
+  if (!typeDef) {
+    throw new JomqlBaseError({
+      message: `Invalid typeDef '${typename}'`,
+      fieldPath,
+    });
+  }
+
+  let hasSqlFields = false;
 
   //handle the custom deleters
   const customResolvers: CustomResolverMap = {};
 
   for (const field in typeDef.definition.fields) {
+    // see if it has sql fields
+    if (typeDef.definition.fields[field].sqlOptions && !hasSqlFields)
+      hasSqlFields = true;
+
     // if it has a custom deleter, add to customResolvers
     const customResolver = typeDef.definition.fields[field].deleter;
     if (customResolver) {
@@ -248,10 +274,15 @@ export async function deleteTableRow(
   }
 
   // do the mysql first
-  await mysqlHelper.removeTableRow(typename, whereObject);
+  if (hasSqlFields)
+    await sqlHelper.removeTableRow(
+      typename,
+      { fields: [{ field: "id", value: id }] },
+      fieldPath
+    );
 
   const resultObject = {
-    id: args.id,
+    id,
   };
 
   //handle the custom deleter functions, which might rely on primary keys
@@ -262,17 +293,18 @@ export async function deleteTableRow(
   return resultObject;
 }
 
-export async function resolveTableRows(
+export async function getObjectType(
   typename: string,
   req,
   fieldPath: string[],
-  externalQuery: { [x: string]: any },
+  externalQuery: JomqlQuery,
   sqlParams: SqlParams,
   data = {},
   externalTypeDef?: JomqlObjectType
 ) {
   // shortcut: if no fields were requested, simply return empty object
-  if (Object.keys(externalQuery).length < 1) return [{}];
+  if (isObject(externalQuery) && Object.keys(externalQuery).length < 1)
+    return [{}];
 
   const anonymousRootResolver = generateAnonymousRootResolver(
     externalTypeDef ?? new JomqlObjectTypeLookup(typename)
@@ -299,7 +331,7 @@ export async function resolveTableRows(
   };
 
   const jomqlResultsTreeArray: SqlSelectQueryOutput[] = collapseSqlOutputArray(
-    await mysqlHelper.fetchTableRows(sqlQuery)
+    await sqlHelper.fetchTableRows(sqlQuery, fieldPath)
   );
 
   // finish processing jomqlResolverNode by running the resolvers on the data fetched thru sql.
@@ -329,6 +361,14 @@ export async function resolveTableRows(
   return processedResultsTree;
 }
 
+export function countObjectType(
+  typename: string,
+  fieldPath: string[],
+  whereObject: SqlWhereObject
+) {
+  return sqlHelper.countTableRows(typename, whereObject, fieldPath);
+}
+
 function generateSqlQuerySelectObject(
   jomqlResolverNode: JomqlResolverNode,
   parentFields: string[] = [],
@@ -342,9 +382,9 @@ function generateSqlQuerySelectObject(
   }
   const nested = jomqlResolverNode.nested;
 
-  const mysqlOptions = jomqlResolverNode.typeDef.mysqlOptions;
+  const sqlOptions = jomqlResolverNode.typeDef.sqlOptions;
 
-  if (parentFields.length < 1 || mysqlOptions) {
+  if (parentFields.length < 1 || sqlOptions) {
     // if nested with no resolver and no dataloader
     if (
       nested &&
@@ -375,7 +415,7 @@ function generateSqlQuerySelectObject(
       }
     } else {
       // if not root level AND joinHidden, throw error
-      if (parentFields.length > 1 && mysqlOptions!.joinHidden) {
+      if (parentFields.length > 1 && sqlOptions!.joinHidden) {
         throw new JomqlQueryError({
           message: `Requested field not allowed to be accessed directly in an nested context`,
           fieldPath: fieldPath.concat(parentFields),
@@ -389,10 +429,6 @@ function generateSqlQuerySelectObject(
   }
 
   return sqlSelectObjectArray;
-}
-
-export function countTableRows(typename: string, whereObject: SqlWhereObject) {
-  return mysqlHelper.countTableRows(typename, whereObject);
 }
 
 async function handleAggregatedQueries(
@@ -428,7 +464,7 @@ async function handleAggregatedQueries(
       const aggregatedResults = await dataloaderFn({
         req,
         args,
-        query: nestedResolverNodeMap[field].query!,
+        query: nestedResolverNodeMap[field].query,
         currentObject: {},
         fieldPath: currentFieldPath,
         data,

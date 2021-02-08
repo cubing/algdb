@@ -13,6 +13,12 @@ export class AlgsetService extends PaginatedService {
     code: {},
     is_public: {},
     name: {},
+    puzzle: {
+      field: "puzzle.id",
+    },
+    parent: {
+      field: "parent.id",
+    },
   };
 
   uniqueKeyMap = {

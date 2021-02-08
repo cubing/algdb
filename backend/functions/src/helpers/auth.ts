@@ -1,10 +1,10 @@
 import { env } from "../config";
 import * as jwt from "jsonwebtoken";
-import { Puzzle, User } from "../schema/services";
+import { User } from "../schema/services";
 import { userRoleKenum, userPermissionEnum } from "../schema/enums";
 import { userRoleToPermissionsMap } from "../schema/helpers/permissions";
 import type { ContextUser } from "../types";
-import * as mysqlHelper from "../schema/helpers/mysql";
+import * as sqlHelper from "../schema/helpers/sql";
 
 export async function validateToken(auth: string) {
   if (auth.split(" ")[0] !== "Bearer") {
@@ -27,7 +27,7 @@ export async function validateToken(auth: string) {
     };
 
     // fetch role from database
-    const userResults = await mysqlHelper.fetchTableRows({
+    const userResults = await sqlHelper.fetchTableRows({
       select: [{ field: "role" }, { field: "permissions" }],
       from: User.typename,
       where: {
@@ -45,7 +45,7 @@ export async function validateToken(auth: string) {
 
       // if any extra permissions, also add those
       let parsedPermissions = userResults[0].permissions
-        ? JSON.parse(userResults[0].permissions)
+        ? userResults[0].permissions
         : [];
 
       // convert permissions to enums

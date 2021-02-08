@@ -23,8 +23,6 @@ export abstract class BaseService {
     this.rootResolvers = rootResolvers;
   }
 
-  permissionsLink?: any;
-
   // standard ones are 'get', 'getMultiple', 'update', 'create', 'delete'
   accessControl?: AccessControlMap;
 

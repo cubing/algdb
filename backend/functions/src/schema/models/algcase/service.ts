@@ -10,6 +10,9 @@ export class AlgcaseService extends PaginatedService {
     created_by: {
       field: "created_by.id",
     },
+    algset: {
+      field: "algset.id",
+    },
   };
 
   uniqueKeyMap = {
