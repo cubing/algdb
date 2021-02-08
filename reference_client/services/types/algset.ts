@@ -6,7 +6,7 @@ import {
   getCaseVisualizations,
 } from '~/services/dropdown'
 import algcaseRecordInfo from '~/services/types/algcase'
-import CrudAlgsetInterface from '~/components/interface/crud/CrudAlgsetInterface.vue'
+import CrudAlgsetInterface from '~/components/interface/crud/crudAlgsetInterface.vue'
 
 export default <RecordInfo>{
   type: 'algset',
