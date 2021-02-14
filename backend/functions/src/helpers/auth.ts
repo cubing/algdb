@@ -6,7 +6,7 @@ import { userRoleToPermissionsMap } from "../schema/helpers/permissions";
 import type { ContextUser } from "../types";
 import * as sqlHelper from "../schema/helpers/sql";
 
-export async function validateToken(auth: string) {
+export async function validateToken(auth: string): Promise<ContextUser> {
   if (auth.split(" ")[0] !== "Bearer") {
     throw new Error("Invalid Token");
   }
@@ -36,10 +36,10 @@ export async function validateToken(auth: string) {
     });
 
     if (userResults.length > 0) {
-      contextUser.role = userResults[0].role;
+      contextUser.role = userRoleKenum.fromIndex(userResults[0].role);
       if (userRoleToPermissionsMap[userResults[0].role]) {
         contextUser.permissions.push(
-          ...userRoleToPermissionsMap[userResults[0].role]
+          ...userRoleToPermissionsMap[contextUser.role.name]
         );
       }
 
@@ -49,8 +49,8 @@ export async function validateToken(auth: string) {
         : [];
 
       // convert permissions to enums
-      parsedPermissions = parsedPermissions.map(
-        (ele) => userPermissionEnum[ele]
+      parsedPermissions = parsedPermissions.map((ele) =>
+        userPermissionEnum.fromName(ele)
       );
       contextUser.permissions.push(...parsedPermissions);
     }

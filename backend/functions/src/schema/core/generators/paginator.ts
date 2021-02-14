@@ -7,11 +7,12 @@ import {
 
 import { generateTypenameField } from "../../helpers/typeDef";
 import type { ObjectTypeDefinition } from "jomql";
+import { PaginatorData } from "../../../types";
 
 export function generatePaginatorTypeDef(
   service: PaginatedService,
   currentService: BaseService
-) {
+): ObjectTypeDefinition {
   const PaginatorInfo = new PaginatorInfoService(service);
 
   const Edge = new EdgeService(service);
@@ -41,9 +42,10 @@ export function generatePaginatorTypeDef(
         },
         allowNull: false,
         resolver: async ({ req, fieldPath, args, query, data }) => {
-          // data.records should contain the results
+          const paginatorData = <PaginatorData>data;
+
           return Promise.all(
-            data.records.map((item, index) => {
+            paginatorData.records.map((item, index) => {
               // separate the last_id and last_value keys, if any
               const { last_id, last_value, ...remainingItem } = item;
               return Edge.getRecord({

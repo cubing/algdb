@@ -1,8 +1,9 @@
 import type { RecordInfo } from '~/types'
 import sharedService from '~/services/shared'
 import algRecordInfo from '~/services/types/alg'
+import { getPuzzles } from '~/services/dropdown'
 
-export default <RecordInfo>{
+export default <RecordInfo<'algcase'>>{
   type: 'algcase',
   options: {
     sortBy: ['created_at'],
@@ -10,10 +11,17 @@ export default <RecordInfo>{
   },
   hasSearch: true,
   filters: [
-    {
+    /*     {
       field: 'algset',
       label: 'Algset ID',
       operator: 'eq',
+    }, */
+    {
+      field: 'puzzle',
+      label: 'Puzzle',
+      operator: 'eq',
+      parseValue: (val) => Number(val),
+      getOptions: getPuzzles,
     },
   ],
   inputs: {

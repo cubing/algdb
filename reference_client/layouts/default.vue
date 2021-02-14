@@ -8,7 +8,10 @@
       app
     >
       <nuxt-link to="/">
-        <v-img :src="require('../static/algdb1.png')" class="ma-2" />
+        <v-img
+          :src="require('../static/algdb-withcube-vertical.png')"
+          class="ma-2"
+        />
       </nuxt-link>
       <v-divider></v-divider>
       <v-list dense>

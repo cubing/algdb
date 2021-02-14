@@ -1,10 +1,9 @@
 <template>
-  <div>
+  <div :class="{ 'expanded-table-bg': isChildComponent }">
     <v-data-table
       :headers="recordInfo.headers"
       :items="records"
       class="elevation-1"
-      :class="{ 'expanded-table-bg': isChildComponent }"
       :loading="loading.loadData"
       :options.sync="options"
       loading-text="Loading... Please wait"
@@ -71,7 +70,6 @@
                 :items="item.options"
                 filled
                 :label="item.fieldInfo.label"
-                style="width: 300px"
                 :prepend-icon="item.fieldInfo.icon"
                 clearable
                 item-text="name"
@@ -141,7 +139,7 @@
         <td :colspan="headers.length" class="pr-0">
           <component
             :is="childInterfaceComponent"
-            class="pb-2"
+            class="mb-2"
             :record-info="recordInfo.nested"
             :locked-filters="lockedSubFilters"
             :add-filters="addSubFilters"
@@ -203,13 +201,11 @@ export default {
 </script>
 
 <style scoped>
-.expanded-row-bg {
-  background-color: green;
-}
-
-.expanded-table-bg {
-  border-left: 5px solid green;
-  border-bottom: 5px solid green;
-  border-radius: 0px;
+.v-data-table
+  > .v-data-table__wrapper
+  > table
+  > tbody
+  > tr.expanded-row-bg:hover:not(.v-data-table__expanded__content):not(.v-data-table__empty-wrapper) {
+  background: var(--v-secondary-base);
 }
 </style>

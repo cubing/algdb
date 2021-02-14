@@ -59,7 +59,7 @@ export async function handleJqlSubscriptionTrigger(
   req,
   service: NormalService,
   operationName: string,
-  args: object
+  args: unknown
 ) {
   const subscriptionResults = await sqlHelper.executeDBQuery(
     "SELECT id, user, args, query, channel FROM jqlSubscription WHERE operation = :operation AND args = :args",
@@ -155,7 +155,7 @@ export async function handleJqlSubscriptionTriggerIterative(
 export async function deleteJqlSubscription(
   req,
   operationName: string,
-  args: object
+  args: unknown
 ) {
   return sqlHelper.executeDBQuery(
     "DELETE FROM jqlSubscription WHERE args = :args AND operation = :operation",

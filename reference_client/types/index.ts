@@ -1,13 +1,24 @@
-export type RecordInfo = {
-  type: string
+import { InputTypes, MainTypes, Scalars } from '~/types/schema'
+
+export type RecordInfo<T extends keyof MainTypes> = {
+  type: T
   options: {
-    sortBy: string[]
+    sortBy: `get${Capitalize<T>}Paginator` extends keyof InputTypes
+      ? InputTypes[`get${Capitalize<T>}Paginator`]['sortBy']
+      : []
     sortDesc: boolean[]
   }
-  hasSearch: boolean
-  filters: RecordFilter[]
+
+  hasSearch: `get${Capitalize<T>}Paginator` extends keyof InputTypes
+    ? 'search' extends keyof InputTypes[`get${Capitalize<T>}Paginator`]
+      ? true
+      : false
+    : false
+  filters: `${T}FilterByObject` extends keyof InputTypes
+    ? RecordFilter<InputTypes[`${T}FilterByObject`]>[]
+    : []
   inputs: {
-    [x: string]: {
+    [K in keyof MainTypes[T]['Type']]?: {
       text: string
       addable: boolean
       editable: boolean
@@ -25,14 +36,14 @@ export type RecordInfo = {
   deleteRecordComponent?: any | null
   viewRecordComponent?: any | null
   interfaceComponent?: any
-  nested?: RecordInfo
+  nested?: RecordInfo<any>
 }
 
-export type RecordFilter = {
-  field: string
+export type RecordFilter<T> = {
+  field: keyof T
   label: string
   icon?: string
-  operator: string
+  operator: Scalars['filterOperator']
   parseValue?: Function
   getOptions?: Function
   default?: Function

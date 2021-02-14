@@ -17,7 +17,7 @@ export class EnumService extends BaseService {
     this.rootResolvers = generateEnumRootResolver(this);
   }
 
-  getAllRecords(inputs: ServiceFunctionInputs) {
-    return Object.keys(this.enum).filter((key) => Number.isNaN(parseInt(key)));
+  getAllRecords(inputs: ServiceFunctionInputs): (number | string)[] {
+    return this.enum.values.map((ele) => ele.name);
   }
 }

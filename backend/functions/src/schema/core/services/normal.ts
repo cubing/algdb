@@ -22,6 +22,7 @@ import {
   JomqlInputFieldType,
   JomqlInitializationError,
   JomqlScalarType,
+  StringKeyObject,
 } from "jomql";
 
 import {
@@ -161,6 +162,8 @@ export class NormalService extends BaseService {
       isAdmin = false,
     }: ServiceFunctionInputs
   ) {
+    // args should be validated already
+    const validatedArgs = <any>args;
     const selectQuery = query || Object.assign({}, this.presets.default);
 
     //check if the record and query is fetchable
@@ -171,7 +174,7 @@ export class NormalService extends BaseService {
       selectQuery,
       {
         where: {
-          fields: [{ field: "id", value: args.id }],
+          fields: [{ field: "id", value: validatedArgs.id }],
         },
       },
       data
@@ -182,7 +185,7 @@ export class NormalService extends BaseService {
     }
 
     const subscriptionFilterableArgs = {
-      id: args.id,
+      id: validatedArgs.id,
     };
 
     const channel = await handleJqlSubscription(
@@ -209,6 +212,9 @@ export class NormalService extends BaseService {
       isAdmin = false,
     }: ServiceFunctionInputs
   ) {
+    // args should be validated already
+    const validatedArgs = <any>args;
+
     const selectQuery = query || Object.assign({}, this.presets.default);
 
     //check if the query is valid (no need to actually run it)
@@ -223,7 +229,7 @@ export class NormalService extends BaseService {
 
     // only allowed to filter subscriptions based on these limited args
     const subscriptionFilterableArgs = {
-      created_by: args.created_by,
+      created_by: validatedArgs.created_by,
     };
 
     const channel = await handleJqlSubscription(
@@ -247,6 +253,9 @@ export class NormalService extends BaseService {
     data = {},
     isAdmin = false,
   }: ServiceFunctionInputs) {
+    // args should be validated already
+    const validatedArgs = <any>args;
+
     const selectQuery = query ?? Object.assign({}, this.presets.default);
 
     const whereObject: SqlWhereObject = {
@@ -257,7 +266,7 @@ export class NormalService extends BaseService {
     data.rootArgs = args;
 
     whereObject.fields.push(
-      ...Object.entries(args).map(([field, value]) => ({
+      ...Object.entries(validatedArgs).map(([field, value]) => ({
         field,
         value,
       }))
@@ -291,13 +300,15 @@ export class NormalService extends BaseService {
     data = {},
     isAdmin = false,
   }: ServiceFunctionInputs) {
+    // args should be validated already
+    const validatedArgs = <any>args;
     const whereObject: SqlWhereObject = {
       connective: "AND",
       fields: [],
     };
 
-    if (isObject(args.filterBy)) {
-      Object.entries(args.filterBy).forEach(([key, value]) => {
+    if (isObject(validatedArgs.filterBy)) {
+      Object.entries(validatedArgs.filterBy).forEach(([key, value]) => {
         // all keys must be pre-validated via args checking
         if (Array.isArray(value)) {
           value.forEach((ele) => {
@@ -312,7 +323,7 @@ export class NormalService extends BaseService {
     }
 
     //handle search fields
-    if (args.search) {
+    if (validatedArgs.search) {
       const whereSubObject: SqlWhereObject = {
         connective: "OR",
         fields: [],
@@ -321,7 +332,7 @@ export class NormalService extends BaseService {
       for (const prop in this.searchFieldsMap) {
         whereSubObject.fields.push({
           field: this.searchFieldsMap[prop].field ?? prop,
-          value: "%" + args.search + "%",
+          value: "%" + validatedArgs.search + "%",
           operator: "like",
         });
       }
@@ -347,6 +358,8 @@ export class NormalService extends BaseService {
     data = {},
     isAdmin = false,
   }: ServiceFunctionInputs) {
+    // args should be validated already
+    const validatedArgs = <any>args;
     const selectQuery = query || Object.assign({}, this.presets.default);
 
     const whereObject: SqlWhereObject = {
@@ -354,8 +367,8 @@ export class NormalService extends BaseService {
       fields: [],
     };
 
-    if (isObject(args.filterBy)) {
-      Object.entries(args.filterBy).forEach(([key, value]) => {
+    if (isObject(validatedArgs.filterBy)) {
+      Object.entries(validatedArgs.filterBy).forEach(([key, value]) => {
         // all keys must be pre-validated via args checking
         if (Array.isArray(value)) {
           value.forEach((ele) => {
@@ -370,7 +383,7 @@ export class NormalService extends BaseService {
     }
 
     //handle search fields
-    if (args.search) {
+    if (validatedArgs.search) {
       const whereSubObject: SqlWhereObject = {
         connective: "OR",
         fields: [],
@@ -379,7 +392,7 @@ export class NormalService extends BaseService {
       for (const prop in this.searchFieldsMap) {
         whereSubObject.fields.push({
           field: this.searchFieldsMap[prop].field ?? prop,
-          value: "%" + args.search + "%",
+          value: "%" + validatedArgs.search + "%",
           operator: "like",
         });
       }
@@ -391,17 +404,18 @@ export class NormalService extends BaseService {
 
     // only the first sortKey works at the moment. falls back to "id" if not provided
     const sortByField =
-      (Array.isArray(args.sortBy) ? args.sortBy[0] : "id") ?? "id";
+      (Array.isArray(validatedArgs.sortBy) ? validatedArgs.sortBy[0] : "id") ??
+      "id";
     if (!(sortByField in this.sortFieldsMap))
       throw errorHelper.generateError("Invalid sortBy field", fieldPath);
-    const sortByDesc = Array.isArray(args.sortDesc)
-      ? args.sortDesc[0] === true
+    const sortByDesc = Array.isArray(validatedArgs.sortDesc)
+      ? validatedArgs.sortDesc[0] === true
       : false;
 
     // process the "after" constraint, if provided
-    if (args.after) {
+    if (validatedArgs.after) {
       // parse cursor
-      const parsedCursor = JSON.parse(btoa(args.after));
+      const parsedCursor = JSON.parse(btoa(validatedArgs.after));
 
       const isNullLastValue = parsedCursor.last_value === null;
 
@@ -454,10 +468,10 @@ export class NormalService extends BaseService {
     }
 
     // handle the before constraints, basically the reverse of the args.after case
-    if (args.before) {
+    if (validatedArgs.before) {
       isBeforeQuery = true;
       // parse cursor
-      const parsedCursor = JSON.parse(btoa(args.before));
+      const parsedCursor = JSON.parse(btoa(validatedArgs.before));
 
       const isNullLastValue = parsedCursor.last_value === null;
 
@@ -511,7 +525,7 @@ export class NormalService extends BaseService {
 
     // set limit to args.first or args.last
     //parse args.first and ensure it is less than 100
-    const requestedLimit = parseInt(args.first ?? args.last);
+    const requestedLimit = Number(validatedArgs.first ?? validatedArgs.last);
     const limit = Math.min(requestedLimit, 100) || 100;
 
     // process sort fields
@@ -544,8 +558,8 @@ export class NormalService extends BaseService {
         where: whereObject,
         orderBy,
         limit: limit,
-        groupBy: Array.isArray(args.groupBy)
-          ? args.groupBy.reduce((total, item, index) => {
+        groupBy: Array.isArray(validatedArgs.groupBy)
+          ? validatedArgs.groupBy.reduce((total, item, index) => {
               if (item in this.groupByFieldsMap) {
                 total.push({
                   field: this.groupByFieldsMap[item].field ?? item,
@@ -559,7 +573,7 @@ export class NormalService extends BaseService {
       data
     );
 
-    return args.reverse
+    return validatedArgs.reverse
       ? isBeforeQuery
         ? results
         : results.reverse()
@@ -605,12 +619,14 @@ export class NormalService extends BaseService {
     data = {},
     isAdmin = false,
   }: ServiceFunctionInputs) {
+    // args should be validated already
+    const validatedArgs = <any>args;
     await this.handleLookupArgs(args);
 
     const addResults = await Resolver.createObjectType({
       typename: this.typename,
       addFields: {
-        ...args,
+        ...validatedArgs,
         created_by: req.user!.id,
       },
       req,
@@ -657,13 +673,15 @@ export class NormalService extends BaseService {
     data = {},
     isAdmin = false,
   }: ServiceFunctionInputs) {
+    // args should be validated already
+    const validatedArgs = <any>args;
     // check if record exists, get ID
     const records = await sqlHelper.fetchTableRows({
       select: [{ field: "id" }],
       from: this.typename,
       where: {
         connective: "AND",
-        fields: Object.entries(args.item).map(([field, value]) => ({
+        fields: Object.entries(validatedArgs.item).map(([field, value]) => ({
           field,
           value,
         })),
@@ -677,13 +695,13 @@ export class NormalService extends BaseService {
     const itemId = records[0].id;
 
     // convert any lookup/joined fields into IDs
-    await this.handleLookupArgs(args.fields);
+    await this.handleLookupArgs(validatedArgs.fields);
 
     await Resolver.updateObjectType({
       typename: this.typename,
       id: itemId,
       updateFields: {
-        ...args.fields,
+        ...validatedArgs.fields,
         updated_at: 1,
       },
       req,
@@ -728,13 +746,15 @@ export class NormalService extends BaseService {
     data = {},
     isAdmin = false,
   }: ServiceFunctionInputs) {
+    // args should be validated already
+    const validatedArgs = <any>args;
     // confirm existence of item and get ID
     const results = await sqlHelper.fetchTableRows({
       select: [{ field: "id" }],
       from: this.typename,
       where: {
         connective: "AND",
-        fields: Object.entries(args).map(([field, value]) => ({
+        fields: Object.entries(validatedArgs).map(([field, value]) => ({
           field,
           value,
         })),

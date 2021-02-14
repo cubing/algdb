@@ -1,5 +1,5 @@
 import { SimpleService } from "../../core/services";
-import * as bcrypt from "bcryptjs";
+// import * as bcrypt from "bcryptjs";
 import * as errorHelper from "../../helpers/error";
 import { User } from "../../services";
 import { env } from "../../../config";
@@ -12,10 +12,11 @@ export class AuthService extends SimpleService {
   defaultTypename = "auth";
 
   accessControl = {
-    "*": () => true,
+    "*": (): boolean => true,
   };
 
-  async loginUser({
+  // must use socialLogin
+  /*   async loginUser({
     req,
     fieldPath,
     args,
@@ -60,7 +61,7 @@ export class AuthService extends SimpleService {
       query,
       fieldPath,
     });
-  }
+  } */
 
   async socialLogin({
     req,
@@ -69,8 +70,11 @@ export class AuthService extends SimpleService {
     query,
     isAdmin = false,
   }: ServiceFunctionInputs) {
+    // args should be validated already
+    const validatedArgs = <any>args;
+
     //only wca supported at the moment
-    if (args.provider !== "wca") {
+    if (validatedArgs.provider !== "wca") {
       throw errorHelper.generateError(
         "Invalid social login provider",
         fieldPath
@@ -88,8 +92,8 @@ export class AuthService extends SimpleService {
       grant_type: "authorization_code",
       client_id: env.wca.client_id,
       client_secret: env.wca.client_secret,
-      code: args.code,
-      redirect_uri: args.redirect_uri,
+      code: validatedArgs.code,
+      redirect_uri: validatedArgs.redirect_uri,
     });
 
     //hit the /me route to get the user info
@@ -105,7 +109,7 @@ export class AuthService extends SimpleService {
       from: User.typename,
       where: {
         fields: [
-          { field: "provider", value: args.provider },
+          { field: "provider", value: validatedArgs.provider },
           { field: "provider_id", value: wcaData.me.id },
         ],
       },
@@ -118,7 +122,7 @@ export class AuthService extends SimpleService {
       const addResults = await Resolver.createObjectType({
         typename: User.typename,
         addFields: {
-          provider: args.provider,
+          provider: validatedArgs.provider,
           provider_id: wcaData.me.id,
           wca_id: wcaData.me.wca_id,
           email: wcaData.me.email,

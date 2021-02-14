@@ -1,8 +1,9 @@
+import { getPuzzles, getTags } from '../dropdown'
 import type { RecordInfo } from '~/types'
 import sharedService from '~/services/shared'
 import CreateAlgDialog from '~/components/dialog/alg/createAlgDialog.vue'
 
-export default <RecordInfo>{
+export default <RecordInfo<'alg'>>{
   type: 'alg',
   options: {
     sortBy: ['created_at'],
@@ -11,9 +12,18 @@ export default <RecordInfo>{
   hasSearch: true,
   filters: [
     {
-      field: 'algcase',
-      label: 'Algcase ID',
+      field: 'puzzle',
       operator: 'eq',
+      label: 'Puzzle',
+      getOptions: getPuzzles,
+      parseValue: (val) => Number(val),
+    },
+    {
+      field: 'tag',
+      operator: 'eq',
+      label: 'Tag',
+      getOptions: getTags,
+      parseValue: (val) => Number(val),
     },
   ],
   inputs: {
@@ -28,7 +38,7 @@ export default <RecordInfo>{
       addable: true,
       editable: false,
       viewable: false,
-      readonly: true,
+      // readonly: true,
       parseValue: (val) => ({ id: val }),
     },
   },
@@ -38,6 +48,13 @@ export default <RecordInfo>{
       align: 'left',
       sortable: false,
       value: 'sequence',
+    },
+    {
+      text: 'Score',
+      align: 'left',
+      sortable: false,
+      value: 'score',
+      width: '50px',
     },
     {
       text: 'Created At',

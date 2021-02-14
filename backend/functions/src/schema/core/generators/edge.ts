@@ -8,7 +8,7 @@ import type { ObjectTypeDefinition } from "jomql";
 export function generateEdgeTypeDef(
   service: NormalService,
   currentService: BaseService
-) {
+): ObjectTypeDefinition {
   return <ObjectTypeDefinition>{
     name: currentService.typename,
     fields: {

@@ -3,7 +3,7 @@ import sharedService from '~/services/shared'
 import algsetRecordInfo from '~/services/types/algset'
 import { getBooleanOptions } from '~/services/dropdown'
 
-export default <RecordInfo>{
+export default <RecordInfo<'puzzle'>>{
   type: 'puzzle',
   options: {
     sortBy: ['created_at'],

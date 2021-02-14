@@ -19,7 +19,9 @@ export abstract class BaseService {
     },
   };
 
-  setRootResolvers(rootResolvers: { [x: string]: JomqlRootResolverType }) {
+  setRootResolvers(rootResolvers: {
+    [x: string]: JomqlRootResolverType;
+  }): void {
     this.rootResolvers = rootResolvers;
   }
 
@@ -43,7 +45,7 @@ export abstract class BaseService {
       data,
       isAdmin = false,
     }: ServiceFunctionInputs
-  ) {
+  ): Promise<boolean> {
     if (isAdmin) return true;
 
     if (!req.user) return false;

@@ -1,20 +1,21 @@
 import * as sqlHelper from "./sql";
-import { User } from "../services";
 import { userRoleKenum, userPermissionEnum } from "../enums";
-import { BaseService, NormalService } from "../core/services";
+import { BaseService } from "../core/services";
 import * as errorHelper from "./error";
 import { ServiceFunctionInputs, AccessControlFunction } from "../../types";
+import { StringKeyObject } from "jomql";
 
 export const userRoleToPermissionsMap = {
-  // [userRoleKenum.ADMIN]: [userPermissionEnum.A_A],
-  [userRoleKenum.ADMIN]: [userPermissionEnum.A_A],
-  [userRoleKenum.NORMAL]: [],
+  [userRoleKenum.ADMIN.name]: [userPermissionEnum.A_A],
+  [userRoleKenum.NORMAL.name]: [],
 };
 
 export function generateItemCreatedByUserGuard(
   service: BaseService
 ): AccessControlFunction {
-  return async function ({ req, fieldPath, args, query }) {
+  return async function ({ req, args }) {
+    // args should be validated already
+    const validatedArgs = <StringKeyObject>args;
     //check if logged in
     if (!req.user) return false;
 
@@ -23,7 +24,7 @@ export function generateItemCreatedByUserGuard(
         select: [{ field: "created_by" }],
         from: service.typename,
         where: {
-          fields: [{ field: "id", value: args.id }],
+          fields: [{ field: "id", value: validatedArgs.id }],
         },
       });
 
@@ -41,7 +42,7 @@ export function generateUserAdminGuard(): AccessControlFunction {
 export function generateUserRoleGuard(
   allowedRoles: userRoleKenum[]
 ): AccessControlFunction {
-  return async function ({ req, fieldPath, args, query }) {
+  return async function ({ req }) {
     //check if logged in
     if (!req.user) return false;
 
@@ -58,7 +59,7 @@ export function generateUserRoleGuard(
       */
 
       if (!req.user.role) return false;
-      return allowedRoles.includes(userRoleKenum[req.user.role]);
+      return allowedRoles.includes(req.user.role);
     } catch (err) {
       return false;
     }

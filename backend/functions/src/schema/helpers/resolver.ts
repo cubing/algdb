@@ -8,7 +8,6 @@ import {
   objectTypeDefs,
   JomqlObjectTypeLookup,
   isRootResolverDefinition,
-  JomqlQuery,
   JomqlBaseError,
 } from "jomql";
 
@@ -18,14 +17,15 @@ import {
   SqlWhereObject,
   SqlParams,
   SqlSelectQueryOutput,
+  CustomResolverFunction,
 } from "../../types";
 
 import { isObject } from "../helpers/shared";
 import type { Request } from "express";
 
 type CustomResolver = {
-  resolver: Function;
-  value?: any;
+  resolver: CustomResolverFunction;
+  value?: unknown;
 };
 
 type CustomResolverMap = {
@@ -90,7 +90,7 @@ export async function createObjectType({
   fieldPath: string[];
   addFields: { [x: string]: unknown };
   ignore?: boolean;
-}) {
+}): Promise<any> {
   const typeDef = objectTypeDefs.get(typename);
   if (!typeDef) {
     throw new JomqlBaseError({
@@ -168,7 +168,7 @@ export async function updateObjectType({
   fieldPath: string[];
   updateFields: { [x: string]: unknown };
   id: number;
-}) {
+}): Promise<any> {
   const typeDef = objectTypeDefs.get(typename);
   if (!typeDef) {
     throw new JomqlBaseError({
@@ -244,7 +244,7 @@ export async function deleteObjectType({
   req: Request;
   fieldPath: string[];
   id: number;
-}) {
+}): Promise<any> {
   //resolve the deleters
   const typeDef = objectTypeDefs.get(typename);
   if (!typeDef) {
@@ -297,11 +297,11 @@ export async function getObjectType(
   typename: string,
   req,
   fieldPath: string[],
-  externalQuery: JomqlQuery,
+  externalQuery: unknown,
   sqlParams: SqlParams,
   data = {},
   externalTypeDef?: JomqlObjectType
-) {
+): Promise<unknown[]> {
   // shortcut: if no fields were requested, simply return empty object
   if (isObject(externalQuery) && Object.keys(externalQuery).length < 1)
     return [{}];
@@ -349,13 +349,13 @@ export async function getObjectType(
 
   // handle aggregated fields -- must be nested query. cannot be array of scalars like [1, 2, 3, 4] at the moment
   if (jomqlResolverTree.nested) {
-    await handleAggregatedQueries(
-      processedResultsTree,
-      jomqlResolverTree.nested,
+    await handleAggregatedQueries({
+      resultsArray: processedResultsTree,
+      nestedResolverNodeMap: jomqlResolverTree.nested,
       req,
       data,
-      fieldPath
-    );
+      fieldPath,
+    });
   }
 
   return processedResultsTree;
@@ -365,7 +365,7 @@ export function countObjectType(
   typename: string,
   fieldPath: string[],
   whereObject: SqlWhereObject
-) {
+): Promise<number> {
   return sqlHelper.countTableRows(typename, whereObject, fieldPath);
 }
 
@@ -373,7 +373,7 @@ function generateSqlQuerySelectObject(
   jomqlResolverNode: JomqlResolverNode,
   parentFields: string[] = [],
   fieldPath: string[]
-) {
+): SqlQuerySelectObject[] {
   const sqlSelectObjectArray: SqlQuerySelectObject[] = [];
 
   // if root resolver object, skip.
@@ -431,14 +431,21 @@ function generateSqlQuerySelectObject(
   return sqlSelectObjectArray;
 }
 
-async function handleAggregatedQueries(
-  resultsArray: any[],
-  nestedResolverNodeMap: { [x: string]: JomqlResolverNode },
-  req: Request,
-  args: any,
-  data: any,
-  fieldPath: string[] = []
-) {
+async function handleAggregatedQueries({
+  resultsArray,
+  nestedResolverNodeMap,
+  req,
+  args,
+  data,
+  fieldPath = [],
+}: {
+  resultsArray: any[];
+  nestedResolverNodeMap: { [x: string]: JomqlResolverNode };
+  req: Request;
+  args?: unknown;
+  data: any;
+  fieldPath?: string[];
+}): Promise<void> {
   for (const field in nestedResolverNodeMap) {
     const currentFieldPath = fieldPath.concat(field);
     // if root resolver object, skip.
@@ -488,14 +495,14 @@ async function handleAggregatedQueries(
         return total;
       }, []);
 
-      await handleAggregatedQueries(
-        nestedResultsArray,
-        nestedResolver,
+      await handleAggregatedQueries({
+        resultsArray: nestedResultsArray,
+        nestedResolverNodeMap: nestedResolver,
         req,
         args,
         data,
-        currentFieldPath
-      );
+        fieldPath: currentFieldPath,
+      });
     }
   }
 }

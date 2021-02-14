@@ -362,6 +362,7 @@ export function generateArrayField(
 export function generateEnumField(
   params: {
     scalarDefinition: JomqlScalarType;
+    isKenum?: boolean;
   } & GenerateFieldParams
 ) {
   const {
@@ -374,6 +375,7 @@ export function generateEnumField(
     sqlDefinition,
     sqlOptions,
     typeDefOptions,
+    isKenum = false,
   } = params;
 
   // if scalarDefinition.parseValue, run that on defaultValue
@@ -387,7 +389,7 @@ export function generateEnumField(
         ? scalarDefinition.definition.parseValue(defaultValue)
         : defaultValue,
     hidden,
-    sqlType: "string",
+    sqlType: isKenum ? "integer" : "string",
     type: scalarDefinition,
     sqlDefinition,
     sqlOptions,
@@ -525,7 +527,7 @@ export function generateDataloadableField(
       defer: true,
       dataloader: ({ req, args, query, currentObject, fieldPath, data }) => {
         // if data.idArray empty, return empty array
-        if (!data.idArray.length) return [];
+        if (!data.idArray.length) return Promise.resolve([]);
         // aggregator function that must accept data.idArray = [1, 2, 3, ...]
         return Resolver.getObjectType(
           service.typename,
@@ -694,12 +696,14 @@ export function generatePaginatorPivotResolverObject(params: {
       parentValue,
       data,
     }) => {
+      // args should be validated already
+      const validatedArgs = <any>args;
       // check if currentObject.id was requested
       let parentItemId = parentValue?.id ?? data.rootArgs?.args?.id;
 
       // if not available, must be looked up using non-id key, fetch
       if (!parentItemId) {
-        const results = await currentService!.getRecord({
+        const results = <any>await currentService!.getRecord({
           req,
           fieldPath,
           args: { ...data.rootArgs },
@@ -718,7 +722,7 @@ export function generatePaginatorPivotResolverObject(params: {
         req,
         fieldPath,
         args: deepAssign(
-          { ...args },
+          { ...validatedArgs },
           {
             filterBy: {
               [filterByField]: [

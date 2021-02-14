@@ -1,4 +1,8 @@
-import type { ObjectTypeDefSqlOptions, DataloaderFunction } from "..";
+import type {
+  ObjectTypeDefSqlOptions,
+  DataloaderFunction,
+  CustomResolverFunction,
+} from "..";
 
 declare global {
   namespace Jomql {
@@ -8,9 +12,9 @@ declare global {
       addable?: boolean;
       updateable?: boolean;
       dataloader?: DataloaderFunction;
-      deleter?: Function;
-      setter?: Function;
-      updater?: Function;
+      deleter?: CustomResolverFunction;
+      setter?: CustomResolverFunction;
+      updater?: CustomResolverFunction;
     }
   }
 }

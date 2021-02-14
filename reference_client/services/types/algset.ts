@@ -8,7 +8,7 @@ import {
 import algcaseRecordInfo from '~/services/types/algcase'
 import CrudAlgsetInterface from '~/components/interface/crud/crudAlgsetInterface.vue'
 
-export default <RecordInfo>{
+export default <RecordInfo<'algset'>>{
   type: 'algset',
   options: {
     sortBy: ['created_at'],
@@ -20,6 +20,7 @@ export default <RecordInfo>{
       field: 'puzzle',
       label: 'Puzzle',
       operator: 'eq',
+      parseValue: (val) => Number(val),
       getOptions: getPuzzles,
     },
     {
@@ -68,7 +69,8 @@ export default <RecordInfo>{
       addable: true,
       editable: false,
       viewable: false,
-      readonly: true,
+      // readonly: true,
+      getOptions: getPuzzles,
       parseValue: (val) => (val === null ? null : { id: val }),
     },
     parent: {
@@ -76,7 +78,7 @@ export default <RecordInfo>{
       addable: true,
       editable: false,
       viewable: false,
-      readonly: true,
+      // readonly: true,
       parseValue: (val) => (val === null ? null : { id: val }),
     },
   },
@@ -86,6 +88,13 @@ export default <RecordInfo>{
       align: 'left',
       sortable: false,
       value: 'name',
+    },
+    {
+      text: 'Score',
+      align: 'left',
+      sortable: false,
+      value: 'score',
+      width: '50px',
     },
     {
       text: 'Code',

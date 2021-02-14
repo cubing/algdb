@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 export const env = require("../env.json");
 
 export const production = {

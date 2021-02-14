@@ -1,17 +1,7 @@
 // Query builder (Typescript version >= 4.1.3 required)
-const queryResult = executeJomql({
+/* const queryResult = executeJomql({
   // Start typing here to get hints
-  createAlg: {
-    __args: {
-      alg: {
-        id: 1,
-      },
-      algcase: {
-        id: 1,
-      },
-    },
-  },
-})
+}) */
 
 export function executeJomql<Key extends keyof Root>(
   query: GetQuery<Key>
@@ -26,6 +16,8 @@ export type GetQuery<K extends keyof Root> = K extends never
   : Record<K, Queryize<Root[K]>>
 
 export type GetResponse<K extends keyof Root> = Responseize<Root[K]>
+
+export type GetType<T> = Responseize<Field<T, undefined>>
 
 type Primitive = string | number | boolean | undefined | null
 
@@ -111,7 +103,7 @@ type Edge<T> = {
   tagSortByKey: 'id' | 'created_at'
   tagGroupByKey: 'id'
 }
-/**All Input types*/ export type InputType = {
+/**All Input types*/ export type InputTypes = {
   getUser: { id?: Scalars['id'] }
   'userFilterByField/id': {
     operator?: Scalars['filterOperator']
@@ -134,11 +126,11 @@ type Edge<T> = {
     value: Scalars['string']
   }
   userFilterByObject: {
-    id?: InputType['userFilterByField/id'][]
-    created_by?: InputType['userFilterByField/created_by'][]
-    'created_by.name'?: InputType['userFilterByField/created_by.name'][]
-    role?: InputType['userFilterByField/role'][]
-    name?: InputType['userFilterByField/name'][]
+    id?: InputTypes['userFilterByField/id'][]
+    created_by?: InputTypes['userFilterByField/created_by'][]
+    'created_by.name'?: InputTypes['userFilterByField/created_by.name'][]
+    role?: InputTypes['userFilterByField/role'][]
+    name?: InputTypes['userFilterByField/name'][]
   }
   getUserPaginator: {
     first?: Scalars['number']
@@ -147,7 +139,7 @@ type Edge<T> = {
     before?: Scalars['string']
     sortBy?: Scalars['userSortByKey'][]
     sortDesc?: Scalars['boolean'][]
-    filterBy?: InputType['userFilterByObject']
+    filterBy?: InputTypes['userFilterByObject']
     groupBy?: Scalars['userGroupByKey'][]
     search?: Scalars['string']
   }
@@ -173,8 +165,8 @@ type Edge<T> = {
     permissions?: Scalars['userPermission'][] | null
   }
   updateUser: {
-    item: InputType['getUser']
-    fields: InputType['updateUserFields']
+    item: InputTypes['getUser']
+    fields: InputTypes['updateUserFields']
   }
   socialLogin: {
     provider: Scalars['string']
@@ -199,10 +191,10 @@ type Edge<T> = {
     value: Scalars['boolean']
   }
   puzzleFilterByObject: {
-    id?: InputType['puzzleFilterByField/id'][]
-    created_by?: InputType['puzzleFilterByField/created_by'][]
-    code?: InputType['puzzleFilterByField/code'][]
-    is_public?: InputType['puzzleFilterByField/is_public'][]
+    id?: InputTypes['puzzleFilterByField/id'][]
+    created_by?: InputTypes['puzzleFilterByField/created_by'][]
+    code?: InputTypes['puzzleFilterByField/code'][]
+    is_public?: InputTypes['puzzleFilterByField/is_public'][]
   }
   getPuzzlePaginator: {
     first?: Scalars['number']
@@ -211,7 +203,7 @@ type Edge<T> = {
     before?: Scalars['string']
     sortBy?: Scalars['puzzleSortByKey'][]
     sortDesc?: Scalars['boolean'][]
-    filterBy?: InputType['puzzleFilterByObject']
+    filterBy?: InputTypes['puzzleFilterByObject']
     groupBy?: Scalars['puzzleGroupByKey'][]
     search?: Scalars['string']
   }
@@ -226,8 +218,8 @@ type Edge<T> = {
     is_public?: Scalars['boolean']
   }
   updatePuzzle: {
-    item: InputType['getPuzzle']
-    fields: InputType['updatePuzzleFields']
+    item: InputTypes['getPuzzle']
+    fields: InputTypes['updatePuzzleFields']
   }
   getAlgset: { id?: Scalars['id']; code?: Scalars['string'] }
   'algsetFilterByField/id': {
@@ -250,12 +242,22 @@ type Edge<T> = {
     operator?: Scalars['filterOperator']
     value: Scalars['string']
   }
+  'algsetFilterByField/puzzle': {
+    operator?: Scalars['filterOperator']
+    value: Scalars['id']
+  }
+  'algsetFilterByField/parent': {
+    operator?: Scalars['filterOperator']
+    value: Scalars['id'] | null
+  }
   algsetFilterByObject: {
-    id?: InputType['algsetFilterByField/id'][]
-    created_by?: InputType['algsetFilterByField/created_by'][]
-    code?: InputType['algsetFilterByField/code'][]
-    is_public?: InputType['algsetFilterByField/is_public'][]
-    name?: InputType['algsetFilterByField/name'][]
+    id?: InputTypes['algsetFilterByField/id'][]
+    created_by?: InputTypes['algsetFilterByField/created_by'][]
+    code?: InputTypes['algsetFilterByField/code'][]
+    is_public?: InputTypes['algsetFilterByField/is_public'][]
+    name?: InputTypes['algsetFilterByField/name'][]
+    puzzle?: InputTypes['algsetFilterByField/puzzle'][]
+    parent?: InputTypes['algsetFilterByField/parent'][]
   }
   getAlgsetPaginator: {
     first?: Scalars['number']
@@ -264,15 +266,15 @@ type Edge<T> = {
     before?: Scalars['string']
     sortBy?: Scalars['algsetSortByKey'][]
     sortDesc?: Scalars['boolean'][]
-    filterBy?: InputType['algsetFilterByObject']
+    filterBy?: InputTypes['algsetFilterByObject']
     groupBy?: Scalars['algsetGroupByKey'][]
     search?: Scalars['string']
   }
   createAlgset: {
     name: Scalars['string']
     code: Scalars['string']
-    parent?: InputType['getAlgset'] | null
-    puzzle: InputType['getPuzzle']
+    parent?: InputTypes['getAlgset'] | null
+    puzzle: InputTypes['getPuzzle']
     mask?: Scalars['string'] | null
     visualization?: Scalars['caseVisualization']
     score?: Scalars['number']
@@ -281,16 +283,16 @@ type Edge<T> = {
   updateAlgsetFields: {
     name?: Scalars['string']
     code?: Scalars['string']
-    parent?: InputType['getAlgset'] | null
-    puzzle?: InputType['getPuzzle']
+    parent?: InputTypes['getAlgset'] | null
+    puzzle?: InputTypes['getPuzzle']
     mask?: Scalars['string'] | null
     visualization?: Scalars['caseVisualization']
     score?: Scalars['number']
     is_public?: Scalars['boolean']
   }
   updateAlgset: {
-    item: InputType['getAlgset']
-    fields: InputType['updateAlgsetFields']
+    item: InputTypes['getAlgset']
+    fields: InputTypes['updateAlgsetFields']
   }
   getAlgcase: { id?: Scalars['id'] }
   'algcaseFilterByField/id': {
@@ -301,9 +303,19 @@ type Edge<T> = {
     operator?: Scalars['filterOperator']
     value: Scalars['id']
   }
+  'algcaseFilterByField/algset': {
+    operator?: Scalars['filterOperator']
+    value: Scalars['id']
+  }
+  'algcaseFilterByField/puzzle': {
+    operator?: Scalars['filterOperator']
+    value: Scalars['id']
+  }
   algcaseFilterByObject: {
-    id?: InputType['algcaseFilterByField/id'][]
-    created_by?: InputType['algcaseFilterByField/created_by'][]
+    id?: InputTypes['algcaseFilterByField/id'][]
+    created_by?: InputTypes['algcaseFilterByField/created_by'][]
+    algset?: InputTypes['algcaseFilterByField/algset'][]
+    puzzle?: InputTypes['algcaseFilterByField/puzzle'][]
   }
   getAlgcasePaginator: {
     first?: Scalars['number']
@@ -312,18 +324,18 @@ type Edge<T> = {
     before?: Scalars['string']
     sortBy?: Scalars['algcaseSortByKey'][]
     sortDesc?: Scalars['boolean'][]
-    filterBy?: InputType['algcaseFilterByObject']
+    filterBy?: InputTypes['algcaseFilterByObject']
     groupBy?: Scalars['algcaseGroupByKey'][]
     search?: Scalars['string']
   }
-  createAlgcase: { name: Scalars['string']; algset: InputType['getAlgset'] }
+  createAlgcase: { name: Scalars['string']; algset: InputTypes['getAlgset'] }
   updateAlgcaseFields: {
     name?: Scalars['string']
-    algset?: InputType['getAlgset']
+    algset?: InputTypes['getAlgset']
   }
   updateAlgcase: {
-    item: InputType['getAlgcase']
-    fields: InputType['updateAlgcaseFields']
+    item: InputTypes['getAlgcase']
+    fields: InputTypes['updateAlgcaseFields']
   }
   getAlg: { id?: Scalars['id'] }
   'algFilterByField/id': {
@@ -338,6 +350,10 @@ type Edge<T> = {
     operator?: Scalars['filterOperator']
     value: Scalars['id']
   }
+  'algFilterByField/puzzle': {
+    operator?: Scalars['filterOperator']
+    value: Scalars['id']
+  }
   'algFilterByField/tag': {
     operator?: Scalars['filterOperator']
     value: Scalars['id']
@@ -347,11 +363,12 @@ type Edge<T> = {
     value: Scalars['string']
   }
   algFilterByObject: {
-    id?: InputType['algFilterByField/id'][]
-    'algcase.name'?: InputType['algFilterByField/algcase.name'][]
-    algcase?: InputType['algFilterByField/algcase'][]
-    tag?: InputType['algFilterByField/tag'][]
-    'tag.name'?: InputType['algFilterByField/tag.name'][]
+    id?: InputTypes['algFilterByField/id'][]
+    'algcase.name'?: InputTypes['algFilterByField/algcase.name'][]
+    algcase?: InputTypes['algFilterByField/algcase'][]
+    puzzle?: InputTypes['algFilterByField/puzzle'][]
+    tag?: InputTypes['algFilterByField/tag'][]
+    'tag.name'?: InputTypes['algFilterByField/tag.name'][]
   }
   getAlgPaginator: {
     first?: Scalars['number']
@@ -360,7 +377,7 @@ type Edge<T> = {
     before?: Scalars['string']
     sortBy?: Scalars['algSortByKey'][]
     sortDesc?: Scalars['boolean'][]
-    filterBy?: InputType['algFilterByObject']
+    filterBy?: InputTypes['algFilterByObject']
     groupBy?: Scalars['algGroupByKey'][]
     search?: Scalars['string']
   }
@@ -375,8 +392,8 @@ type Edge<T> = {
     score?: Scalars['number']
   }
   updateAlg: {
-    item: InputType['getAlg']
-    fields: InputType['updateAlgFields']
+    item: InputTypes['getAlg']
+    fields: InputTypes['updateAlgFields']
   }
   getTag: { id?: Scalars['id'] }
   'tagFilterByField/id': {
@@ -392,9 +409,9 @@ type Edge<T> = {
     value: Scalars['string']
   }
   tagFilterByObject: {
-    id?: InputType['tagFilterByField/id'][]
-    alg?: InputType['tagFilterByField/alg'][]
-    name?: InputType['tagFilterByField/name'][]
+    id?: InputTypes['tagFilterByField/id'][]
+    alg?: InputTypes['tagFilterByField/alg'][]
+    name?: InputTypes['tagFilterByField/name'][]
   }
   getTagPaginator: {
     first?: Scalars['number']
@@ -403,18 +420,63 @@ type Edge<T> = {
     before?: Scalars['string']
     sortBy?: Scalars['tagSortByKey'][]
     sortDesc?: Scalars['boolean'][]
-    filterBy?: InputType['tagFilterByObject']
+    filterBy?: InputTypes['tagFilterByObject']
     groupBy?: Scalars['tagGroupByKey'][]
     search?: Scalars['string']
   }
   createTag: { name: Scalars['string'] }
   getAlgAlgcaseLink: { id?: Scalars['id'] }
   createAlgAlgcaseLink: {
-    alg: InputType['getAlg']
-    algcase: InputType['getAlgcase']
+    alg: InputTypes['getAlg']
+    algcase: InputTypes['getAlgcase']
   }
   getAlgTagLink: { id?: Scalars['id'] }
-  createAlgTagLink: { alg: InputType['getAlg']; tag: InputType['getTag'] }
+  createAlgTagLink: { alg: InputTypes['getAlg']; tag: InputTypes['getTag'] }
+}
+/**All main types*/ export type MainTypes = {
+  paginatorInfo: { Typename: 'paginatorInfo'; Type: GetType<PaginatorInfo> }
+  userEdge: { Typename: 'userEdge'; Type: GetType<UserEdge> }
+  userPaginator: { Typename: 'userPaginator'; Type: GetType<UserPaginator> }
+  puzzleEdge: { Typename: 'puzzleEdge'; Type: GetType<PuzzleEdge> }
+  puzzlePaginator: {
+    Typename: 'puzzlePaginator'
+    Type: GetType<PuzzlePaginator>
+  }
+  algsetEdge: { Typename: 'algsetEdge'; Type: GetType<AlgsetEdge> }
+  algsetPaginator: {
+    Typename: 'algsetPaginator'
+    Type: GetType<AlgsetPaginator>
+  }
+  algcaseEdge: { Typename: 'algcaseEdge'; Type: GetType<AlgcaseEdge> }
+  algcasePaginator: {
+    Typename: 'algcasePaginator'
+    Type: GetType<AlgcasePaginator>
+  }
+  algEdge: { Typename: 'algEdge'; Type: GetType<AlgEdge> }
+  algPaginator: { Typename: 'algPaginator'; Type: GetType<AlgPaginator> }
+  tagEdge: { Typename: 'tagEdge'; Type: GetType<TagEdge> }
+  tagPaginator: { Typename: 'tagPaginator'; Type: GetType<TagPaginator> }
+  algAlgcaseLink: { Typename: 'algAlgcaseLink'; Type: GetType<AlgAlgcaseLink> }
+  algTagLink: { Typename: 'algTagLink'; Type: GetType<AlgTagLink> }
+  userRoleEnumPaginator: {
+    Typename: 'userRoleEnumPaginator'
+    Type: GetType<UserRoleEnumPaginator>
+  }
+  filterOperatorEnumPaginator: {
+    Typename: 'filterOperatorEnumPaginator'
+    Type: GetType<FilterOperatorEnumPaginator>
+  }
+  caseVisualizationEnumPaginator: {
+    Typename: 'caseVisualizationEnumPaginator'
+    Type: GetType<CaseVisualizationEnumPaginator>
+  }
+  user: { Typename: 'user'; Type: GetType<User> }
+  auth: { Typename: 'auth'; Type: GetType<Auth> }
+  puzzle: { Typename: 'puzzle'; Type: GetType<Puzzle> }
+  algset: { Typename: 'algset'; Type: GetType<Algset> }
+  algcase: { Typename: 'algcase'; Type: GetType<Algcase> }
+  alg: { Typename: 'alg'; Type: GetType<Alg> }
+  tag: { Typename: 'tag'; Type: GetType<Tag> }
 }
 /**PaginatorInfo Type*/ export type PaginatorInfo = {
   /**The typename of the record*/ __typename: {
@@ -679,56 +741,56 @@ export type TagEdge = Edge<Tag>
     Args: undefined
   }
   getCurrentUser: { Type: User; Args: undefined }
-  getUser: { Type: User; Args: InputType['getUser'] }
+  getUser: { Type: User; Args: InputTypes['getUser'] }
   getUserPaginator: {
     Type: UserPaginator
-    Args: InputType['getUserPaginator']
+    Args: InputTypes['getUserPaginator']
   }
-  deleteUser: { Type: User; Args: InputType['getUser'] }
-  createUser: { Type: User; Args: InputType['createUser'] }
-  updateUser: { Type: User; Args: InputType['updateUser'] }
-  socialLogin: { Type: Auth; Args: [InputType['socialLogin']] }
-  getPuzzle: { Type: Puzzle; Args: InputType['getPuzzle'] }
+  deleteUser: { Type: User; Args: InputTypes['getUser'] }
+  createUser: { Type: User; Args: InputTypes['createUser'] }
+  updateUser: { Type: User; Args: InputTypes['updateUser'] }
+  socialLogin: { Type: Auth; Args: [InputTypes['socialLogin']] }
+  getPuzzle: { Type: Puzzle; Args: InputTypes['getPuzzle'] }
   getPuzzlePaginator: {
     Type: PuzzlePaginator
-    Args: InputType['getPuzzlePaginator']
+    Args: InputTypes['getPuzzlePaginator']
   }
-  deletePuzzle: { Type: Puzzle; Args: InputType['getPuzzle'] }
-  createPuzzle: { Type: Puzzle; Args: InputType['createPuzzle'] }
-  updatePuzzle: { Type: Puzzle; Args: InputType['updatePuzzle'] }
-  getAlgset: { Type: Algset; Args: InputType['getAlgset'] }
+  deletePuzzle: { Type: Puzzle; Args: InputTypes['getPuzzle'] }
+  createPuzzle: { Type: Puzzle; Args: InputTypes['createPuzzle'] }
+  updatePuzzle: { Type: Puzzle; Args: InputTypes['updatePuzzle'] }
+  getAlgset: { Type: Algset; Args: InputTypes['getAlgset'] }
   getAlgsetPaginator: {
     Type: AlgsetPaginator
-    Args: InputType['getAlgsetPaginator']
+    Args: InputTypes['getAlgsetPaginator']
   }
-  deleteAlgset: { Type: Algset; Args: InputType['getAlgset'] }
-  createAlgset: { Type: Algset; Args: InputType['createAlgset'] }
-  updateAlgset: { Type: Algset; Args: InputType['updateAlgset'] }
-  getAlgcase: { Type: Algcase; Args: InputType['getAlgcase'] }
+  deleteAlgset: { Type: Algset; Args: InputTypes['getAlgset'] }
+  createAlgset: { Type: Algset; Args: InputTypes['createAlgset'] }
+  updateAlgset: { Type: Algset; Args: InputTypes['updateAlgset'] }
+  getAlgcase: { Type: Algcase; Args: InputTypes['getAlgcase'] }
   getAlgcasePaginator: {
     Type: AlgcasePaginator
-    Args: InputType['getAlgcasePaginator']
+    Args: InputTypes['getAlgcasePaginator']
   }
-  deleteAlgcase: { Type: Algcase; Args: InputType['getAlgcase'] }
-  createAlgcase: { Type: Algcase; Args: InputType['createAlgcase'] }
-  updateAlgcase: { Type: Algcase; Args: InputType['updateAlgcase'] }
-  getAlg: { Type: Alg; Args: InputType['getAlg'] }
-  getAlgPaginator: { Type: AlgPaginator; Args: InputType['getAlgPaginator'] }
-  deleteAlg: { Type: Alg; Args: InputType['getAlg'] }
-  createAlg: { Type: Alg; Args: InputType['createAlg'] }
-  updateAlg: { Type: Alg; Args: InputType['updateAlg'] }
-  getTag: { Type: Tag; Args: InputType['getTag'] }
-  getTagPaginator: { Type: TagPaginator; Args: InputType['getTagPaginator'] }
-  deleteTag: { Type: Tag; Args: InputType['getTag'] }
-  createTag: { Type: Tag; Args: InputType['createTag'] }
+  deleteAlgcase: { Type: Algcase; Args: InputTypes['getAlgcase'] }
+  createAlgcase: { Type: Algcase; Args: InputTypes['createAlgcase'] }
+  updateAlgcase: { Type: Algcase; Args: InputTypes['updateAlgcase'] }
+  getAlg: { Type: Alg; Args: InputTypes['getAlg'] }
+  getAlgPaginator: { Type: AlgPaginator; Args: InputTypes['getAlgPaginator'] }
+  deleteAlg: { Type: Alg; Args: InputTypes['getAlg'] }
+  createAlg: { Type: Alg; Args: InputTypes['createAlg'] }
+  updateAlg: { Type: Alg; Args: InputTypes['updateAlg'] }
+  getTag: { Type: Tag; Args: InputTypes['getTag'] }
+  getTagPaginator: { Type: TagPaginator; Args: InputTypes['getTagPaginator'] }
+  deleteTag: { Type: Tag; Args: InputTypes['getTag'] }
+  createTag: { Type: Tag; Args: InputTypes['createTag'] }
   deleteAlgAlgcaseLink: {
     Type: AlgAlgcaseLink
-    Args: InputType['getAlgAlgcaseLink']
+    Args: InputTypes['getAlgAlgcaseLink']
   }
   createAlgAlgcaseLink: {
     Type: AlgAlgcaseLink
-    Args: InputType['createAlgAlgcaseLink']
+    Args: InputTypes['createAlgAlgcaseLink']
   }
-  deleteAlgTagLink: { Type: AlgTagLink; Args: InputType['getAlgTagLink'] }
-  createAlgTagLink: { Type: AlgTagLink; Args: InputType['createAlgTagLink'] }
+  deleteAlgTagLink: { Type: AlgTagLink; Args: InputTypes['getAlgTagLink'] }
+  createAlgTagLink: { Type: AlgTagLink; Args: InputTypes['createAlgTagLink'] }
 }

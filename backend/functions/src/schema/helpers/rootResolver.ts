@@ -11,7 +11,7 @@ import {
 } from "jomql";
 import { NormalService, PaginatedService, EnumService } from "../core/services";
 import { generatePaginatorPivotResolverObject } from "../helpers/typeDef";
-import { capitalizeString } from "../helpers/shared";
+import { capitalizeString, isObject } from "../helpers/shared";
 type BaseRootResolverTypes =
   | "get"
   | "getMultiple"
@@ -26,7 +26,7 @@ type BaseRootResolverTypes =
 export function generateBaseRootResolvers(
   service: NormalService,
   methods: BaseRootResolverTypes[]
-) {
+): { [x: string]: JomqlRootResolverType } {
   const capitalizedClass = capitalizeString(service.typename);
 
   const rootResolvers = {};
@@ -159,6 +159,13 @@ export function generateBaseRootResolvers(
                     fields: updateArgs,
                     inputsValidator: (args, fieldPath) => {
                       // check if at least 1 valid update field provided
+                      if (!isObject(args)) {
+                        throw new JomqlArgsError({
+                          message: `Object args required`,
+                          fieldPath,
+                        });
+                      }
+
                       const { id, ...updateFields } = args;
                       if (Object.keys(updateFields).length < 1)
                         throw new JomqlArgsError({
@@ -330,7 +337,9 @@ export function generateBaseRootResolvers(
   return rootResolvers;
 }
 
-export function generateEnumRootResolver(enumService: EnumService) {
+export function generateEnumRootResolver(
+  enumService: EnumService
+): { [x: string]: JomqlRootResolverType } {
   const capitalizedClass = capitalizeString(enumService.paginator.typename);
   const methodName = "get" + capitalizedClass;
   const rootResolvers = {

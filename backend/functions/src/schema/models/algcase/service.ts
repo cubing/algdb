@@ -13,6 +13,9 @@ export class AlgcaseService extends PaginatedService {
     algset: {
       field: "algset.id",
     },
+    puzzle: {
+      field: "algset.puzzle.id",
+    },
   };
 
   uniqueKeyMap = {

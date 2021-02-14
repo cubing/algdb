@@ -4,8 +4,8 @@ import { ServiceFunctionInputs } from "../../../types";
 export class KenumService extends EnumService {
   enum;
 
-  getAllRecords(inputs: ServiceFunctionInputs) {
-    // fetches the numerical keys, which are serialized into their corresponding enum values
-    return Object.keys(this.enum).filter((key) => !Number.isNaN(parseInt(key)));
+  getAllRecords(inputs: ServiceFunctionInputs): (number | string)[] {
+    // fetches the numerical indices, which are serialized into their corresponding enum values
+    return this.enum.values.map((ele) => ele.index);
   }
 }

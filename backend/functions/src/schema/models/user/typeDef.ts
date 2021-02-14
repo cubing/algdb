@@ -15,7 +15,7 @@ import {
 } from "../../helpers/typeDef";
 import * as Scalars from "../../scalars";
 import { userRoleToPermissionsMap } from "../../helpers/permissions";
-import { userPermissionEnum } from "../../enums";
+import { userRoleKenum } from "../../enums";
 
 export default new JomqlObjectType(<ObjectTypeDefinition>{
   name: User.typename,
@@ -63,6 +63,7 @@ export default new JomqlObjectType(<ObjectTypeDefinition>{
       allowNull: false,
       defaultValue: "NONE",
       sqlOptions: { joinHidden: true },
+      isKenum: true,
     }),
     permissions: generateArrayField({
       allowNull: true,
@@ -80,7 +81,7 @@ export default new JomqlObjectType(<ObjectTypeDefinition>{
         let permissions = parentValue.permissions;
         // if either role or permissions not defined, fetch them
         if (!role || !permissions) {
-          const results = await User.getRecord({
+          const results = <any>await User.getRecord({
             req,
             fieldPath,
             args: { ...data.rootArgs },
@@ -97,10 +98,12 @@ export default new JomqlObjectType(<ObjectTypeDefinition>{
           permissions = results.permissions;
         }
 
-        let rolePermissionsArray = userRoleToPermissionsMap[role] ?? [];
-        rolePermissionsArray = rolePermissionsArray.map(
-          (ele) => userPermissionEnum[ele]
-        );
+        // convert role to name
+        const roleName = userRoleKenum.fromIndex(role).name;
+
+        const rolePermissionsArray = (
+          userRoleToPermissionsMap[roleName] ?? []
+        ).map((ele) => ele.name);
 
         const permissionsArray = permissions ?? [];
 

@@ -8,7 +8,7 @@ const prodResource = axios.create({
 })
 
 export async function executeJomql<Key extends keyof Root>(
-  that,
+  _that,
   query: GetQuery<Key>
 ): Promise<GetResponse<Key>> {
   // fetches the idToken directly from the cookies, if available
@@ -27,7 +27,7 @@ export async function executeJomql<Key extends keyof Root>(
   return data.data
 }
 
-export async function executeJomqlSubscription(that, query, callbackFn) {
+export async function executeJomqlSubscription(_that, query, callbackFn) {
   // fetches the idToken directly from the cookies, if available
   const idToken = Cookie.get('auth-token')
 

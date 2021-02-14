@@ -13,7 +13,7 @@ import { ObjectTypeDefinition } from "jomql";
 export function generateLinkTypeDef(
   services: NormalService[],
   currentService: BaseService
-) {
+): ObjectTypeDefinition {
   const typeDefFields = {};
 
   for (const service of services) {

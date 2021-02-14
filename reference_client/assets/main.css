@@ -1,0 +1,8 @@
+.expanded-row-bg {
+  background-color: var(--v-secondary-base);
+}
+
+.expanded-table-bg {
+  border-left: 5px solid var(--v-secondary-base);
+  border-bottom: 5px solid var(--v-secondary-base);
+}

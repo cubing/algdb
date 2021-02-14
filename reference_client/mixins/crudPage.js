@@ -51,13 +51,23 @@ export default {
         )
         .join(',')
 
+      const query = {
+        ...this.$route.query,
+        search: searchInput,
+        filters: filterString,
+      }
+
+      if (!searchInput) {
+        delete query.search
+      }
+
+      if (!filterString) {
+        delete query.filters
+      }
+
       this.$router.replace({
         path: this.$route.path,
-        query: {
-          ...this.$route.query,
-          search: searchInput,
-          filters: filterString,
-        },
+        query,
       })
     },
   },

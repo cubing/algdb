@@ -1,11 +1,11 @@
-import { NormalService, SimpleService, PaginatedService } from ".";
+import { SimpleService, PaginatedService } from ".";
 
 import * as Resolver from "../../helpers/resolver";
-import { itemNotFoundError, badPermissionsError } from "../../helpers/error";
+import { itemNotFoundError } from "../../helpers/error";
 import { generatePaginatorTypeDef } from "../generators";
-import { ServiceFunctionInputs } from "../../../types";
+import { PaginatorData, ServiceFunctionInputs } from "../../../types";
 
-import { lookupSymbol, JomqlObjectType } from "jomql";
+import { lookupSymbol, JomqlObjectType, StringKeyObject } from "jomql";
 
 export class PaginatorService extends SimpleService {
   constructor(service: PaginatedService) {
@@ -30,24 +30,25 @@ export class PaginatorService extends SimpleService {
       fieldPath,
       args,
       query,
-      data = {},
+      data,
       isAdmin = false,
     }: ServiceFunctionInputs) => {
       const selectQuery = query || Object.assign({}, this.presets.default);
 
-      data.rootArgs = args;
-
       // check if properly formed query and store the results in data
-      data.records = !selectQuery.edges?.node
-        ? []
-        : await service.getRecords({
-            req,
-            args,
-            query: selectQuery.edges.node,
-            fieldPath: fieldPath.concat(["edges", "node"]), // need to add these since the query field is from edges.node
-            isAdmin,
-            data,
-          });
+      const paginatorData: PaginatorData = {
+        rootArgs: <StringKeyObject>args,
+        records: !selectQuery.edges?.node
+          ? <Array<StringKeyObject>>[]
+          : <Array<StringKeyObject>>await service.getRecords({
+              req,
+              args,
+              query: selectQuery.edges.node,
+              fieldPath: fieldPath.concat(["edges", "node"]), // need to add these since the query field is from edges.node
+              isAdmin,
+              data,
+            }),
+      };
 
       const results = await Resolver.getObjectType(
         this.typename,
@@ -55,7 +56,7 @@ export class PaginatorService extends SimpleService {
         fieldPath,
         selectQuery,
         {},
-        data
+        paginatorData
       );
 
       if (results.length < 1) {

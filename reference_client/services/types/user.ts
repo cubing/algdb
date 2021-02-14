@@ -1,7 +1,7 @@
 import type { RecordInfo } from '~/types'
 import sharedService from '~/services/shared'
 
-export default <RecordInfo>{
+export default <RecordInfo<'user'>>{
   type: 'user',
   options: {
     sortBy: ['created_at'],

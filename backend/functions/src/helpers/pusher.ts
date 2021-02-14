@@ -1,7 +1,8 @@
 import { getPusher } from "../utils/pusher";
 import { executeDBQuery } from "../utils/knex";
+import type { Request, Response } from "express";
 
-export function handlePusherAuth(req: any, res) {
+export function handlePusherAuth(req: Request, res: Response): void {
   const socketId = req.body.socket_id;
   const channel = req.body.channel_name;
 
@@ -23,7 +24,7 @@ export function handlePusherAuth(req: any, res) {
   res.send(auth);
 }
 
-export function handlePusherChannelVacated(req: any, res) {
+export function handlePusherChannelVacated(req: Request, res: Response): void {
   req.body.events.forEach((event) => {
     if (event.name === "channel_vacated") {
       //delete table rows where channel == channel

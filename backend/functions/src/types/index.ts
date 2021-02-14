@@ -1,5 +1,7 @@
 import type { Request } from "express";
-import type { JomqlQuery } from "jomql";
+import { userPermissionEnum, userRoleKenum } from "../schema/enums";
+
+export type StringKeyObject = Record<string, unknown>;
 
 export type PusherEnv = {
   readonly app_id: string;
@@ -69,7 +71,7 @@ export type SqlQueryObject = SqlParams & {
 export type SqlQuerySelectObject = {
   field: string;
   as?: string;
-  getter?: Function;
+  getter?: (val: string) => string;
 };
 
 export type SqlParams = {
@@ -119,16 +121,16 @@ export type ExternalQuery = {
 export type ServiceFunctionInputs = {
   req: Request;
   fieldPath: string[];
-  args: any;
-  query?: JomqlQuery;
+  args: unknown;
+  query?: unknown;
   data?: any;
   isAdmin?: boolean;
 };
 
 export type ContextUser = {
   id: number;
-  role: string | null;
-  permissions: string[];
+  role: userRoleKenum | null;
+  permissions: userPermissionEnum[];
 };
 
 export type AccessControlMap = {
@@ -142,10 +144,24 @@ export type AccessControlFunction = (
 export type DataloaderFunctionInput = {
   req: Request;
   fieldPath: string[];
-  args: any;
-  query: JomqlQuery;
-  currentObject: any;
+  args: unknown;
+  query: unknown;
+  currentObject: unknown;
   data: any;
 };
 
-export type DataloaderFunction = (input: DataloaderFunctionInput) => any;
+export type DataloaderFunction = (
+  input: DataloaderFunctionInput
+) => Promise<unknown[]>;
+
+export type PaginatorData = {
+  rootArgs: StringKeyObject;
+  records: StringKeyObject[];
+};
+
+export type CustomResolverFunction = (
+  typename: string,
+  req: Request,
+  value: any,
+  currentObject: any
+) => any;

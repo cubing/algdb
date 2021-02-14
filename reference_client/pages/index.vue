@@ -2,7 +2,7 @@
   <v-layout column justify-center align-center>
     <v-flex xs12 sm8 md6>
       <div class="text-center">
-        <img src="../static/algdb1.png" alt="" style="width: 60%" />
+        <img src="../static/algdb1-withcube.png" alt="" style="width: 40%" />
       </div>
       <v-card>
         <v-card-title class="headline">

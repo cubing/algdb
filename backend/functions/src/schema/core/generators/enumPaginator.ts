@@ -6,7 +6,7 @@ import { generateTypenameField } from "../../helpers/typeDef";
 export function generateEnumPaginatorTypeDef(
   service: EnumService,
   currentService: BaseService
-) {
+): ObjectTypeDefinition {
   return <ObjectTypeDefinition>{
     name: currentService.typename,
     description: "EnumPaginator",
