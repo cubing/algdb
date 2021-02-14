@@ -3,7 +3,7 @@
   "scripts": {
     "lint": "eslint --ext .ts",
     "build": "tsc",
-    "serve": "set DEV=1 && tsc && firebase emulators:start --only functions",
+    "serve": "set DEV=1 && tsc -w --preserveWatchOutput | firebase emulators:start --only functions",
     "db:sync": "set DEV=1 && ts-node src/scripts/syncDatabase.ts",
     "generate:schema": "set DEV=1 && ts-node src/scripts/generateSchema.ts",
     "generate:migration": "set DEV=1 && ts-node src/scripts/generateMigration.ts",
