@@ -7,8 +7,8 @@ export class TagService extends PaginatedService {
 
   filterFieldsMap = {
     id: {},
-    alg: {
-      field: "alg.id",
+    "alg.id": {
+      field: "algTagLink/alg.id",
     },
     name: {},
   };

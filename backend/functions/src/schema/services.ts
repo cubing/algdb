@@ -1,8 +1,4 @@
-import {
-  filterOperatorEnum,
-  caseVisualizationEnum,
-  userRoleKenum,
-} from "./enums";
+import { caseVisualizationEnum, userRoleKenum } from "./enums";
 import { KenumService, EnumService } from "./core/services";
 
 import { UserService } from "./models/user/service";
@@ -15,6 +11,7 @@ import { TagService } from "./models/tag/service";
 
 import { AlgAlgcaseLinkService } from "./links/algAlgcaseLink/service";
 import { AlgTagLinkService } from "./links/algTagLink/service";
+import { UserAlgVoteLinkService } from "./links/userAlgVoteLink/service";
 
 export const User = new UserService();
 export const Puzzle = new PuzzleService();
@@ -27,11 +24,11 @@ export const Tag = new TagService();
 export const AlgAlgcaseLink = new AlgAlgcaseLinkService([Alg, Algcase]);
 export const AlgTagLink = new AlgTagLinkService([Alg, Tag]);
 
+// don't autogenerate the typeDef on this one. will specify manually
+export const UserAlgVoteLink = new UserAlgVoteLinkService([User, Alg], false);
+
 export const UserRole = new KenumService("userRole", userRoleKenum);
-export const FilterOperator = new EnumService(
-  "filterOperator",
-  filterOperatorEnum
-);
+
 export const CaseVisualization = new EnumService(
   "caseVisualization",
   caseVisualizationEnum

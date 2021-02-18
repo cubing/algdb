@@ -19,7 +19,7 @@
 
 <script>
 import crudPageMixin from '~/mixins/crudPage'
-import algsetRecordInfo from '~/services/types/algset'
+import algsetRecordInfo from '~/services/models/algset'
 
 export default {
   mixins: [crudPageMixin],

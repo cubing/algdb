@@ -3,7 +3,7 @@
     v-model="status"
     scrollable
     max-width="800px"
-    :persistent="!viewMode"
+    :persistent="mode !== 'view'"
   >
     <v-card>
       <v-toolbar flat>
@@ -30,29 +30,29 @@
         <v-container v-else>
           <v-row>
             <v-col
-              v-for="(item, i) in validInputs"
+              v-for="(item, i) in inputsArray"
               :key="i"
               cols="12"
               xs="12"
               class="py-0"
             >
               <v-select
-                v-if="recordInfo.inputs[i].getOptions"
-                v-model="inputs[i]"
-                :items="inputOptions[i]"
+                v-if="item.fieldInfo.getOptions"
+                v-model="item.value"
+                :items="item.options"
                 filled
-                :label="recordInfo.inputs[i].text"
-                :readonly="viewMode || recordInfo.inputs[i].readonly"
-                :clearable="!viewMode && !recordInfo.inputs[i].readonly"
+                :label="item.fieldInfo.text"
+                :readonly="item.readonly || mode === 'view'"
+                :clearable="!item.readonly && mode !== 'view'"
                 item-text="name"
                 item-value="id"
                 class="py-0"
               ></v-select>
               <v-text-field
                 v-else
-                v-model="inputs[i]"
-                :label="recordInfo.inputs[i].text"
-                :readonly="viewMode || recordInfo.inputs[i].readonly"
+                v-model="item.value"
+                :label="item.fieldInfo.text"
+                :readonly="item.readonly || mode === 'view'"
                 filled
                 dense
                 class="py-0"
@@ -66,7 +66,7 @@
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="close()">Cancel</v-btn>
         <v-btn
-          v-if="!viewMode"
+          v-if="mode !== 'view'"
           color="primary"
           :loading="loading.editRecord"
           @click="submit()"

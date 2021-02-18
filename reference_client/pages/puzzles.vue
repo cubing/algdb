@@ -19,7 +19,7 @@
 
 <script>
 import crudPageMixin from '~/mixins/crudPage'
-import puzzleRecordInfo from '~/services/types/puzzle'
+import puzzleRecordInfo from '~/services/models/puzzle'
 
 export default {
   mixins: [crudPageMixin],

@@ -37,7 +37,7 @@ export async function validateToken(auth: string): Promise<ContextUser> {
 
     if (userResults.length > 0) {
       contextUser.role = userRoleKenum.fromIndex(userResults[0].role);
-      if (userRoleToPermissionsMap[userResults[0].role]) {
+      if (userRoleToPermissionsMap[contextUser.role.name]) {
         contextUser.permissions.push(
           ...userRoleToPermissionsMap[contextUser.role.name]
         );

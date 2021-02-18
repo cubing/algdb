@@ -1,7 +1,16 @@
 // Query builder (Typescript version >= 4.1.3 required)
-/* const queryResult = executeJomql({
+const queryResult = executeJomql({
   // Start typing here to get hints
-}); */
+  createAndLinkAlg: {
+    id: true,
+    __args: {
+      sequence: "ABC",
+      algcase: {
+        id: 1,
+      },
+    },
+  },
+});
 
 export function executeJomql<Key extends keyof Root>(
   query: GetQuery<Key>
@@ -398,6 +407,12 @@ type Edge<T> = {
     item: InputTypes["getAlg"];
     fields: InputTypes["updateAlgFields"];
   };
+  createAndLinkAlg: {
+    sequence: Scalars["string"];
+    is_approved?: Scalars["boolean"];
+    score?: Scalars["number"];
+    algcase: InputTypes["getAlgcase"];
+  };
   getTag: { id?: Scalars["id"] };
   "tagFilterByField/id": {
     operator?: Scalars["filterOperator"];
@@ -782,6 +797,7 @@ export type TagEdge = Edge<Tag>;
   deleteAlg: { Type: Alg; Args: InputTypes["getAlg"] };
   createAlg: { Type: Alg; Args: InputTypes["createAlg"] };
   updateAlg: { Type: Alg; Args: InputTypes["updateAlg"] };
+  createAndLinkAlg: { Type: Alg; Args: InputTypes["createAndLinkAlg"] };
   getTag: { Type: Tag; Args: InputTypes["getTag"] };
   getTagPaginator: { Type: TagPaginator; Args: InputTypes["getTagPaginator"] };
   deleteTag: { Type: Tag; Args: InputTypes["getTag"] };

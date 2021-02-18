@@ -8,11 +8,12 @@ import {
   generateJoinableField,
   generateTypenameField,
 } from "../../helpers/typeDef";
-import { ObjectTypeDefinition } from "jomql";
+import { ObjectTypeDefinition, ObjectTypeDefinitionField } from "jomql";
 
 export function generateLinkTypeDef(
   services: NormalService[],
-  currentService: BaseService
+  currentService: BaseService,
+  additionalFields?: { [x: string]: ObjectTypeDefinitionField }
 ): ObjectTypeDefinition {
   const typeDefFields = {};
 
@@ -31,6 +32,7 @@ export function generateLinkTypeDef(
       ...generateIdField(),
       ...generateTypenameField(currentService),
       ...typeDefFields,
+      ...additionalFields,
       ...generateCreatedAtField(),
       ...generateUpdatedAtField(),
       ...generateCreatedByField(User),

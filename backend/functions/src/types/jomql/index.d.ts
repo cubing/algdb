@@ -15,6 +15,8 @@ declare global {
       deleter?: CustomResolverFunction;
       setter?: CustomResolverFunction;
       updater?: CustomResolverFunction;
+      // sql field dependencies that need to be resolved in order to process the resolver
+      requiredSqlFields?: string[];
     }
   }
 }

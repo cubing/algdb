@@ -62,6 +62,16 @@ type Edge<T> = {
   cursor: Field<string, undefined>;
 };
 
+export type FilterByField<T> = {
+  eq?: T;
+  neq?: T;
+  gt?: T;
+  lt?: T;
+  in?: T[];
+  nin?: T[];
+  regex?: Scalars["regex"];
+};
+
 /**All Scalar values*/ export type Scalars = {
   /**String value*/ string: string;
   /**True or False*/ boolean: boolean;
@@ -71,19 +81,11 @@ type Edge<T> = {
   /**UNIX Timestamp (Seconds since Epoch Time)*/ unixTimestamp: number;
   /**Valid generic JSON that is stored in database as string*/ jsonAsString: unknown;
   /**ID Field*/ id: number;
+  /**Regex Field*/ regex: RegExp;
   /**Enum stored as a separate key value*/ userRole:
     | "NONE"
     | "NORMAL"
     | "ADMIN";
-  /**Enum stored as is*/ filterOperator:
-    | "eq"
-    | "neq"
-    | "gt"
-    | "lt"
-    | "in"
-    | "nin"
-    | "regex"
-    | "like";
   /**Enum stored as is*/ caseVisualization: "V_2D" | "V_3D" | "V_PG3D";
   /**Enum stored as is*/ userPermission:
     | "A_A"
@@ -102,38 +104,29 @@ type Edge<T> = {
   algcaseSortByKey: "id" | "created_at";
   algcaseGroupByKey: undefined;
   algSortByKey: "id" | "created_at";
-  algGroupByKey: "id";
+  algGroupByKey: "id" | "current_vote_value";
   tagSortByKey: "id" | "created_at";
   tagGroupByKey: "id";
+  algAlgcaseLinkSortByKey: "created_at";
+  algAlgcaseLinkGroupByKey: undefined;
+  algTagLinkSortByKey: "created_at";
+  algTagLinkGroupByKey: undefined;
+  userAlgVoteLinkSortByKey: "created_at";
+  userAlgVoteLinkGroupByKey: undefined;
 };
 /**All Input types*/ export type InputTypes = {
   getUser: { id?: Scalars["id"] };
-  "userFilterByField/id": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["id"];
-  };
-  "userFilterByField/created_by": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["id"];
-  };
-  "userFilterByField/created_by.name": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["string"];
-  };
-  "userFilterByField/role": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["userRole"];
-  };
-  "userFilterByField/name": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["string"];
-  };
+  "userFilterByField/id": FilterByField<Scalars["id"]>;
+  "userFilterByField/created_by": FilterByField<Scalars["id"]>;
+  "userFilterByField/created_by.name": FilterByField<Scalars["string"]>;
+  "userFilterByField/role": FilterByField<Scalars["userRole"]>;
+  "userFilterByField/name": FilterByField<Scalars["string"]>;
   userFilterByObject: {
-    id?: InputTypes["userFilterByField/id"][];
-    created_by?: InputTypes["userFilterByField/created_by"][];
-    "created_by.name"?: InputTypes["userFilterByField/created_by.name"][];
-    role?: InputTypes["userFilterByField/role"][];
-    name?: InputTypes["userFilterByField/name"][];
+    id?: InputTypes["userFilterByField/id"];
+    created_by?: InputTypes["userFilterByField/created_by"];
+    "created_by.name"?: InputTypes["userFilterByField/created_by.name"];
+    role?: InputTypes["userFilterByField/role"];
+    name?: InputTypes["userFilterByField/name"];
   };
   getUserPaginator: {
     first?: Scalars["number"];
@@ -142,7 +135,7 @@ type Edge<T> = {
     before?: Scalars["string"];
     sortBy?: Scalars["userSortByKey"][];
     sortDesc?: Scalars["boolean"][];
-    filterBy?: InputTypes["userFilterByObject"];
+    filterBy?: InputTypes["userFilterByObject"][];
     groupBy?: Scalars["userGroupByKey"][];
     search?: Scalars["string"];
   };
@@ -177,27 +170,15 @@ type Edge<T> = {
     redirect_uri: Scalars["string"];
   };
   getPuzzle: { id?: Scalars["id"]; code?: Scalars["string"] };
-  "puzzleFilterByField/id": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["id"];
-  };
-  "puzzleFilterByField/created_by": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["id"];
-  };
-  "puzzleFilterByField/code": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["string"];
-  };
-  "puzzleFilterByField/is_public": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["boolean"];
-  };
+  "puzzleFilterByField/id": FilterByField<Scalars["id"]>;
+  "puzzleFilterByField/created_by": FilterByField<Scalars["id"]>;
+  "puzzleFilterByField/code": FilterByField<Scalars["string"]>;
+  "puzzleFilterByField/is_public": FilterByField<Scalars["boolean"]>;
   puzzleFilterByObject: {
-    id?: InputTypes["puzzleFilterByField/id"][];
-    created_by?: InputTypes["puzzleFilterByField/created_by"][];
-    code?: InputTypes["puzzleFilterByField/code"][];
-    is_public?: InputTypes["puzzleFilterByField/is_public"][];
+    id?: InputTypes["puzzleFilterByField/id"];
+    created_by?: InputTypes["puzzleFilterByField/created_by"];
+    code?: InputTypes["puzzleFilterByField/code"];
+    is_public?: InputTypes["puzzleFilterByField/is_public"];
   };
   getPuzzlePaginator: {
     first?: Scalars["number"];
@@ -206,7 +187,7 @@ type Edge<T> = {
     before?: Scalars["string"];
     sortBy?: Scalars["puzzleSortByKey"][];
     sortDesc?: Scalars["boolean"][];
-    filterBy?: InputTypes["puzzleFilterByObject"];
+    filterBy?: InputTypes["puzzleFilterByObject"][];
     groupBy?: Scalars["puzzleGroupByKey"][];
     search?: Scalars["string"];
   };
@@ -225,42 +206,21 @@ type Edge<T> = {
     fields: InputTypes["updatePuzzleFields"];
   };
   getAlgset: { id?: Scalars["id"]; code?: Scalars["string"] };
-  "algsetFilterByField/id": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["id"];
-  };
-  "algsetFilterByField/created_by": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["id"];
-  };
-  "algsetFilterByField/code": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["string"];
-  };
-  "algsetFilterByField/is_public": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["boolean"];
-  };
-  "algsetFilterByField/name": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["string"];
-  };
-  "algsetFilterByField/puzzle": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["id"];
-  };
-  "algsetFilterByField/parent": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["id"] | null;
-  };
+  "algsetFilterByField/id": FilterByField<Scalars["id"]>;
+  "algsetFilterByField/created_by": FilterByField<Scalars["id"]>;
+  "algsetFilterByField/code": FilterByField<Scalars["string"]>;
+  "algsetFilterByField/is_public": FilterByField<Scalars["boolean"]>;
+  "algsetFilterByField/name": FilterByField<Scalars["string"]>;
+  "algsetFilterByField/puzzle.id": FilterByField<Scalars["id"]>;
+  "algsetFilterByField/parent.id": FilterByField<Scalars["id"]>;
   algsetFilterByObject: {
-    id?: InputTypes["algsetFilterByField/id"][];
-    created_by?: InputTypes["algsetFilterByField/created_by"][];
-    code?: InputTypes["algsetFilterByField/code"][];
-    is_public?: InputTypes["algsetFilterByField/is_public"][];
-    name?: InputTypes["algsetFilterByField/name"][];
-    puzzle?: InputTypes["algsetFilterByField/puzzle"][];
-    parent?: InputTypes["algsetFilterByField/parent"][];
+    id?: InputTypes["algsetFilterByField/id"];
+    created_by?: InputTypes["algsetFilterByField/created_by"];
+    code?: InputTypes["algsetFilterByField/code"];
+    is_public?: InputTypes["algsetFilterByField/is_public"];
+    name?: InputTypes["algsetFilterByField/name"];
+    "puzzle.id"?: InputTypes["algsetFilterByField/puzzle.id"];
+    "parent.id"?: InputTypes["algsetFilterByField/parent.id"];
   };
   getAlgsetPaginator: {
     first?: Scalars["number"];
@@ -269,7 +229,7 @@ type Edge<T> = {
     before?: Scalars["string"];
     sortBy?: Scalars["algsetSortByKey"][];
     sortDesc?: Scalars["boolean"][];
-    filterBy?: InputTypes["algsetFilterByObject"];
+    filterBy?: InputTypes["algsetFilterByObject"][];
     groupBy?: Scalars["algsetGroupByKey"][];
     search?: Scalars["string"];
   };
@@ -298,27 +258,15 @@ type Edge<T> = {
     fields: InputTypes["updateAlgsetFields"];
   };
   getAlgcase: { id?: Scalars["id"] };
-  "algcaseFilterByField/id": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["id"];
-  };
-  "algcaseFilterByField/created_by": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["id"];
-  };
-  "algcaseFilterByField/algset": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["id"];
-  };
-  "algcaseFilterByField/puzzle": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["id"];
-  };
+  "algcaseFilterByField/id": FilterByField<Scalars["id"]>;
+  "algcaseFilterByField/created_by": FilterByField<Scalars["id"]>;
+  "algcaseFilterByField/algset.id": FilterByField<Scalars["id"]>;
+  "algcaseFilterByField/puzzle.id": FilterByField<Scalars["id"]>;
   algcaseFilterByObject: {
-    id?: InputTypes["algcaseFilterByField/id"][];
-    created_by?: InputTypes["algcaseFilterByField/created_by"][];
-    algset?: InputTypes["algcaseFilterByField/algset"][];
-    puzzle?: InputTypes["algcaseFilterByField/puzzle"][];
+    id?: InputTypes["algcaseFilterByField/id"];
+    created_by?: InputTypes["algcaseFilterByField/created_by"];
+    "algset.id"?: InputTypes["algcaseFilterByField/algset.id"];
+    "puzzle.id"?: InputTypes["algcaseFilterByField/puzzle.id"];
   };
   getAlgcasePaginator: {
     first?: Scalars["number"];
@@ -327,7 +275,7 @@ type Edge<T> = {
     before?: Scalars["string"];
     sortBy?: Scalars["algcaseSortByKey"][];
     sortDesc?: Scalars["boolean"][];
-    filterBy?: InputTypes["algcaseFilterByObject"];
+    filterBy?: InputTypes["algcaseFilterByObject"][];
     groupBy?: Scalars["algcaseGroupByKey"][];
     search?: Scalars["string"];
   };
@@ -341,37 +289,19 @@ type Edge<T> = {
     fields: InputTypes["updateAlgcaseFields"];
   };
   getAlg: { id?: Scalars["id"] };
-  "algFilterByField/id": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["id"];
-  };
-  "algFilterByField/algcase.name": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["string"];
-  };
-  "algFilterByField/algcase": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["id"];
-  };
-  "algFilterByField/puzzle": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["id"];
-  };
-  "algFilterByField/tag": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["id"];
-  };
-  "algFilterByField/tag.name": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["string"];
-  };
+  "algFilterByField/id": FilterByField<Scalars["id"]>;
+  "algFilterByField/algcase.name": FilterByField<Scalars["string"]>;
+  "algFilterByField/algcase.id": FilterByField<Scalars["id"]>;
+  "algFilterByField/puzzle.id": FilterByField<Scalars["id"]>;
+  "algFilterByField/tag.id": FilterByField<Scalars["id"]>;
+  "algFilterByField/tag.name": FilterByField<Scalars["string"]>;
   algFilterByObject: {
-    id?: InputTypes["algFilterByField/id"][];
-    "algcase.name"?: InputTypes["algFilterByField/algcase.name"][];
-    algcase?: InputTypes["algFilterByField/algcase"][];
-    puzzle?: InputTypes["algFilterByField/puzzle"][];
-    tag?: InputTypes["algFilterByField/tag"][];
-    "tag.name"?: InputTypes["algFilterByField/tag.name"][];
+    id?: InputTypes["algFilterByField/id"];
+    "algcase.name"?: InputTypes["algFilterByField/algcase.name"];
+    "algcase.id"?: InputTypes["algFilterByField/algcase.id"];
+    "puzzle.id"?: InputTypes["algFilterByField/puzzle.id"];
+    "tag.id"?: InputTypes["algFilterByField/tag.id"];
+    "tag.name"?: InputTypes["algFilterByField/tag.name"];
   };
   getAlgPaginator: {
     first?: Scalars["number"];
@@ -380,7 +310,7 @@ type Edge<T> = {
     before?: Scalars["string"];
     sortBy?: Scalars["algSortByKey"][];
     sortDesc?: Scalars["boolean"][];
-    filterBy?: InputTypes["algFilterByObject"];
+    filterBy?: InputTypes["algFilterByObject"][];
     groupBy?: Scalars["algGroupByKey"][];
     search?: Scalars["string"];
   };
@@ -398,23 +328,20 @@ type Edge<T> = {
     item: InputTypes["getAlg"];
     fields: InputTypes["updateAlgFields"];
   };
+  createAndLinkAlg: {
+    sequence: Scalars["string"];
+    is_approved?: Scalars["boolean"];
+    score?: Scalars["number"];
+    algcase: InputTypes["getAlgcase"];
+  };
   getTag: { id?: Scalars["id"] };
-  "tagFilterByField/id": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["id"];
-  };
-  "tagFilterByField/alg": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["id"];
-  };
-  "tagFilterByField/name": {
-    operator?: Scalars["filterOperator"];
-    value: Scalars["string"];
-  };
+  "tagFilterByField/id": FilterByField<Scalars["id"]>;
+  "tagFilterByField/alg.id": FilterByField<Scalars["id"]>;
+  "tagFilterByField/name": FilterByField<Scalars["string"]>;
   tagFilterByObject: {
-    id?: InputTypes["tagFilterByField/id"][];
-    alg?: InputTypes["tagFilterByField/alg"][];
-    name?: InputTypes["tagFilterByField/name"][];
+    id?: InputTypes["tagFilterByField/id"];
+    "alg.id"?: InputTypes["tagFilterByField/alg.id"];
+    name?: InputTypes["tagFilterByField/name"];
   };
   getTagPaginator: {
     first?: Scalars["number"];
@@ -423,18 +350,74 @@ type Edge<T> = {
     before?: Scalars["string"];
     sortBy?: Scalars["tagSortByKey"][];
     sortDesc?: Scalars["boolean"][];
-    filterBy?: InputTypes["tagFilterByObject"];
+    filterBy?: InputTypes["tagFilterByObject"][];
     groupBy?: Scalars["tagGroupByKey"][];
     search?: Scalars["string"];
   };
   createTag: { name: Scalars["string"] };
+  "algAlgcaseLinkFilterByField/id": FilterByField<Scalars["id"]>;
+  "algAlgcaseLinkFilterByField/algcase.id": FilterByField<Scalars["id"]>;
+  "algAlgcaseLinkFilterByField/alg.id": FilterByField<Scalars["id"]>;
+  algAlgcaseLinkFilterByObject: {
+    id?: InputTypes["algAlgcaseLinkFilterByField/id"];
+    "algcase.id"?: InputTypes["algAlgcaseLinkFilterByField/algcase.id"];
+    "alg.id"?: InputTypes["algAlgcaseLinkFilterByField/alg.id"];
+  };
+  getAlgAlgcaseLinkPaginator: {
+    first?: Scalars["number"];
+    last?: Scalars["number"];
+    after?: Scalars["string"];
+    before?: Scalars["string"];
+    sortBy?: Scalars["algAlgcaseLinkSortByKey"][];
+    sortDesc?: Scalars["boolean"][];
+    filterBy?: InputTypes["algAlgcaseLinkFilterByObject"][];
+    groupBy?: Scalars["algAlgcaseLinkGroupByKey"][];
+  };
   getAlgAlgcaseLink: { id?: Scalars["id"] };
   createAlgAlgcaseLink: {
     alg: InputTypes["getAlg"];
     algcase: InputTypes["getAlgcase"];
   };
+  "algTagLinkFilterByField/alg.id": FilterByField<Scalars["id"]>;
+  "algTagLinkFilterByField/tag.id": FilterByField<Scalars["id"]>;
+  algTagLinkFilterByObject: {
+    "alg.id"?: InputTypes["algTagLinkFilterByField/alg.id"];
+    "tag.id"?: InputTypes["algTagLinkFilterByField/tag.id"];
+  };
+  getAlgTagLinkPaginator: {
+    first?: Scalars["number"];
+    last?: Scalars["number"];
+    after?: Scalars["string"];
+    before?: Scalars["string"];
+    sortBy?: Scalars["algTagLinkSortByKey"][];
+    sortDesc?: Scalars["boolean"][];
+    filterBy?: InputTypes["algTagLinkFilterByObject"][];
+    groupBy?: Scalars["algTagLinkGroupByKey"][];
+  };
   getAlgTagLink: { id?: Scalars["id"] };
   createAlgTagLink: { alg: InputTypes["getAlg"]; tag: InputTypes["getTag"] };
+  "userAlgVoteLinkFilterByField/user.id": FilterByField<Scalars["id"]>;
+  "userAlgVoteLinkFilterByField/alg.id": FilterByField<Scalars["id"]>;
+  userAlgVoteLinkFilterByObject: {
+    "user.id"?: InputTypes["userAlgVoteLinkFilterByField/user.id"];
+    "alg.id"?: InputTypes["userAlgVoteLinkFilterByField/alg.id"];
+  };
+  getUserAlgVoteLinkPaginator: {
+    first?: Scalars["number"];
+    last?: Scalars["number"];
+    after?: Scalars["string"];
+    before?: Scalars["string"];
+    sortBy?: Scalars["userAlgVoteLinkSortByKey"][];
+    sortDesc?: Scalars["boolean"][];
+    filterBy?: InputTypes["userAlgVoteLinkFilterByObject"][];
+    groupBy?: Scalars["userAlgVoteLinkGroupByKey"][];
+  };
+  getUserAlgVoteLink: { id?: Scalars["id"] };
+  createUserAlgVoteLink: {
+    user: InputTypes["getUser"];
+    alg: InputTypes["getAlg"];
+    vote_value: Scalars["number"];
+  };
 };
 /**All main types*/ export type MainTypes = {
   paginatorInfo: { Typename: "paginatorInfo"; Type: GetType<PaginatorInfo> };
@@ -459,15 +442,32 @@ type Edge<T> = {
   algPaginator: { Typename: "algPaginator"; Type: GetType<AlgPaginator> };
   tagEdge: { Typename: "tagEdge"; Type: GetType<TagEdge> };
   tagPaginator: { Typename: "tagPaginator"; Type: GetType<TagPaginator> };
+  algAlgcaseLinkEdge: {
+    Typename: "algAlgcaseLinkEdge";
+    Type: GetType<AlgAlgcaseLinkEdge>;
+  };
+  algAlgcaseLinkPaginator: {
+    Typename: "algAlgcaseLinkPaginator";
+    Type: GetType<AlgAlgcaseLinkPaginator>;
+  };
   algAlgcaseLink: { Typename: "algAlgcaseLink"; Type: GetType<AlgAlgcaseLink> };
+  algTagLinkEdge: { Typename: "algTagLinkEdge"; Type: GetType<AlgTagLinkEdge> };
+  algTagLinkPaginator: {
+    Typename: "algTagLinkPaginator";
+    Type: GetType<AlgTagLinkPaginator>;
+  };
   algTagLink: { Typename: "algTagLink"; Type: GetType<AlgTagLink> };
+  userAlgVoteLinkEdge: {
+    Typename: "userAlgVoteLinkEdge";
+    Type: GetType<UserAlgVoteLinkEdge>;
+  };
+  userAlgVoteLinkPaginator: {
+    Typename: "userAlgVoteLinkPaginator";
+    Type: GetType<UserAlgVoteLinkPaginator>;
+  };
   userRoleEnumPaginator: {
     Typename: "userRoleEnumPaginator";
     Type: GetType<UserRoleEnumPaginator>;
-  };
-  filterOperatorEnumPaginator: {
-    Typename: "filterOperatorEnumPaginator";
-    Type: GetType<FilterOperatorEnumPaginator>;
   };
   caseVisualizationEnumPaginator: {
     Typename: "caseVisualizationEnumPaginator";
@@ -480,6 +480,10 @@ type Edge<T> = {
   algcase: { Typename: "algcase"; Type: GetType<Algcase> };
   alg: { Typename: "alg"; Type: GetType<Alg> };
   tag: { Typename: "tag"; Type: GetType<Tag> };
+  userAlgVoteLink: {
+    Typename: "userAlgVoteLink";
+    Type: GetType<UserAlgVoteLink>;
+  };
 };
 /**PaginatorInfo Type*/ export type PaginatorInfo = {
   /**The typename of the record*/ __typename: {
@@ -545,6 +549,15 @@ export type TagEdge = Edge<Tag>;
   paginatorInfo: { Type: PaginatorInfo; Args: undefined };
   edges: { Type: TagEdge[]; Args: undefined };
 };
+export type AlgAlgcaseLinkEdge = Edge<AlgAlgcaseLink>;
+/**Paginator*/ export type AlgAlgcaseLinkPaginator = {
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  paginatorInfo: { Type: PaginatorInfo; Args: undefined };
+  edges: { Type: AlgAlgcaseLinkEdge[]; Args: undefined };
+};
 /**Link type*/ export type AlgAlgcaseLink = {
   /**The unique ID of the field*/ id: { Type: Scalars["id"]; Args: undefined };
   /**The typename of the record*/ __typename: {
@@ -562,6 +575,15 @@ export type TagEdge = Edge<Tag>;
     Args: undefined;
   };
   created_by: { Type: User; Args: undefined };
+};
+export type AlgTagLinkEdge = Edge<AlgTagLink>;
+/**Paginator*/ export type AlgTagLinkPaginator = {
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  paginatorInfo: { Type: PaginatorInfo; Args: undefined };
+  edges: { Type: AlgTagLinkEdge[]; Args: undefined };
 };
 /**Link type*/ export type AlgTagLink = {
   /**The unique ID of the field*/ id: { Type: Scalars["id"]; Args: undefined };
@@ -581,19 +603,21 @@ export type TagEdge = Edge<Tag>;
   };
   created_by: { Type: User; Args: undefined };
 };
+export type UserAlgVoteLinkEdge = Edge<UserAlgVoteLink>;
+/**Paginator*/ export type UserAlgVoteLinkPaginator = {
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  paginatorInfo: { Type: PaginatorInfo; Args: undefined };
+  edges: { Type: UserAlgVoteLinkEdge[]; Args: undefined };
+};
 /**EnumPaginator*/ export type UserRoleEnumPaginator = {
   /**The typename of the record*/ __typename: {
     Type: Scalars["string"];
     Args: [Scalars["number"]];
   };
   values: { Type: Scalars["userRole"][]; Args: undefined };
-};
-/**EnumPaginator*/ export type FilterOperatorEnumPaginator = {
-  /**The typename of the record*/ __typename: {
-    Type: Scalars["string"];
-    Args: [Scalars["number"]];
-  };
-  values: { Type: Scalars["filterOperator"][]; Args: undefined };
 };
 /**EnumPaginator*/ export type CaseVisualizationEnumPaginator = {
   /**The typename of the record*/ __typename: {
@@ -706,6 +730,7 @@ export type TagEdge = Edge<Tag>;
   sequence: { Type: Scalars["string"]; Args: undefined };
   is_approved: { Type: Scalars["boolean"]; Args: undefined };
   score: { Type: Scalars["number"]; Args: undefined };
+  current_user_vote: { Type: Scalars["number"] | null; Args: undefined };
   /**When the record was created*/ created_at: {
     Type: Scalars["unixTimestamp"];
     Args: undefined;
@@ -733,12 +758,27 @@ export type TagEdge = Edge<Tag>;
   };
   created_by: { Type: User; Args: undefined };
 };
-/**All Root resolvers*/ export type Root = {
-  getUserRoleEnumPaginator: { Type: UserRoleEnumPaginator; Args: undefined };
-  getFilterOperatorEnumPaginator: {
-    Type: FilterOperatorEnumPaginator;
+/**Link type*/ export type UserAlgVoteLink = {
+  /**The unique ID of the field*/ id: { Type: Scalars["id"]; Args: undefined };
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  user: { Type: User; Args: undefined };
+  alg: { Type: Alg; Args: undefined };
+  vote_value: { Type: Scalars["number"]; Args: undefined };
+  /**When the record was created*/ created_at: {
+    Type: Scalars["unixTimestamp"];
     Args: undefined;
   };
+  /**When the record was last updated*/ updated_at: {
+    Type: Scalars["unixTimestamp"] | null;
+    Args: undefined;
+  };
+  created_by: { Type: User; Args: undefined };
+};
+/**All Root resolvers*/ export type Root = {
+  getUserRoleEnumPaginator: { Type: UserRoleEnumPaginator; Args: undefined };
   getCaseVisualizationEnumPaginator: {
     Type: CaseVisualizationEnumPaginator;
     Args: undefined;
@@ -782,10 +822,15 @@ export type TagEdge = Edge<Tag>;
   deleteAlg: { Type: Alg; Args: InputTypes["getAlg"] };
   createAlg: { Type: Alg; Args: InputTypes["createAlg"] };
   updateAlg: { Type: Alg; Args: InputTypes["updateAlg"] };
+  createAndLinkAlg: { Type: Alg; Args: InputTypes["createAndLinkAlg"] };
   getTag: { Type: Tag; Args: InputTypes["getTag"] };
   getTagPaginator: { Type: TagPaginator; Args: InputTypes["getTagPaginator"] };
   deleteTag: { Type: Tag; Args: InputTypes["getTag"] };
   createTag: { Type: Tag; Args: InputTypes["createTag"] };
+  getAlgAlgcaseLinkPaginator: {
+    Type: AlgAlgcaseLinkPaginator;
+    Args: InputTypes["getAlgAlgcaseLinkPaginator"];
+  };
   deleteAlgAlgcaseLink: {
     Type: AlgAlgcaseLink;
     Args: InputTypes["getAlgAlgcaseLink"];
@@ -794,6 +839,22 @@ export type TagEdge = Edge<Tag>;
     Type: AlgAlgcaseLink;
     Args: InputTypes["createAlgAlgcaseLink"];
   };
+  getAlgTagLinkPaginator: {
+    Type: AlgTagLinkPaginator;
+    Args: InputTypes["getAlgTagLinkPaginator"];
+  };
   deleteAlgTagLink: { Type: AlgTagLink; Args: InputTypes["getAlgTagLink"] };
   createAlgTagLink: { Type: AlgTagLink; Args: InputTypes["createAlgTagLink"] };
+  getUserAlgVoteLinkPaginator: {
+    Type: UserAlgVoteLinkPaginator;
+    Args: InputTypes["getUserAlgVoteLinkPaginator"];
+  };
+  deleteUserAlgVoteLink: {
+    Type: UserAlgVoteLink;
+    Args: InputTypes["getUserAlgVoteLink"];
+  };
+  createUserAlgVoteLink: {
+    Type: UserAlgVoteLink;
+    Args: InputTypes["createUserAlgVoteLink"];
+  };
 };

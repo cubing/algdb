@@ -71,7 +71,6 @@ export type SqlQueryObject = SqlParams & {
 export type SqlQuerySelectObject = {
   field: string;
   as?: string;
-  getter?: (val: string) => string;
 };
 
 export type SqlParams = {
@@ -80,6 +79,8 @@ export type SqlParams = {
   limit?: number;
   groupBy?: SqlGroupFieldObject[];
   orderBy?: SqlSortFieldObject[];
+  miscParams?: any;
+  distinct?: boolean;
 };
 
 export type SqlSelectQueryOutput = null | {
@@ -88,14 +89,17 @@ export type SqlSelectQueryOutput = null | {
 
 export type ObjectTypeDefSqlOptions = {
   joinInfo?: {
-    type: string;
-    foreignKey?: string;
+    type: string; // foreign table name
+    // foreignKey?: string; // foreign table id (should always be id)
+  };
+  fieldInfo?: {
+    field: string; // field alias, if different from the key
   };
   getter?: (value: string) => string;
   setter?: (value: string) => string;
   parseValue?: (value: unknown) => unknown; // performed before inserts/updates
   joinHidden?: boolean;
-  sqlDefinition: SqlDefinition;
+  sqlDefinition?: SqlDefinition;
 };
 
 export type SqlDefinition = {

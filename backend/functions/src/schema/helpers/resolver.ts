@@ -11,7 +11,14 @@ import {
   JomqlBaseError,
 } from "jomql";
 
-import * as sqlHelper from "./sql";
+import {
+  InsertTableRowOptions,
+  insertTableRow,
+  updateTableRow,
+  removeTableRow,
+  fetchTableRows,
+  countTableRows,
+} from "./sql";
 import {
   SqlQuerySelectObject,
   SqlWhereObject,
@@ -22,6 +29,7 @@ import {
 
 import { isObject } from "../helpers/shared";
 import type { Request } from "express";
+import e = require("express");
 
 type CustomResolver = {
   resolver: CustomResolverFunction;
@@ -83,13 +91,13 @@ export async function createObjectType({
   req,
   fieldPath,
   addFields,
-  ignore = false,
+  options,
 }: {
   typename: string;
   req: Request;
   fieldPath: string[];
   addFields: { [x: string]: unknown };
-  ignore?: boolean;
+  options?: InsertTableRowOptions;
 }): Promise<any> {
   const typeDef = objectTypeDefs.get(typename);
   if (!typeDef) {
@@ -132,11 +140,11 @@ export async function createObjectType({
 
   // do the mysql fields first, if any
   if (Object.keys(sqlFields).length > 0) {
-    addedResults = await sqlHelper.insertTableRow(
+    addedResults = await insertTableRow(
       typename,
       sqlFields,
       fieldPath,
-      ignore
+      options
     );
   }
 
@@ -208,7 +216,7 @@ export async function updateObjectType({
 
   // do the mysql first, if any fields
   if (Object.keys(sqlFields).length > 0) {
-    await sqlHelper.updateTableRow(
+    await updateTableRow(
       typename,
       sqlFields,
       { fields: [{ field: "id", value: id }] },
@@ -275,7 +283,7 @@ export async function deleteObjectType({
 
   // do the mysql first
   if (hasSqlFields)
-    await sqlHelper.removeTableRow(
+    await removeTableRow(
       typename,
       { fields: [{ field: "id", value: id }] },
       fieldPath
@@ -293,18 +301,34 @@ export async function deleteObjectType({
   return resultObject;
 }
 
-export async function getObjectType(
-  typename: string,
+export async function getObjectType({
+  typename,
   req,
-  fieldPath: string[],
-  externalQuery: unknown,
-  sqlParams: SqlParams,
+  fieldPath,
+  externalQuery,
+  sqlParams,
   data = {},
-  externalTypeDef?: JomqlObjectType
-): Promise<unknown[]> {
+  externalTypeDef,
+}: {
+  typename: string;
+  req;
+  fieldPath: string[];
+  externalQuery: unknown;
+  sqlParams: SqlParams;
+  data?: any;
+  externalTypeDef?: JomqlObjectType;
+}): Promise<unknown[]> {
   // shortcut: if no fields were requested, simply return empty object
   if (isObject(externalQuery) && Object.keys(externalQuery).length < 1)
     return [{}];
+
+  const typeDef = objectTypeDefs.get(typename);
+  if (!typeDef) {
+    throw new JomqlBaseError({
+      message: `Invalid typeDef '${typename}'`,
+      fieldPath,
+    });
+  }
 
   const anonymousRootResolver = generateAnonymousRootResolver(
     externalTypeDef ?? new JomqlObjectTypeLookup(typename)
@@ -318,11 +342,30 @@ export async function getObjectType(
   );
 
   // convert jomqlResolverNode into a validatedSqlQuery
-  const validatedSqlSelectArray = generateSqlQuerySelectObject(
-    jomqlResolverTree,
-    [],
-    fieldPath
-  );
+  const validatedSqlSelectArray = generateSqlQuerySelectObject({
+    // should never end up in here without a nested query
+    nestedResolverNodeMap: jomqlResolverTree.nested!,
+    fieldPath,
+  });
+
+  const requiredSqlFields: Set<string> = new Set();
+
+  for (const field in typeDef.definition.fields) {
+    const sqlFields = typeDef.definition.fields[field].requiredSqlFields;
+
+    if (sqlFields) {
+      sqlFields.forEach((field) => requiredSqlFields.add(field));
+    }
+  }
+
+  // ensure any requiredSqlFields are in validatedSqlSelectArray
+  requiredSqlFields.forEach((field) => {
+    if (!validatedSqlSelectArray.find((ele) => ele.field === field)) {
+      validatedSqlSelectArray.push({
+        field,
+      });
+    }
+  });
 
   const sqlQuery = {
     select: validatedSqlSelectArray,
@@ -331,7 +374,7 @@ export async function getObjectType(
   };
 
   const jomqlResultsTreeArray: SqlSelectQueryOutput[] = collapseSqlOutputArray(
-    await sqlHelper.fetchTableRows(sqlQuery, fieldPath)
+    await fetchTableRows(sqlQuery, fieldPath)
   );
 
   // finish processing jomqlResolverNode by running the resolvers on the data fetched thru sql.
@@ -364,68 +407,78 @@ export async function getObjectType(
 export function countObjectType(
   typename: string,
   fieldPath: string[],
-  whereObject: SqlWhereObject
+  whereObject: SqlWhereObject,
+  distinct?: boolean
 ): Promise<number> {
-  return sqlHelper.countTableRows(typename, whereObject, fieldPath);
+  return countTableRows(typename, whereObject, distinct, fieldPath);
 }
 
-function generateSqlQuerySelectObject(
-  jomqlResolverNode: JomqlResolverNode,
-  parentFields: string[] = [],
-  fieldPath: string[]
-): SqlQuerySelectObject[] {
+function generateSqlQuerySelectObject({
+  nestedResolverNodeMap,
+  parentFields = [],
+  fieldPath,
+}: {
+  nestedResolverNodeMap: { [x: string]: JomqlResolverNode };
+  parentFields?: string[];
+  fieldPath: string[];
+}) {
   const sqlSelectObjectArray: SqlQuerySelectObject[] = [];
 
-  // if root resolver object, skip.
-  if (isRootResolverDefinition(jomqlResolverNode.typeDef)) {
-    return sqlSelectObjectArray;
-  }
-  const nested = jomqlResolverNode.nested;
+  let addIdField = true;
+  for (const field in nestedResolverNodeMap) {
+    const typeDef = nestedResolverNodeMap[field].typeDef;
+    // if root resolver object, skip (should never reach this case)
+    if (isRootResolverDefinition(typeDef)) {
+      continue;
+    }
 
-  const sqlOptions = jomqlResolverNode.typeDef.sqlOptions;
-
-  if (parentFields.length < 1 || sqlOptions) {
-    // if nested with no resolver and no dataloader
-    if (
-      nested &&
-      !jomqlResolverNode.typeDef.resolver &&
-      !jomqlResolverNode.typeDef.dataloader
-    ) {
-      let addIdField = true;
-      let fieldsAdded = 0;
-      for (const field in jomqlResolverNode.nested) {
-        // indicate if we need to add the id field later
-        if (field === "id") addIdField = false;
-
-        const parentPlusCurrentField = parentFields.concat(field);
-        const arrayToAdd = generateSqlQuerySelectObject(
-          jomqlResolverNode.nested[field],
-          parentPlusCurrentField,
-          fieldPath
+    const parentPlusCurrentField = parentFields.concat(field);
+    const nested = nestedResolverNodeMap[field].nested;
+    const sqlOptions = typeDef.sqlOptions;
+    if (sqlOptions) {
+      // if nested with no resolver and no dataloader
+      if (nested && !typeDef.resolver && !typeDef.dataloader) {
+        sqlSelectObjectArray.push(
+          ...generateSqlQuerySelectObject({
+            nestedResolverNodeMap: nested,
+            parentFields: parentPlusCurrentField,
+            fieldPath,
+          })
         );
-        fieldsAdded += arrayToAdd.length;
-        sqlSelectObjectArray.push(...arrayToAdd);
-      }
-
-      // if any sql fields requested at this node, add the id field if not already added
-      if (fieldsAdded > 0 && addIdField) {
-        sqlSelectObjectArray.push({
-          field: parentFields.concat("id").join("."),
-        });
-      }
-    } else {
-      // if not root level AND joinHidden, throw error
-      if (parentFields.length > 1 && sqlOptions!.joinHidden) {
-        throw new JomqlQueryError({
-          message: `Requested field not allowed to be accessed directly in an nested context`,
-          fieldPath: fieldPath.concat(parentFields),
-        });
       } else {
-        sqlSelectObjectArray.push({
-          field: parentFields.join("."),
-        });
+        // if not root level AND joinHidden, throw error
+        if (parentFields.length && sqlOptions.joinHidden) {
+          throw new JomqlBaseError({
+            message: `Requested field not allowed to be accessed directly in an nested context`,
+            fieldPath: fieldPath.concat(parentPlusCurrentField),
+          });
+        } else {
+          if (field === "id") addIdField = false;
+
+          if (sqlOptions.fieldInfo?.field) {
+            sqlSelectObjectArray.push({
+              field: parentFields.concat(sqlOptions.fieldInfo.field).join("."),
+              as: parentPlusCurrentField.join("."),
+            });
+          } else {
+            sqlSelectObjectArray.push({
+              field: parentPlusCurrentField.join("."),
+            });
+          }
+        }
       }
     }
+  }
+
+  // if any sql fields requested at this node and it is deeper than 0, add the id field
+  if (
+    sqlSelectObjectArray.length > 0 &&
+    parentFields.length > 0 &&
+    addIdField
+  ) {
+    sqlSelectObjectArray.push({
+      field: parentFields.concat("id").join("."),
+    });
   }
 
   return sqlSelectObjectArray;
@@ -448,7 +501,7 @@ async function handleAggregatedQueries({
 }): Promise<void> {
   for (const field in nestedResolverNodeMap) {
     const currentFieldPath = fieldPath.concat(field);
-    // if root resolver object, skip.
+    // if root resolver object, skip (should never reach this case)
     const typeDef = nestedResolverNodeMap[field].typeDef;
     if (isRootResolverDefinition(typeDef)) {
       continue;

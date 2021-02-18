@@ -1,5 +1,6 @@
 import sharedService from '~/services/shared'
 import { executeJomql } from '~/services/jomql'
+import { collapseObject, getNestedProperty } from '~/services/common'
 
 export default {
   props: {
@@ -17,26 +18,24 @@ export default {
       required: true,
     },
 
-    addMode: {
-      type: Boolean,
-      default: false,
-    },
-
-    viewMode: {
-      type: Boolean,
-      default: false,
+    // must be add, edit, or view
+    mode: {
+      type: String,
+      required: true,
+      validator: (value) => {
+        return ['add', 'edit', 'view'].includes(value)
+      },
     },
   },
   data() {
     return {
-      inputs: {},
-
-      inputOptions: {},
+      inputsArray: [],
 
       // inputs that are used for scaffolding
       miscInputs: null,
       originalMiscInputs: {},
 
+      // loaded from loadMiscDropdowns, if provided
       miscOptions: {},
 
       loading: {
@@ -53,30 +52,17 @@ export default {
     },
     title() {
       return (
-        (this.addMode ? 'New' : this.viewMode ? 'View' : 'Edit') +
+        (this.mode === 'add' ? 'New' : this.mode === 'edit' ? 'Edit' : 'View') +
         ' ' +
         this.capitalizedType
       )
     },
     icon() {
-      return this.addMode
+      return this.mode === 'add'
         ? 'mdi-plus'
-        : this.viewMode
-        ? 'mdi-eye'
-        : 'mdi-pencil'
-    },
-    validInputs() {
-      const returnObject = {}
-      for (const prop in this.recordInfo.inputs) {
-        if (
-          this.recordInfo.inputs[prop][
-            this.addMode ? 'addable' : this.viewMode ? 'viewable' : 'editable'
-          ]
-        ) {
-          returnObject[prop] = this.recordInfo.inputs[prop]
-        }
-      }
-      return returnObject
+        : this.mode === 'edit'
+        ? 'mdi-pencil'
+        : 'mdi-eye'
     },
   },
 
@@ -98,39 +84,35 @@ export default {
     async submit() {
       this.loading.editRecord = true
       try {
-        // identify inputs that need to be overwritten (due to entity)
-        const overwriteInputs = {}
-        for (const prop in this.inputs) {
-          const parsevalueFn = this.recordInfo.inputs[prop]?.parseValue
-          if (parsevalueFn) {
-            overwriteInputs[prop] = parsevalueFn(this.inputs[prop])
-          }
-        }
+        const inputs = collapseObject(
+          this.inputsArray.reduce((total, inputObject) => {
+            total[inputObject.field] = inputObject.fieldInfo.parseValue
+              ? inputObject.fieldInfo.parseValue(inputObject.value)
+              : inputObject.value
+            return total
+          }, {})
+        )
 
         // add mode
         let query
-        if (this.addMode) {
+        if (this.mode === 'add') {
           query = {
-            ['create' + this.capitalizedType]: {
+            [this.recordInfo.addOptions.operationName ??
+            'create' + this.capitalizedType]: {
               id: true,
-              __args: {
-                ...this.inputs,
-                ...overwriteInputs,
-              },
+              __args: inputs,
             },
           }
         } else {
           query = {
-            ['update' + this.capitalizedType]: {
+            [this.recordInfo.editOptions.operationName ??
+            'update' + this.capitalizedType]: {
               id: true,
               __args: {
                 item: {
                   id: this.selectedItem.id,
                 },
-                fields: {
-                  ...this.inputs,
-                  ...overwriteInputs,
-                },
+                fields: inputs,
               },
             },
           }
@@ -155,49 +137,57 @@ export default {
     async loadRecord() {
       this.loading.loadRecord = true
       try {
+        const fields =
+          this.mode === 'edit'
+            ? this.recordInfo.editOptions.fields
+            : this.recordInfo.viewOptions.fields
         const data = await executeJomql(this, {
           ['get' + this.capitalizedType]: {
-            id: true,
-            ...Object.keys(this.validInputs).reduce((total, key) => {
-              // exclude if view mode and not viewable
-              if (!this.validInputs[key].viewable) return total
-
-              total[key] = true
-              return total
-            }, {}),
+            ...collapseObject(
+              fields.reduce((total, fieldKey) => {
+                total[fieldKey] = true
+                return total
+              }, {})
+            ),
             __args: {
               id: this.selectedItem.id,
             },
           },
         })
 
-        this.inputs = {
-          ...Object.keys(this.validInputs).reduce((total, key) => {
-            const serializeFn = this.recordInfo.inputs[key]?.serialize
+        // serialize any fields if necessary
 
-            total[key] = serializeFn ? serializeFn(data[key]) : data[key]
+        this.inputsArray = fields.map((fieldKey) => {
+          const fieldInfo = this.recordInfo.fields[fieldKey]
 
-            return total
-          }, {}),
-        }
+          // field unknown, abort
+          if (!fieldInfo) throw new Error('Unknown field: ' + fieldKey)
+
+          const fieldValue = getNestedProperty(data, fieldKey)
+          const inputObject = {
+            field: fieldKey,
+            fieldInfo,
+            value: fieldInfo.serialize
+              ? fieldInfo.serialize(fieldValue)
+              : fieldValue,
+            options: [],
+          }
+
+          fieldInfo.getOptions &&
+            fieldInfo
+              .getOptions(this)
+              .then((res) => (inputObject.options = res))
+
+          return inputObject
+        })
       } catch (err) {
         sharedService.handleError(err, this.$root)
       }
       this.loading.loadRecord = false
     },
 
-    async loadDropdowns() {
+    loadDropdowns() {
       this.loading.loadDropdowns = true
-      for (const prop in this.recordInfo.inputs) {
-        // only set it if not already set
-        if (
-          this.recordInfo.inputs[prop].getOptions &&
-          !this.inputOptions[prop]
-        ) {
-          const data = await this.recordInfo.inputs[prop].getOptions(this)
-          this.$set(this.inputOptions, prop, data)
-        }
-      }
 
       // load any other misc dropdowns
       this.loadMiscDropdowns && this.loadMiscDropdowns()
@@ -215,16 +205,39 @@ export default {
       this.loadDropdowns()
 
       // initialize inputs
-      if (this.addMode) {
-        this.inputs = {
-          ...Object.keys(this.recordInfo.inputs).reduce((total, key) => {
-            total[key] = this.recordInfo.inputs[key].default
-              ? this.recordInfo.inputs[key].default()
-              : null
-            return total
-          }, {}),
-          ...this.selectedItem,
-        }
+      if (this.mode === 'add') {
+        this.inputsArray = this.recordInfo.addOptions.fields.map((fieldKey) => {
+          const fieldInfo = this.recordInfo.fields[fieldKey]
+
+          // field unknown, abort
+          if (!fieldInfo) throw new Error('Unknown field: ' + fieldKey)
+
+          let value
+          let readonly = false
+
+          // is the field in selectedItem? if so, use that and set field to readonly
+          if (fieldKey in this.selectedItem) {
+            value = this.selectedItem[fieldKey]
+            readonly = true
+          } else {
+            value = fieldInfo.default ? fieldInfo.default(this) : null
+          }
+
+          const inputObject = {
+            field: fieldKey,
+            fieldInfo,
+            value,
+            options: [],
+            readonly,
+          }
+
+          fieldInfo.getOptions &&
+            fieldInfo
+              .getOptions(this)
+              .then((res) => (inputObject.options = res))
+
+          return inputObject
+        })
       } else {
         this.loadRecord()
       }

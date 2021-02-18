@@ -19,7 +19,7 @@
 
 <script>
 import crudPageMixin from '~/mixins/crudPage'
-import tagRecordInfo from '~/services/types/tag'
+import tagRecordInfo from '~/services/models/tag'
 
 export default {
   mixins: [crudPageMixin],

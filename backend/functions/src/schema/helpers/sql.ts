@@ -12,6 +12,7 @@ import type {
   SqlWhereFieldObject,
 } from "../../types";
 import { JomqlBaseError, JomqlObjectType, objectTypeDefs } from "jomql";
+import e = require("express");
 
 export type JoinsMap = {
   [x: string]: string[];
@@ -25,6 +26,14 @@ export type AssemblyFunction = (
   fieldIndex: number,
   currentTypeDef: JomqlObjectType
 ) => string;
+
+// options for knex to handle conflicts
+export type InsertTableRowOptions = {
+  onConflict: {
+    columns: string[];
+    action: "ignore" | "merge";
+  };
+};
 
 function generateError(err: Error, fieldPath?: string[]) {
   const errMessage = isDev ? err.message : "A SQL error has occurred";
@@ -114,19 +123,29 @@ export async function fetchTableRows(
       joinStatement += groupResults.joinStatement;
     }
 
-    /*
-  if(jqlQuery.offset) {
-    limitStatement += " OFFSET " + parseInt(jqlQuery.offset) || 0;
-  }
-  */
+    // if distinct flag set, generate the distinct statement
+    let distinctStatement = "";
+    if (sqlQuery.distinct && orderStatement) {
+      distinctStatement += orderStatement.replace(
+        /(\sDESC NULLS LAST)|(\sASC NULLS FIRST)/g,
+        ""
+      );
+    }
 
     const sqlQueryString =
-      `SELECT ${selectStatement} FROM "${sqlQuery.from}" AS "${
+      `SELECT ${
+        distinctStatement ? "DISTINCT ON(" + distinctStatement + ") " : ""
+      }${selectStatement} FROM "${sqlQuery.from}" AS "${
         sqlQuery.from + "0"
       }"${joinStatement} WHERE ${whereStatement}` +
       (groupByStatement ? " GROUP BY " + groupByStatement : "") +
       (orderStatement ? " ORDER BY " + orderStatement : "") +
       limitStatement;
+
+    // mix in any miscParams
+    if (sqlQuery.miscParams) {
+      Object.assign(params, sqlQuery.miscParams);
+    }
 
     const results = await executeDBQuery(sqlQueryString, params);
     return results;
@@ -138,6 +157,7 @@ export async function fetchTableRows(
 export async function countTableRows(
   table: string,
   whereObject: SqlWhereObject,
+  distinct?: boolean,
   fieldPath?: string[]
 ) {
   try {
@@ -146,7 +166,9 @@ export async function countTableRows(
     const previousJoins: JoinsMap = {};
     const params = {};
 
-    const selectStatement = "count(*) AS count";
+    const selectStatement = `count(${
+      distinct ? "DISTINCT " : ""
+    }"${table}0".id) AS count`;
 
     //handle where statements
     const whereResults = processWhereObject(
@@ -179,7 +201,7 @@ export async function insertTableRow(
   table: string,
   setFields,
   fieldPath?: string[],
-  ignore = false
+  options?: InsertTableRowOptions
 ) {
   try {
     // check if there is a mysql setter on the field
@@ -198,7 +220,29 @@ export async function insertTableRow(
         : setFields[fieldname];
     }
 
-    const results = await knex(table).insert(setFields).returning(["id"]);
+    let results;
+
+    const action = options?.onConflict?.action;
+
+    // handle custom options
+    if (options?.onConflict) {
+      if (action === "ignore") {
+        results = await knex(table)
+          .insert(setFields)
+          .onConflict(options.onConflict.columns)
+          .ignore()
+          .returning(["id"]);
+      } else {
+        results = await knex(table)
+          .insert(setFields)
+          .onConflict(options.onConflict.columns)
+          .merge()
+          .returning(["id"]);
+      }
+    } else {
+      results = await knex(table).insert(setFields).returning(["id"]);
+    }
+
     return results;
   } catch (err) {
     throw generateError(err, fieldPath);
@@ -438,11 +482,14 @@ function processWhereObject(
             }
             break;
           case "regex":
-            try {
-              new RegExp(fieldObject.value);
-              whereSubstatement += " REGEXP :" + placeholder;
-              params[placeholder] = fieldObject.value;
-            } catch (err) {
+            if (fieldObject.value instanceof RegExp) {
+              // for regex, also need to cast the field as TEXT
+              whereSubstatement = "CAST(" + whereSubstatement + " AS TEXT)";
+              whereSubstatement += " ~ :" + placeholder;
+              params[placeholder] = fieldObject.value
+                .toString()
+                .replace(/(^\/)|(\/[^\/]*$)/g, "");
+            } else {
               throw new Error("Invalid Regex value");
             }
             break;
@@ -532,7 +579,7 @@ function processGroupArray(
       fieldObject,
       fieldIndex,
       currentTypeDef
-    ) => `"${tableAlias}.${fieldname}`
+    ) => `"${tableAlias}".${fieldname}`
   );
 }
 
@@ -560,42 +607,55 @@ function processJoins(
       joinTableName?: string;
       field: string;
       foreignField: string;
+      andOn?: string[];
     }[] = [];
-
-    // if this exists, they must be processed first before processing the fieldPath
-    /*
-    if (Array.isArray(fieldObject.joinFields)) {
-      fieldObject.joinFields.forEach((joinFieldObject, joinFieldIndex) => {
-        joinArray.push({
-          joinTableName: joinFieldObject.table,
-          field: joinFieldObject.field,
-          foreignField: joinFieldObject.foreignField,
-        });
-      });
-    }
-    */
 
     // process the "normal" fields
     for (const field of fieldPath) {
-      // does the field exist on the currentTypeDef?
-      if (!(field in currentTypeDef.definition.fields)) {
-        // look in link fields and generate required joins
-        linkDefs.forEach((linkDef, linkName) => {
-          if (linkDef.types.has(field) && linkDef.types.has(tableName)) {
-            joinArray.unshift({
-              joinTableName: linkName,
-              field: "id",
-              foreignField: tableName,
-            });
-          }
+      // does the field have a /
+      // if yes, we need to join that table
+      if (field.match(/\//)) {
+        const fieldParts = field.split(/\//);
+
+        // ensure fieldParts[0] refers to a linkDef
+        const linkDef = linkDefs.get(fieldParts[0]);
+        if (!linkDef) throw new Error(`Invalid linkDef '${fieldParts[0]}'`);
+
+        // linkDef.types must ONLY contain tableName and the field in order to be treated as the first case
+        if (
+          linkDef.types.size === 2 &&
+          linkDef.types.has(tableName) &&
+          linkDef.types.has(fieldParts[1])
+        ) {
+          joinArray.unshift({
+            joinTableName: fieldParts[0],
+            field: "id",
+            foreignField: tableName,
+          });
+        } else {
+          // some fields missing, will need to do onAnd in join statement
+          joinArray.unshift({
+            joinTableName: fieldParts[0],
+            field: "id",
+            foreignField: tableName,
+            // the andOn fields will be all of the types in the linkDef except the current type.
+            andOn: [...linkDef.types.keys()].filter(
+              (typename) => typename !== tableName
+            ),
+          });
+        }
+
+        joinArray.push({
+          field: fieldParts[1],
+          foreignField: "id",
+        });
+      } else {
+        // going to assume the foreignKey is always "id"
+        joinArray.push({
+          field: field,
+          foreignField: "id",
         });
       }
-
-      // going to assume the foreignKey is always "id"
-      joinArray.push({
-        field: field,
-        foreignField: "id",
-      });
     }
 
     const cumulativeJoinFields: string[] = [];
@@ -644,6 +704,13 @@ function processJoins(
         if (newJoin) {
           //assemble join statement, if required
           joinStatement += ` LEFT JOIN "${joinTableName}" AS "${joinTableAlias}" ON "${tableAlias}".${ele.field} = "${joinTableAlias}".${ele.foreignField}`;
+
+          // does it have a special onAnd field?
+          if (ele.andOn) {
+            ele.andOn.forEach((typename) => {
+              joinStatement += ` AND "${joinTableAlias}".${typename} = :${typename}`;
+            });
+          }
         }
 
         // shift the typeDef, tableAlias, and tableName

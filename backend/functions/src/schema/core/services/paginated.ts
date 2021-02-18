@@ -2,8 +2,8 @@ import { NormalService, PaginatorService } from ".";
 export class PaginatedService extends NormalService {
   paginator: PaginatorService;
 
-  constructor() {
-    super();
+  constructor(typename?: string) {
+    super(typename);
     this.paginator = new PaginatorService(this);
   }
 

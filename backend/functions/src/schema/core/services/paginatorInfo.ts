@@ -28,15 +28,15 @@ export class PaginatorInfoService extends SimpleService {
     }: ServiceFunctionInputs) => {
       const selectQuery = query || Object.assign({}, this.presets.default);
 
-      const results = await Resolver.getObjectType(
-        this.typename,
+      const results = await Resolver.getObjectType({
+        typename: this.typename,
         req,
         fieldPath,
-        selectQuery,
-        {},
+        externalQuery: selectQuery,
+        sqlParams: {},
         data,
-        this.typeDef // must pass the specific typeDef for this Paginator
-      );
+        externalTypeDef: this.typeDef, // must pass the specific typeDef for this Paginator
+      });
 
       if (results.length < 1) {
         throw itemNotFoundError(fieldPath);

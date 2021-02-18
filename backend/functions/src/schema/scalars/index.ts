@@ -3,7 +3,6 @@ import {
   generateEnumScalarDefinition,
 } from "../helpers/scalar";
 import {
-  filterOperatorEnum,
   caseVisualizationEnum,
   userRoleKenum,
   userPermissionEnum,
@@ -23,14 +22,11 @@ export { imageUrl } from "./imageUrl";
 export { unixTimestamp } from "./unixTimestamp";
 export { jsonAsString } from "./jsonAsString";
 export { id } from "./id";
+export { regex } from "./regex";
 
 // generated scalars
 export const userRole = new JomqlScalarType(
   generateKenumScalarDefinition("userRole", userRoleKenum)
-);
-
-export const filterOperator = new JomqlScalarType(
-  generateEnumScalarDefinition("filterOperator", filterOperatorEnum)
 );
 
 export const caseVisualization = new JomqlScalarType(

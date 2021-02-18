@@ -18,15 +18,18 @@ export default {
         this.$route.query.filters.split(',').forEach((ele) => {
           const filterParts = ele.split('-')
           if (filterParts.length === 3) {
-            // check if there is a parser on the recordInfo.filters
             const filter = this.recordInfo.filters.find(
               (filterObject) => filterObject.field === filterParts[0]
             )
 
-            const parseValue = filter ? filter.parseValue : null
+            // check if there is a parser on the fieldInfo
+            const fieldInfo = this.recordInfo.fields[filter.field]
 
-            const value = parseValue
-              ? parseValue(filterParts[2])
+            // field unknown, abort
+            if (!fieldInfo) throw new Error('Unknown field: ' + filter.field)
+
+            const value = fieldInfo.parseValue
+              ? fieldInfo.parseValue(filterParts[2])
               : filterParts[2]
             filterArray.push({
               field: filterParts[0],
@@ -45,10 +48,7 @@ export default {
       // build filter string
       const filterString = filterInputsArray
         .filter((ele) => ele.value !== undefined && ele.value !== null)
-        .map(
-          (ele) =>
-            `${ele.fieldInfo.field}-${ele.fieldInfo.operator}-${ele.value}`
-        )
+        .map((ele) => `${ele.field}-${ele.operator}-${ele.value}`)
         .join(',')
 
       const query = {

@@ -50,14 +50,14 @@ export class PaginatorService extends SimpleService {
             }),
       };
 
-      const results = await Resolver.getObjectType(
-        this.typename,
+      const results = await Resolver.getObjectType({
+        typename: this.typename,
         req,
         fieldPath,
-        selectQuery,
-        {},
-        paginatorData
-      );
+        externalQuery: selectQuery,
+        sqlParams: {},
+        data: paginatorData,
+      });
 
       if (results.length < 1) {
         throw itemNotFoundError(fieldPath);

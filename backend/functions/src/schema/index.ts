@@ -10,6 +10,8 @@ import algcase from "./models/algcase/typeDef";
 import alg from "./models/alg/typeDef";
 import tag from "./models/tag/typeDef";
 
+import userAlgVoteLink from "./links/userAlgVoteLink/typeDef";
+
 // add the typeDefs for the services with typeDefs
 allServices.User.setTypeDef(user);
 allServices.Auth.setTypeDef(auth);
@@ -18,6 +20,8 @@ allServices.Algset.setTypeDef(algset);
 allServices.Algcase.setTypeDef(algcase);
 allServices.Alg.setTypeDef(alg);
 allServices.Tag.setTypeDef(tag);
+
+allServices.UserAlgVoteLink.setTypeDef(userAlgVoteLink);
 
 import User from "./models/user/rootResolver";
 import Auth from "./models/auth/rootResolver";
@@ -29,6 +33,7 @@ import Tag from "./models/tag/rootResolver";
 
 import AlgAlgcaseLink from "./links/algAlgcaseLink/rootResolver";
 import AlgTagLink from "./links/algTagLink/rootResolver";
+import UserAlgVoteLink from "./links/userAlgVoteLink/rootResolver";
 
 allServices.User.setRootResolvers(User);
 allServices.Auth.setRootResolvers(Auth);
@@ -40,4 +45,4 @@ allServices.Tag.setRootResolvers(Tag);
 
 allServices.AlgAlgcaseLink.setRootResolvers(AlgAlgcaseLink);
 allServices.AlgTagLink.setRootResolvers(AlgTagLink);
-allServices.AlgAlgcaseLink.setRootResolvers(AlgAlgcaseLink);
+allServices.UserAlgVoteLink.setRootResolvers(UserAlgVoteLink);

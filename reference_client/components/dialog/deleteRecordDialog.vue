@@ -7,7 +7,7 @@
       </v-card-title>
       <v-card-text class="py-0">
         <v-alert v-if="selectedItem" type="error">
-          Confirm Delete: {{ selectedItem.name || selectedItem }}
+          Confirm Delete: {{ itemIdentifier }}
         </v-alert>
       </v-card-text>
       <v-card-actions>
@@ -55,6 +55,12 @@ export default {
     capitalizedType() {
       return sharedService.capitalizeString(this.recordInfo.type)
     },
+    itemIdentifier() {
+      if (!this.status) return
+      return this.recordInfo.deleteOptions.renderItem
+        ? this.recordInfo.deleteOptions.renderItem(this.selectedItem)
+        : this.selectedItem
+    },
   },
 
   watch: {
@@ -74,7 +80,8 @@ export default {
       this.loading.deleteRecord = true
       try {
         const data = await executeJomql(this, {
-          ['delete' + this.capitalizedType]: {
+          [this.recordInfo.deleteOptions.operationName ??
+          'delete' + this.capitalizedType]: {
             id: true,
             __args: {
               id: this.selectedItem.id,

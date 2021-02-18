@@ -6,14 +6,17 @@ export class AlgTagLinkService extends LinkService {
   defaultTypename = "algTagLink";
 
   filterFieldsMap = {
-    id: {},
+    "alg.id": {},
+    "tag.id": {},
   };
 
   uniqueKeyMap = {
     primary: ["id"],
   };
 
-  sortFieldsMap = {};
+  sortFieldsMap = {
+    created_at: {},
+  };
 
   searchFieldsMap = {};
 

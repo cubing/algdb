@@ -85,6 +85,16 @@ export async function up(knex: Knex): Promise<void[]> {
       table.dateTime("updated_at").nullable();
       table.integer("created_by").notNullable();
     }),
+    knex.schema.createTable("userAlgVoteLink", function (table) {
+      table.increments();
+      table.integer("user").notNullable();
+      table.integer("alg").notNullable();
+      table.integer("vote_value").notNullable();
+      table.dateTime("created_at").notNullable().defaultTo(knex.fn.now());
+      table.dateTime("updated_at").nullable();
+      table.integer("created_by").notNullable();
+      table.unique(["user", "alg"]);
+    }),
   ]);
 }
 
@@ -98,5 +108,6 @@ export async function down(knex: Knex): Promise<void[]> {
     knex.schema.dropTable("algcase"),
     knex.schema.dropTable("alg"),
     knex.schema.dropTable("tag"),
+    knex.schema.dropTable("userAlgVoteLink"),
   ]);
 }

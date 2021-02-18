@@ -7,13 +7,17 @@ export class AlgAlgcaseLinkService extends LinkService {
 
   filterFieldsMap = {
     id: {},
+    "algcase.id": {},
+    "alg.id": {},
   };
 
   uniqueKeyMap = {
     primary: ["id"],
   };
 
-  sortFieldsMap = {};
+  sortFieldsMap = {
+    created_at: {},
+  };
 
   searchFieldsMap = {};
 

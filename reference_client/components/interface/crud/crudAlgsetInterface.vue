@@ -1,7 +1,7 @@
 <template>
   <div :class="{ 'expanded-table-bg': isChildComponent }">
     <v-data-table
-      :headers="recordInfo.headers"
+      :headers="headers"
       :items="records"
       class="elevation-1"
       :loading="loading.loadData"
@@ -23,9 +23,9 @@
           <v-btn v-if="parentPath.length > 0" icon @click="goToParent()">
             <v-icon>mdi-arrow-left</v-icon></v-btn
           >
-          <v-icon left>mdi-domain</v-icon>
+          <v-icon left>{{ recordInfo.icon || 'mdi-domain' }}</v-icon>
           <v-toolbar-title
-            >{{ capitalizedType }}s
+            >{{ title || `${recordInfo.name}s` }}
             <span v-for="(item, i) in visibleRawFiltersArray" :key="i"
               >[{{ item.field }}-{{ item.operator }}-{{ item.value }}]</span
             >
@@ -35,14 +35,14 @@
           </v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
           <v-btn
-            v-if="recordInfo.addRecordComponent !== null"
+            v-if="recordInfo.addOptions"
             color="primary"
             darks
             class="mb-2"
             @click="openAddRecordDialog()"
           >
             <v-icon left>mdi-plus</v-icon>
-            New {{ capitalizedType }}
+            New {{ recordInfo.name }}
           </v-btn>
           <v-spacer></v-spacer>
           <v-btn icon :loading="loading.exportData" @click="exportData()">
@@ -75,7 +75,7 @@
                 v-model="item.value"
                 :items="item.options"
                 filled
-                :label="item.fieldInfo.label"
+                :label="item.fieldInfo.text"
                 :prepend-icon="item.fieldInfo.icon"
                 clearable
                 item-text="name"
@@ -85,7 +85,7 @@
               <v-text-field
                 v-else
                 v-model="item.value"
-                :label="item.fieldInfo.label"
+                :label="item.fieldInfo.text"
                 placeholder="Type to search"
                 outlined
                 :prepend-icon="item.fieldInfo.icon"
@@ -104,29 +104,77 @@
       </template>
       <template v-slot:item="props">
         <tr
-          :class="{ 'expanded-row-bg': props.isExpanded }"
           :key="props.item.id"
+          :class="{
+            'expanded-row-bg': props.isExpanded,
+          }"
           @click="handleRowClick(props.item)"
         >
           <td v-if="hasNested">
-            <v-btn icon @click.stop="props.expand(!props.isExpanded)">
+            <v-btn
+              v-if="recordInfo.expandTypes.length === 1"
+              icon
+              @click.stop="
+                toggleItemExpanded(
+                  props,
+                  props.isExpanded ? null : recordInfo.expandTypes[0]
+                )
+              "
+            >
               <v-icon
                 >mdi-chevron-{{ props.isExpanded ? 'up' : 'down' }}</v-icon
               >
             </v-btn>
+
+            <v-menu v-else-if="!props.isExpanded" bottom left offset-x>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn icon v-bind="attrs" v-on="on">
+                  <v-icon>mdi-chevron-down</v-icon>
+                </v-btn>
+              </template>
+
+              <v-list dense>
+                <v-list-item
+                  v-for="(item, i) in recordInfo.expandTypes"
+                  :key="i"
+                  dense
+                  @click="toggleItemExpanded(props, item)"
+                >
+                  <v-list-item-icon>
+                    <v-icon>{{ item.recordInfo.icon }}</v-icon>
+                  </v-list-item-icon>
+                  <v-list-item-title>{{
+                    item.recordInfo.name
+                  }}</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+
+            <v-btn v-else icon @click.stop="toggleItemExpanded(props, null)">
+              <v-icon>mdi-chevron-up</v-icon>
+            </v-btn>
           </td>
-          <td v-for="(headerItem, i) in recordInfo.headers" :key="i">
+          <td v-for="(headerItem, i) in headers" :key="i">
             <div v-if="headerItem.value === null">
               <v-icon small @click.stop="goToChild(props.item.id)"
                 >mdi-arrow-right-circle</v-icon
               >
-              <v-icon small @click.stop="openDialog('viewRecord', props.item)"
+              <v-icon
+                v-if="recordInfo.viewOptions"
+                small
+                @click.stop="openDialog('viewRecord', props.item)"
                 >mdi-eye</v-icon
               >
-              <v-icon small @click.stop="openDialog('editRecord', props.item)"
+              <v-icon
+                v-if="recordInfo.editOptions"
+                small
+                @click.stop="openDialog('editRecord', props.item)"
                 >mdi-pencil</v-icon
               >
-              <v-icon small @click.stop="openDialog('deleteRecord', props.item)"
+              <v-icon
+                v-if="recordInfo.deleteOptions"
+                small
+                @click.stop="openDialog('deleteRecord', props.item)"
                 >mdi-delete</v-icon
               >
             </div>
@@ -149,9 +197,9 @@
           <component
             :is="childInterfaceComponent"
             class="mb-2"
-            :record-info="recordInfo.nested"
+            :record-info="expandTypeObject.recordInfo"
+            :hidden-headers="expandTypeObject.excludeHeaders"
             :locked-filters="lockedSubFilters"
-            :add-filters="addSubFilters"
             :filters="additionalSubFilters"
             :hidden-filters="hiddenSubFilters"
             :search="subSearchInput"
@@ -168,7 +216,7 @@
       :status="dialogs.addRecord"
       :record-info="recordInfo"
       :selected-item="dialogs.selectedItem"
-      add-mode
+      mode="add"
       @close="dialogs.addRecord = false"
       @submit="handleListChange()"
     ></component>
@@ -177,6 +225,7 @@
       :status="dialogs.editRecord"
       :record-info="recordInfo"
       :selected-item="dialogs.selectedItem"
+      mode="edit"
       @close="dialogs.editRecord = false"
       @submit="handleListChange()"
     ></component>
@@ -193,7 +242,7 @@
       :status="dialogs.viewRecord"
       :record-info="recordInfo"
       :selected-item="dialogs.selectedItem"
-      view-mode
+      mode="view"
       @close="dialogs.viewRecord = false"
     ></component>
   </div>
@@ -202,6 +251,7 @@
 <script>
 import crudMixin from '~/mixins/crud'
 import { executeJomql } from '~/services/jomql'
+import { collapseObject } from '~/services/common'
 
 export default {
   mixins: [crudMixin],
@@ -214,7 +264,7 @@ export default {
   computed: {
     additionalLockedFilters() {
       return {
-        field: 'parent',
+        field: 'parent.id',
         operator: 'eq',
         value: this.parentPath.length
           ? this.parentPath[this.parentPath.length - 1].id
@@ -246,7 +296,7 @@ export default {
     openAddRecordDialog() {
       const initializedRecord = {}
 
-      this.addFilters
+      this.lockedFilters
         .concat(this.additionalLockedFilters)
         .forEach((addFilter) => {
           initializedRecord[addFilter.field] = addFilter.value
@@ -280,44 +330,37 @@ export default {
             endCursor: true,
           },
           edges: {
-            node: this.recordInfo.headers.reduce(
-              (total, val) => {
-                // if null, skip
-                if (!val.value) return total
+            node: collapseObject(
+              this.recordInfo.headers.reduce(
+                (total, headerObject) => {
+                  const fieldInfo = this.recordInfo.fields[headerObject.field]
 
-                // if nested, process (only supporting one level of nesting)
-                if (val.value.includes('.')) {
-                  const parts = val.value.split(/\./)
+                  // field unknown, abort
+                  if (!fieldInfo)
+                    throw new Error('Unknown field: ' + headerObject.field)
 
-                  if (!total[parts[0]]) {
-                    total[parts[0]] = {}
-                  }
-
-                  total[parts[0]][parts[1]] = true
-                } else {
-                  total[val.value] = true
-                }
-                return total
-              },
-              { id: true }
+                  total[headerObject.field] = true
+                  return total
+                },
+                { id: true } // always add id
+              )
             ),
-            cursor: true,
           },
           __args: {
             ...paginationArgs,
             sortBy: this.options.sortBy,
             sortDesc: this.options.sortDesc,
-            filterBy: this.filters
-              .concat(this.lockedFilters)
-              .concat(this.additionalLockedFilters)
-              .reduce((total, ele) => {
-                if (!total[ele.field]) total[ele.field] = []
-                total[ele.field].push({
-                  operator: ele.operator,
-                  value: ele.value, // assuming this value has been parsed already
-                })
-                return total
-              }, {}),
+            filterBy: [
+              this.filters
+                .concat(this.lockedFilters)
+                .concat(this.additionalLockedFilters)
+                .reduce((total, ele) => {
+                  if (!total[ele.field]) total[ele.field] = {}
+                  // assuming this value has been parsed already
+                  total[ele.field][ele.operator] = ele.value
+                  return total
+                }, {}),
+            ],
             ...(this.search && { search: this.search }),
             ...(this.groupBy && { groupBy: this.groupBy }),
           },

@@ -58,6 +58,16 @@ export const getCaseVisualizations = memoize(async function (that) {
   return data.values
 })
 
+export const getUserRoles = memoize(async function (that) {
+  const data = await executeJomql<'getUserRoleEnumPaginator'>(that, {
+    getUserRoleEnumPaginator: {
+      values: true,
+    },
+  })
+
+  return data.values
+})
+
 export const getBooleanOptions = memoize(function (_that) {
   return Promise.resolve([true, false])
 })

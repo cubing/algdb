@@ -1,5 +1,4 @@
 import { executeJomql } from '~/services/jomql'
-import { userFragment } from '~/jomql/fragments'
 
 export default (context) => {
   const { store } = context

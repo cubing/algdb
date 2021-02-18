@@ -19,7 +19,7 @@
 
 <script>
 import crudPageMixin from '~/mixins/crudPage'
-import userRecordInfo from '~/services/types/user'
+import userRecordInfo from '~/services/models/user'
 
 export default {
   mixins: [crudPageMixin],

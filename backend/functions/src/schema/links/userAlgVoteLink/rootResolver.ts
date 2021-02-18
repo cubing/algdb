@@ -1,8 +1,8 @@
-import { AlgAlgcaseLink } from "../../services";
+import { UserAlgVoteLink } from "../../services";
 import { generateBaseRootResolvers } from "../../helpers/rootResolver";
 
 export default {
-  ...generateBaseRootResolvers(AlgAlgcaseLink, [
+  ...generateBaseRootResolvers(UserAlgVoteLink, [
     "getMultiple",
     "delete",
     "create",

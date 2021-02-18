@@ -1,18 +1,4 @@
-const moment = require('moment')
-
 export default {
-  generateTimeStringFromUnix(unixTimestamp, mode = 'x', fromNow = true) {
-    if (unixTimestamp === 0) {
-      return 'just now'
-    } else if (unixTimestamp == null) {
-      return 'None'
-    } else {
-      return fromNow
-        ? moment.unix(unixTimestamp, mode).fromNow()
-        : moment.unix(unixTimestamp, mode).format('MMM Do YYYY')
-    }
-  },
-
   handleError(err, root = null) {
     if (root) {
       if (err.response && err.response.data.error.message) {

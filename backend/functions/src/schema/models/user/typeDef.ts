@@ -75,28 +75,11 @@ export default new JomqlObjectType(<ObjectTypeDefinition>{
       arrayOptions: {
         allowNullElement: false,
       },
+      requiredSqlFields: ["role", "permissions"],
       allowNull: false,
-      async resolver({ req, args, fieldPath, parentValue, fieldValue, data }) {
-        let role = parentValue.role;
-        let permissions = parentValue.permissions;
-        // if either role or permissions not defined, fetch them
-        if (!role || !permissions) {
-          const results = <any>await User.getRecord({
-            req,
-            fieldPath,
-            args: { ...data.rootArgs },
-            query: {
-              role: lookupSymbol,
-              permissions: lookupSymbol,
-            },
-            isAdmin: true,
-            data,
-          });
-
-          // should always exist
-          role = results.role;
-          permissions = results.permissions;
-        }
+      async resolver({ parentValue }) {
+        const role = parentValue.role;
+        const permissions = parentValue.permissions;
 
         // convert role to name
         const roleName = userRoleKenum.fromIndex(role).name;

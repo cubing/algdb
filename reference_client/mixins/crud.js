@@ -4,38 +4,61 @@ import { unsubscribeChannels } from '~/services/pusher'
 import EditRecordDialog from '~/components/dialog/editRecordDialog.vue'
 import DeleteRecordDialog from '~/components/dialog/deleteRecordDialog.vue'
 import CrudRecordInterface from '~/components/interface/crud/crudRecordInterface.vue'
+import {
+  collapseObject,
+  getNestedProperty,
+  generateTimeAgoString,
+} from '~/services/common'
 
 export default {
   components: {},
 
   props: {
+    // replacement title to override default one
+    title: {
+      type: String,
+    },
     recordInfo: {
       required: true,
+    },
+    // header fields that should be hidden
+    hiddenHeaders: {
+      type: Array,
+      default: () => [],
     },
     useSubscription: {
       type: Boolean,
       default: false,
     },
-    // raw filters that must also be in recordInfo.filters
+    /** raw filters that must also be in recordInfo.filters
+    {
+      field: string;
+      operator: string;
+      value: any;
+    }
+    */
     filters: {
       type: Array,
       default: () => [],
     },
-    // raw filters that do not need to be in recordInfo.filters
+    /** raw filters that do not need to be in recordInfo.filters. appended directly to the filterBy params. also applied to addRecordDialog
+    {
+      field: string;
+      operator: string;
+      value: any;
+    }
+    */
     lockedFilters: {
       type: Array,
       default: () => [],
     },
-    // raw filters that are applied to the addRecordDialog
-    addFilters: {
-      type: Array,
-      default: () => [],
-    },
     // array of filter keys (recordInfo.filters) that should be hidden
+    // string[]
     hiddenFilters: {
       type: Array,
       default: () => [],
     },
+    // search term
     search: {
       type: String,
     },
@@ -113,27 +136,29 @@ export default {
       expandedItems: [],
       additionalSubFilters: [],
       subSearchInput: '',
+      expandTypeObject: null,
     }
   },
 
   computed: {
     childInterfaceComponent() {
-      return this.hasNested
-        ? this.recordInfo.nested.interfaceComponent || CrudRecordInterface
+      return this.expandTypeObject
+        ? this.expandTypeObject.recordInfo.interfaceComponent ||
+            CrudRecordInterface
         : null
     },
 
     currentAddRecordComponent() {
-      return this.recordInfo.addRecordComponent || EditRecordDialog
+      return this.recordInfo.addOptions?.component ?? EditRecordDialog
     },
     currentEditRecordComponent() {
-      return this.recordInfo.editRecordComponent || EditRecordDialog
+      return this.recordInfo.editOptions?.component ?? EditRecordDialog
     },
     currentDeleteRecordComponent() {
-      return this.recordInfo.deleteRecordComponent || DeleteRecordDialog
+      return this.recordInfo.deleteOptions?.component ?? DeleteRecordDialog
     },
     currentViewRecordComponent() {
-      return this.recordInfo.viewRecordComponent || EditRecordDialog
+      return this.recordInfo.viewOptions?.component ?? EditRecordDialog
     },
     capitalizedType() {
       return sharedService.capitalizeString(this.recordInfo.type)
@@ -149,8 +174,40 @@ export default {
       )
     },
 
+    headers() {
+      return this.recordInfo.headers
+        .filter(
+          (headerObject) => !this.hiddenHeaders.includes(headerObject.field)
+        )
+        .map((headerObject) => {
+          const fieldInfo = this.recordInfo.fields[headerObject.field]
+
+          // field unknown, abort
+          if (!fieldInfo)
+            throw new Error('Unknown field: ' + headerObject.field)
+
+          return {
+            text: fieldInfo.text,
+            align: headerObject.align ?? 'left',
+            sortable: headerObject.sortable,
+            value: headerObject.field,
+            width: headerObject.width ?? null,
+            renderFn: fieldInfo.renderFn,
+          }
+        })
+        .concat({
+          text: 'Action',
+          sortable: false,
+          value: null,
+          width: '90px',
+          ...this.recordInfo.headerActionOptions,
+        })
+    },
+
     hasNested() {
-      return !!this.recordInfo.nested
+      return this.recordInfo.expandTypes
+        ? !!this.recordInfo.expandTypes.length
+        : false
     },
 
     // expanded
@@ -158,16 +215,12 @@ export default {
       return this.expandedItems.length
         ? [
             {
-              field: this.recordInfo.type.toLowerCase(),
+              field: this.recordInfo.type.toLowerCase() + '.id',
               operator: 'eq',
               value: this.expandedItems[0].id,
             },
           ]
         : []
-    },
-
-    addSubFilters() {
-      return this.lockedSubFilters
     },
 
     hiddenSubFilters() {
@@ -176,10 +229,15 @@ export default {
   },
 
   watch: {
+    // this triggers when filters get updated on parent element
     filters() {
+      // doing something between a soft and hard reset
       this.syncFilters()
       this.loadData()
+      // also going to un-expand any expanded items
+      this.expandedItems.pop()
     },
+    // this triggers when parent element switches to a different item
     lockedFilters() {
       this.reset(true)
     },
@@ -195,6 +253,8 @@ export default {
   },
 
   methods: {
+    generateTimeAgoString,
+
     // expanded
     handleSubFiltersUpdated(searchInput, filterInputsArray) {
       this.subSearchInput = searchInput
@@ -203,16 +263,22 @@ export default {
       this.additionalSubFilters = filterInputsArray
         .filter((ele) => ele.value !== undefined && ele.value !== null)
         .map((ele) => ({
-          field: ele.fieldInfo.field,
-          operator: ele.fieldInfo.operator,
+          field: ele.field,
+          operator: ele.operator,
           value: ele.value,
         }))
     },
 
     // expanded
-    handleItemExpanded() {
+    toggleItemExpanded(props, expandTypeObject) {
+      this.expandTypeObject = expandTypeObject
+
+      // if switching to different expandRecordInfo when already expanded, do not toggle expand
+      if (!props.isExpanded || !expandTypeObject)
+        props.expand(!props.isExpanded)
+
       // when item expanded, reset the filters
-      this.additionalSubFilters = []
+      // this.additionalSubFilters = []
     },
 
     handleRowClick(item) {
@@ -220,34 +286,19 @@ export default {
         this.recordInfo.handleRowClick(this, item)
     },
 
-    generateTimeStringFromUnix: sharedService.generateTimeStringFromUnix,
-
     copyToClipboard(content) {
       sharedService.copyToClipboard(this, content)
     },
 
     getTableRowData(headerItem, item) {
       // need to go deeper if nested
-      return this.getNestedProperty(item, headerItem.value)
+      return getNestedProperty(item, headerItem.value)
     },
 
     renderTableRowData(headerItem, item) {
       // need to go deeper if nested
-      const value = this.getNestedProperty(item, headerItem.value)
+      const value = getNestedProperty(item, headerItem.value)
       return headerItem.renderFn ? headerItem.renderFn(value) : value
-    },
-
-    getNestedProperty(obj, path) {
-      const pathArray = path.split(/\./)
-      let currentValue = obj
-      for (const prop of pathArray) {
-        // if not object, return null;
-        if (!(currentValue && typeof currentValue === 'object')) {
-          return null
-        }
-        currentValue = currentValue[prop]
-      }
-      return currentValue
     },
 
     async exportData() {
@@ -282,11 +333,9 @@ export default {
     openAddRecordDialog() {
       const initializedRecord = {}
 
-      this.addFilters.forEach((addFilter) => {
-        initializedRecord[addFilter.field] = addFilter.value
+      this.lockedFilters.forEach((lockedFilter) => {
+        initializedRecord[lockedFilter.field] = lockedFilter.value
       })
-
-      console.log(initializedRecord)
 
       this.openDialog('addRecord', initializedRecord)
     },
@@ -297,7 +346,8 @@ export default {
         options.initialLoad = false
       } else {
         // defer the action to next tick, since we possibly need to wait for handlePageReset and handleUpdatePage to complete
-        this.$nextTick(this.loadData)
+
+        this.$nextTick(this.reset)
       }
     },
 
@@ -356,26 +406,20 @@ export default {
             endCursor: true,
           },
           edges: {
-            node: this.recordInfo.headers.reduce(
-              (total, val) => {
-                // if null, skip
-                if (!val.value) return total
+            node: collapseObject(
+              this.recordInfo.headers.reduce(
+                (total, headerObject) => {
+                  const fieldInfo = this.recordInfo.fields[headerObject.field]
 
-                // if nested, process (only supporting one level of nesting)
-                if (val.value.includes('.')) {
-                  const parts = val.value.split(/\./)
+                  // field unknown, abort
+                  if (!fieldInfo)
+                    throw new Error('Unknown field: ' + headerObject.field)
 
-                  if (!total[parts[0]]) {
-                    total[parts[0]] = {}
-                  }
-
-                  total[parts[0]][parts[1]] = true
-                } else {
-                  total[val.value] = true
-                }
-                return total
-              },
-              { id: true }
+                  total[headerObject.field] = true
+                  return total
+                },
+                { id: true } // always add id
+              )
             ),
             cursor: true,
           },
@@ -383,16 +427,14 @@ export default {
             ...paginationArgs,
             sortBy: this.options.sortBy,
             sortDesc: this.options.sortDesc,
-            filterBy: this.filters
-              .concat(this.lockedFilters)
-              .reduce((total, ele) => {
-                if (!total[ele.field]) total[ele.field] = []
-                total[ele.field].push({
-                  operator: ele.operator,
-                  value: ele.value, // assuming this value has been parsed already
-                })
+            filterBy: [
+              this.filters.concat(this.lockedFilters).reduce((total, ele) => {
+                if (!total[ele.field]) total[ele.field] = {}
+                // assuming this value has been parsed already
+                total[ele.field][ele.operator] = ele.value
                 return total
               }, {}),
+            ],
             ...(this.search && { search: this.search }),
             ...(this.groupBy && { groupBy: this.groupBy }),
           },
@@ -442,8 +484,7 @@ export default {
       this.filters.forEach((ele) => {
         const matchingInputObject = this.filterInputsArray.find(
           (input) =>
-            input.fieldInfo.field === ele.field &&
-            input.fieldInfo.operator === ele.operator
+            input.field === ele.field && input.operator === ele.operator
         )
 
         if (matchingInputObject) {
@@ -471,15 +512,26 @@ export default {
       if (hardReset) {
         if (this.useSubscription) this.subscribeEvents()
 
+        this.options.initialLoad = true
+
         // populate filters
         this.filterInputsArray = this.recordInfo.filters.map((ele) => {
+          const fieldInfo = this.recordInfo.fields[ele.field]
+
+          // field unknown, abort
+          if (!fieldInfo) throw new Error('Unknown field: ' + ele.field)
+
           const filterObject = {
-            fieldInfo: ele,
+            field: ele.field,
+            fieldInfo,
+            operator: ele.operator,
             options: [],
             value: null,
           }
-          ele.getOptions &&
-            ele.getOptions(this).then((res) => (filterObject.options = res))
+          fieldInfo.getOptions &&
+            fieldInfo
+              .getOptions(this)
+              .then((res) => (filterObject.options = res))
           return filterObject
         })
 

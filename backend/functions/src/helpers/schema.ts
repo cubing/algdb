@@ -7,26 +7,36 @@ type Edge<T> = {
   __typename: Field<string, undefined>;
   node: Field<T, undefined>;
   cursor: Field<string, undefined>;
-};\n\n`;
+};
+
+export type FilterByField<T> = {
+  eq?: T
+  neq?: T
+  gt?: T
+  lt?: T
+  in?: T[]
+  nin?: T[]
+  regex?: Scalars['regex']
+}\n\n`;
   }
 
   // additional post-processing of the schema
   processSchema() {
     // loop through this.inputTypeTsTypeFields and find places to simplify
     this.inputTypeTsTypeFields.value.forEach((value, key) => {
-      // if inputDefName is ends in FilterByObject, process differently
-      /*       if (key.match(/FilterByObject$/)) {
-        // replace the value
-        this.inputTypeTsTypeFields.set(key, {
-          value: `FilterByObject<Scalars["${key.replace(
-            /FilterByObject$/,
-            "FilterByFields"
-          )}"]>`,
-          isArray: false,
-          isNullable: false,
-          isOptional: false,
-        });
-      } */
+      // if inputDefName contains FilterByField/, transform it into a FilterByField<T>
+      if (key.match(/FilterByField\//)) {
+        if (typeof value.value !== "string") {
+          const filterByType = value.value.get("eq")?.value;
+          if (filterByType) {
+            this.inputTypeTsTypeFields.value.set(key, {
+              value: `FilterByField<${filterByType}>`,
+              isNullable: false,
+              isOptional: false,
+            });
+          }
+        }
+      }
     });
 
     // loop through types and find places to simplify

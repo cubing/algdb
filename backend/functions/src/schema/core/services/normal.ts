@@ -23,6 +23,7 @@ import {
   JomqlInitializationError,
   JomqlScalarType,
   StringKeyObject,
+  JomqlBaseError,
 } from "jomql";
 
 import {
@@ -30,12 +31,12 @@ import {
   SqlQuerySelectObject,
   SqlSortFieldObject,
   ServiceFunctionInputs,
+  SqlWhereFieldOperator,
 } from "../../../types";
 
 import { btoa, isObject, capitalizeString } from "../../helpers/shared";
 export type JoinFieldObject = {
   field?: string;
-  // joinFields?: SqlJoinFieldObject[];
 };
 
 export type FieldMap = {
@@ -167,18 +168,18 @@ export class NormalService extends BaseService {
     const selectQuery = query || Object.assign({}, this.presets.default);
 
     //check if the record and query is fetchable
-    const results = await Resolver.getObjectType(
-      this.typename,
+    const results = await Resolver.getObjectType({
+      typename: this.typename,
       req,
       fieldPath,
-      selectQuery,
-      {
+      externalQuery: selectQuery,
+      sqlParams: {
         where: {
           fields: [{ field: "id", value: validatedArgs.id }],
         },
       },
-      data
-    );
+      data,
+    });
 
     if (results.length < 1) {
       throw errorHelper.itemNotFoundError(fieldPath);
@@ -272,17 +273,20 @@ export class NormalService extends BaseService {
       }))
     );
 
-    const results = await Resolver.getObjectType(
-      this.typename,
+    const results = await Resolver.getObjectType({
+      typename: this.typename,
       req,
       fieldPath,
-      selectQuery,
-      {
+      externalQuery: selectQuery,
+      sqlParams: {
         where: whereObject,
         limit: 1,
+        miscParams: {
+          user: req.user?.id,
+        },
       },
-      data
-    );
+      data,
+    });
 
     if (results.length < 1) {
       throw errorHelper.itemNotFoundError(fieldPath);
@@ -307,18 +311,32 @@ export class NormalService extends BaseService {
       fields: [],
     };
 
-    if (isObject(validatedArgs.filterBy)) {
-      Object.entries(validatedArgs.filterBy).forEach(([key, value]) => {
-        // all keys must be pre-validated via args checking
-        if (Array.isArray(value)) {
-          value.forEach((ele) => {
-            whereObject.fields.push({
-              field: this.filterFieldsMap[key].field ?? key,
-              operator: ele.operator,
-              value: ele.value,
-            });
-          });
-        }
+    if (Array.isArray(validatedArgs.filterBy)) {
+      const filterByOrObject: SqlWhereObject = {
+        connective: "OR",
+        fields: [],
+      };
+      whereObject.fields.push(filterByOrObject);
+
+      validatedArgs.filterBy.forEach((filterByObject) => {
+        const filterByAndObject: SqlWhereObject = {
+          connective: "AND",
+          fields: [],
+        };
+        filterByOrObject.fields.push(filterByAndObject);
+        Object.entries(filterByObject).forEach(
+          ([filterKey, filterKeyObject]) => {
+            Object.entries(<any>filterKeyObject).forEach(
+              ([operationKey, operationValue]) => {
+                filterByAndObject.fields.push({
+                  field: this.filterFieldsMap[filterKey].field ?? filterKey,
+                  operator: <SqlWhereFieldOperator>operationKey,
+                  value: operationValue,
+                });
+              }
+            );
+          }
+        );
       });
     }
 
@@ -343,7 +361,8 @@ export class NormalService extends BaseService {
     const resultsCount = await Resolver.countObjectType(
       this.typename,
       fieldPath,
-      whereObject
+      whereObject,
+      true
     );
 
     return resultsCount;
@@ -367,18 +386,32 @@ export class NormalService extends BaseService {
       fields: [],
     };
 
-    if (isObject(validatedArgs.filterBy)) {
-      Object.entries(validatedArgs.filterBy).forEach(([key, value]) => {
-        // all keys must be pre-validated via args checking
-        if (Array.isArray(value)) {
-          value.forEach((ele) => {
-            whereObject.fields.push({
-              field: this.filterFieldsMap[key].field ?? key,
-              operator: ele.operator,
-              value: ele.value,
-            });
-          });
-        }
+    if (Array.isArray(validatedArgs.filterBy)) {
+      const filterByOrObject: SqlWhereObject = {
+        connective: "OR",
+        fields: [],
+      };
+      whereObject.fields.push(filterByOrObject);
+
+      validatedArgs.filterBy.forEach((filterByObject) => {
+        const filterByAndObject: SqlWhereObject = {
+          connective: "AND",
+          fields: [],
+        };
+        filterByOrObject.fields.push(filterByAndObject);
+        Object.entries(filterByObject).forEach(
+          ([filterKey, filterKeyObject]) => {
+            Object.entries(<any>filterKeyObject).forEach(
+              ([operationKey, operationValue]) => {
+                filterByAndObject.fields.push({
+                  field: this.filterFieldsMap[filterKey].field ?? filterKey,
+                  operator: <SqlWhereFieldOperator>operationKey,
+                  value: operationValue,
+                });
+              }
+            );
+          }
+        );
       });
     }
 
@@ -406,7 +439,7 @@ export class NormalService extends BaseService {
     const sortByField =
       (Array.isArray(validatedArgs.sortBy) ? validatedArgs.sortBy[0] : "id") ??
       "id";
-    if (!(sortByField in this.sortFieldsMap))
+    if (sortByField !== "id" && !(sortByField in this.sortFieldsMap))
       throw errorHelper.generateError("Invalid sortBy field", fieldPath);
     const sortByDesc = Array.isArray(validatedArgs.sortDesc)
       ? validatedArgs.sortDesc[0] === true
@@ -545,19 +578,24 @@ export class NormalService extends BaseService {
       });
     }
 
-    // always add id as the last sort key
-    orderBy.push({ field: "id", desc: isBeforeQuery ? true : false });
+    // add id as the last sort key if it is not already the sortByField
+    if (sortByField !== "id")
+      orderBy.push({ field: "id", desc: isBeforeQuery ? true : false });
 
-    const results = await Resolver.getObjectType(
-      this.typename,
+    const results = await Resolver.getObjectType({
+      typename: this.typename,
       req,
       fieldPath,
-      selectQuery,
-      {
+      externalQuery: selectQuery,
+      sqlParams: {
         rawSelect,
         where: whereObject,
         orderBy,
         limit: limit,
+        miscParams: {
+          user: req.user?.id,
+        },
+        distinct: true,
         groupBy: Array.isArray(validatedArgs.groupBy)
           ? validatedArgs.groupBy.reduce((total, item, index) => {
               if (item in this.groupByFieldsMap) {
@@ -568,10 +606,9 @@ export class NormalService extends BaseService {
               return total;
             }, [])
           : null,
-        //offset: args.first*args.page || 0
       },
-      data
-    );
+      data,
+    });
 
     return validatedArgs.reverse
       ? isBeforeQuery
@@ -583,9 +620,9 @@ export class NormalService extends BaseService {
   }
 
   // convert any lookup/joined fields into IDs, in place.
-  async handleLookupArgs(args) {
+  async handleLookupArgs(args: any, fieldPath: string[]): Promise<void> {
     for (const key in args) {
-      const typeField = this.getTypeDef().definition.fields[key].type;
+      const typeField = this.getTypeDef().definition.fields[key]?.type;
       if (typeField instanceof JomqlObjectTypeLookup && isObject(args[key])) {
         // get record ID of type, replace object with the ID
         const results = await sqlHelper.fetchTableRows({
@@ -601,7 +638,10 @@ export class NormalService extends BaseService {
         });
 
         if (results.length < 1) {
-          throw new Error(`${typeField.name} not found`);
+          throw new JomqlBaseError({
+            message: `${typeField.name} not found`,
+            fieldPath,
+          });
         }
 
         // replace args[key] with the item ID
@@ -621,7 +661,7 @@ export class NormalService extends BaseService {
   }: ServiceFunctionInputs) {
     // args should be validated already
     const validatedArgs = <any>args;
-    await this.handleLookupArgs(args);
+    await this.handleLookupArgs(args, fieldPath);
 
     const addResults = await Resolver.createObjectType({
       typename: this.typename,
@@ -695,7 +735,7 @@ export class NormalService extends BaseService {
     const itemId = records[0].id;
 
     // convert any lookup/joined fields into IDs
-    await this.handleLookupArgs(validatedArgs.fields);
+    await this.handleLookupArgs(validatedArgs.fields, fieldPath);
 
     await Resolver.updateObjectType({
       typename: this.typename,
