@@ -32,7 +32,6 @@
 </template>
 
 <script>
-import { userFragment } from '~/jomql/fragments'
 import { executeJomql } from '~/services/jomql'
 import sharedService from '~/services/shared'
 
@@ -65,12 +64,21 @@ export default {
     async handleSubmit() {
       this.loading.submitting = true
       try {
-        const data = await executeJomql('updateUser', userFragment, {
-          id: this.inputs.id,
-          name: this.inputs.name,
+        const data = await executeJomql(this, {
+          updateUser: {
+            name: true,
+            __args: {
+              item: {
+                id: this.inputs.id,
+              },
+              fields: {
+                name: this.inputs.name,
+              },
+            },
+          },
         })
 
-        this.$store.commit('auth/setUser', data)
+        this.$store.commit('auth/partialUpdateUser', data)
 
         this.$notifier.showSnackbar({
           message: 'User info updated successfully',
@@ -85,7 +93,12 @@ export default {
     async loadData() {
       this.loading.loadUser = true
       try {
-        const data = await executeJomql('getCurrentUser', userFragment)
+        const data = await executeJomql(this, {
+          getCurrentUser: {
+            id: true,
+            name: true,
+          },
+        })
 
         this.inputs = {
           id: data.id,

@@ -1,6 +1,10 @@
 import sharedService from '~/services/shared'
 import { executeJomql } from '~/services/jomql'
-import { collapseObject, getNestedProperty } from '~/services/common'
+import {
+  collapseObject,
+  getNestedProperty,
+  capitalizeString,
+} from '~/services/common'
 
 export default {
   props: {
@@ -48,7 +52,7 @@ export default {
 
   computed: {
     capitalizedType() {
-      return sharedService.capitalizeString(this.recordInfo.type)
+      return capitalizeString(this.recordInfo.type)
     },
     title() {
       return (
@@ -81,17 +85,107 @@ export default {
       this.$emit('close')
     },
 
+    handleSearchUpdate(inputObject) {
+      if (!inputObject.search || !inputObject.focused) return
+
+      // cancel pending call, if any
+      clearTimeout(this._timerId)
+
+      // delay new call 500ms
+      this._timerId = setTimeout(() => {
+        this.loadSearchResults(inputObject)
+      }, 500)
+    },
+
+    async loadSearchResults(inputObject) {
+      inputObject.loading = true
+      try {
+        const results = await executeJomql(this, {
+          [`get${capitalizeString(
+            inputObject.fieldInfo.optionsInfo.optionsType
+          )}Paginator`]: {
+            edges: {
+              node: {
+                id: true,
+                name: true,
+              },
+            },
+            __args: {
+              first: 20,
+              search: inputObject.search,
+            },
+          },
+        })
+
+        inputObject.options = results.edges.map((edge) => edge.node)
+      } catch (err) {
+        sharedService.handleError(err, this.$root)
+      }
+      inputObject.loading = false
+    },
+
+    handleSubmit() {
+      // if any comboboxes are focused, do nothing
+      if (
+        Array.isArray(this.$refs.combobox) &&
+        this.$refs.combobox.some((ele) => ele.isFocused)
+      ) {
+        return
+      }
+      this.submit()
+    },
+
     async submit() {
       this.loading.editRecord = true
       try {
-        const inputs = collapseObject(
-          this.inputsArray.reduce((total, inputObject) => {
-            total[inputObject.field] = inputObject.fieldInfo.parseValue
-              ? inputObject.fieldInfo.parseValue(inputObject.value)
-              : inputObject.value
-            return total
-          }, {})
-        )
+        const inputs = {}
+
+        for (const inputObject of this.inputsArray) {
+          let value
+          // if the fieldInfo.optionsInfo.inputType === 'combobox', it came from a combo box. need to handle accordingly
+          if (inputObject.fieldInfo.optionsInfo?.inputType === 'combobox') {
+            // must have an optionsType
+            if (!inputObject.fieldInfo.optionsInfo.optionsType) {
+              throw new Error(`Invalid input for ${inputObject.fieldInfo.text}`)
+            }
+
+            if (!inputObject.value) {
+              throw new Error(`Invalid input for ${inputObject.fieldInfo.text}`)
+            }
+
+            // expecting either string or obj
+            if (typeof inputObject.value === 'string') {
+              // create the item, get its id.
+              const results = await executeJomql(this, {
+                ['create' +
+                capitalizeString(
+                  inputObject.fieldInfo.optionsInfo.optionsType
+                )]: {
+                  id: true,
+                  name: true,
+                  __args: {
+                    name: inputObject.value,
+                  },
+                },
+              })
+
+              // force reload of memoized options
+              inputObject.fieldInfo.optionsInfo
+                .getOptions(this, true)
+                .then((res) => (inputObject.options = res))
+
+              value = results.id
+            } else {
+              value = inputObject.value.id
+            }
+          } else {
+            value = inputObject.value
+          }
+
+          inputs[inputObject.field] = inputObject.fieldInfo.parseValue
+            ? inputObject.fieldInfo.parseValue(value)
+            : value
+        }
 
         // add mode
         let query
@@ -100,7 +194,7 @@ export default {
             [this.recordInfo.addOptions.operationName ??
             'create' + this.capitalizedType]: {
               id: true,
-              __args: inputs,
+              __args: collapseObject(inputs),
             },
           }
         } else {
@@ -112,7 +206,7 @@ export default {
                 item: {
                   id: this.selectedItem.id,
                 },
-                fields: inputs,
+                fields: collapseObject(inputs),
               },
             },
           }
@@ -121,7 +215,8 @@ export default {
 
         this.$notifier.showSnackbar({
           message:
-            this.capitalizedType + (this.addMode ? ' Added' : ' Updated'),
+            this.capitalizedType +
+            (this.mode === 'add' ? ' Added' : ' Updated'),
           variant: 'success',
         })
 
@@ -173,11 +268,29 @@ export default {
             options: [],
           }
 
-          fieldInfo.getOptions &&
-            fieldInfo
-              .getOptions(this)
-              .then((res) => (inputObject.options = res))
-
+          // if optionsInfo.inputType === 'server-autocomplete', only populate the options with the specific entry, if any
+          if (fieldInfo.optionsInfo) {
+            if (fieldInfo.optionsInfo.inputType === 'server-autocomplete') {
+              executeJomql(this, {
+                [`get${capitalizeString(fieldInfo.optionsInfo.optionsType)}`]: {
+                  id: true,
+                  name: true,
+                  __args: {
+                    id: inputObject.value,
+                  },
+                },
+              })
+                .then((res) => {
+                  inputObject.options = [res]
+                })
+                .catch((e) => e)
+            } else {
+              fieldInfo.optionsInfo.getOptions &&
+                fieldInfo.optionsInfo
+                  .getOptions(this)
+                  .then((res) => (inputObject.options = res))
+            }
+          }
           return inputObject
         })
       } catch (err) {
@@ -229,12 +342,38 @@ export default {
             value,
             options: [],
             readonly,
+            loading: false,
+            search: null,
+            focused: false,
           }
 
-          fieldInfo.getOptions &&
-            fieldInfo
-              .getOptions(this)
-              .then((res) => (inputObject.options = res))
+          if (fieldInfo.optionsInfo) {
+            // if server-autocomplete and readonly, load only the specific entry
+            if (fieldInfo.optionsInfo.inputType === 'server-autocomplete') {
+              if (inputObject.readonly) {
+                executeJomql(this, {
+                  [`get${capitalizeString(
+                    fieldInfo.optionsInfo.optionsType
+                  )}`]: {
+                    id: true,
+                    name: true,
+                    __args: {
+                      id: inputObject.value,
+                    },
+                  },
+                })
+                  .then((res) => {
+                    inputObject.options = [res]
+                  })
+                  .catch((e) => e)
+              }
+            } else {
+              fieldInfo.optionsInfo.getOptions &&
+                fieldInfo.optionsInfo
+                  .getOptions(this)
+                  .then((res) => (inputObject.options = res))
+            }
+          }
 
           return inputObject
         })

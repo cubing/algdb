@@ -36,8 +36,65 @@
               xs="12"
               class="py-0"
             >
+              <v-text-field
+                v-if="!item.fieldInfo.optionsInfo"
+                v-model="item.value"
+                :label="item.fieldInfo.text"
+                :readonly="item.readonly || mode === 'view'"
+                filled
+                dense
+                class="py-0"
+              ></v-text-field>
+              <v-combobox
+                v-else-if="item.fieldInfo.optionsInfo.inputType === 'combobox'"
+                ref="combobox"
+                v-model="item.value"
+                :items="item.options"
+                item-text="name"
+                item-value="id"
+                :label="item.fieldInfo.text"
+                :readonly="item.readonly || mode === 'view'"
+                :clearable="!item.readonly && mode !== 'view'"
+                filled
+                class="py-0"
+              ></v-combobox>
+              <v-autocomplete
+                v-else-if="
+                  item.fieldInfo.optionsInfo.inputType === 'autocomplete'
+                "
+                v-model="item.value"
+                :items="item.options"
+                item-text="name"
+                item-value="id"
+                :label="item.fieldInfo.text"
+                :readonly="item.readonly || mode === 'view'"
+                :clearable="!item.readonly && mode !== 'view'"
+                filled
+                class="py-0"
+              ></v-autocomplete>
+              <v-autocomplete
+                v-else-if="
+                  item.fieldInfo.optionsInfo.inputType === 'server-autocomplete'
+                "
+                v-model="item.value"
+                :loading="item.loading"
+                :search-input.sync="item.search"
+                :items="item.options"
+                item-text="name"
+                item-value="id"
+                :label="item.fieldInfo.text"
+                :readonly="item.readonly || mode === 'view'"
+                :clearable="!item.readonly && mode !== 'view'"
+                filled
+                hide-no-data
+                cache-items
+                class="py-0"
+                @update:search-input="handleSearchUpdate(item)"
+                @blur="item.focused = false"
+                @focus="item.focused = true"
+              ></v-autocomplete>
               <v-select
-                v-if="item.fieldInfo.getOptions"
+                v-else-if="item.fieldInfo.optionsInfo.inputType === 'select'"
                 v-model="item.value"
                 :items="item.options"
                 filled
@@ -48,15 +105,6 @@
                 item-value="id"
                 class="py-0"
               ></v-select>
-              <v-text-field
-                v-else
-                v-model="item.value"
-                :label="item.fieldInfo.text"
-                :readonly="item.readonly || mode === 'view'"
-                filled
-                dense
-                class="py-0"
-              ></v-text-field>
             </v-col>
           </v-row>
         </v-container>
@@ -67,9 +115,10 @@
         <v-btn color="blue darken-1" text @click="close()">Cancel</v-btn>
         <v-btn
           v-if="mode !== 'view'"
+          ref="submit"
           color="primary"
           :loading="loading.editRecord"
-          @click="submit()"
+          @click="handleSubmit()"
           >Submit</v-btn
         >
       </v-card-actions>

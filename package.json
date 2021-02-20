@@ -1,5 +1,6 @@
 {
 	"devDependencies": {
+		"@nuxtjs/vuetify": "^1.11.3",
 		"husky": "^4.2.5"
 	},
 	"husky": {
@@ -10,5 +11,7 @@
 		}
 	},
 	"license": "ISC",
-	"dependencies": {}
+	"dependencies": {
+		"nuxt": "^2.15.1"
+	}
 }

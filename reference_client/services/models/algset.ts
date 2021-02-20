@@ -38,7 +38,10 @@ export default <RecordInfo<'algset'>>{
     },
     is_public: {
       text: 'Public',
-      getOptions: getBooleanOptions,
+      optionsInfo: {
+        getOptions: getBooleanOptions,
+        inputType: 'select',
+      },
       parseValue: (val) => (typeof val === 'boolean' ? val : val === 'true'),
     },
     mask: {
@@ -46,12 +49,19 @@ export default <RecordInfo<'algset'>>{
     },
     visualization: {
       text: 'Visualization',
-      getOptions: getCaseVisualizations,
+      optionsInfo: {
+        getOptions: getCaseVisualizations,
+        inputType: 'select',
+      },
     },
     'puzzle.id': {
-      text: 'Puzzle ID',
+      text: 'Puzzle',
       parseValue: (val) => Number(val),
-      getOptions: getPuzzles,
+      optionsInfo: {
+        getOptions: getPuzzles,
+        optionsType: 'puzzle',
+        inputType: 'autocomplete',
+      },
     },
     'parent.id': {
       text: 'Parent Algset ID',
@@ -77,7 +87,7 @@ export default <RecordInfo<'algset'>>{
     ],
   },
   editOptions: {
-    fields: ['name', 'code', 'is_public', 'mask', 'visualization'],
+    fields: ['name', 'code', 'is_public', 'mask', 'visualization', 'puzzle.id'],
   },
   viewOptions: {
     fields: [

@@ -22,14 +22,6 @@ export default {
     return errMessage.replace(/^GraphQL error: /, '')
   },
 
-  copyToClipboard(that, content) {
-    that.$copyText(content)
-    that.$notifier.showSnackbar({
-      message: 'Copied to Clipboard',
-      variant: 'success',
-    })
-  },
-
   generateError(message, errno = null) {
     const err = new Error(message)
     if (errno) {

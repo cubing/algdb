@@ -1,10 +1,10 @@
-import { getTags } from '../dropdown'
+import { getUsertags } from '../dropdown'
 import type { RecordInfo } from '~/types'
 import { generateTimeAgoString } from '~/services/common'
 
-export default <RecordInfo<'algTagLink'>>{
-  type: 'algTagLink',
-  name: 'Alg-Tag-Link',
+export default <RecordInfo<'algUsertagLink'>>{
+  type: 'algUsertagLink',
+  name: 'Alg-Usertag-Link',
   icon: 'mdi-link',
   options: {
     sortBy: ['created_at'],
@@ -13,22 +13,25 @@ export default <RecordInfo<'algTagLink'>>{
   hasSearch: false,
   filters: [],
   fields: {
-    'tag.id': {
-      text: 'Tag',
+    'usertag.id': {
+      text: 'User Tag',
       optionsInfo: {
-        getOptions: getTags,
-        optionsType: 'tag',
+        getOptions: getUsertags,
+        optionsType: 'usertag',
         inputType: 'combobox',
       },
     },
     'alg.id': {
       text: 'Alg',
     },
-    'tag.name': {
-      text: 'Tag Name',
+    'usertag.name': {
+      text: 'Usertag Name',
     },
     'alg.sequence': {
       text: 'Alg Sequence',
+    },
+    'created_by.name': {
+      text: 'Created By',
     },
     created_at: {
       text: 'Created At',
@@ -40,20 +43,25 @@ export default <RecordInfo<'algTagLink'>>{
     },
   },
   addOptions: {
-    fields: ['tag.id', 'alg.id'],
+    fields: ['usertag.id', 'alg.id'],
   },
   editOptions: undefined,
   viewOptions: undefined,
   deleteOptions: {
-    renderItem: (item) => `${item.alg.sequence} -> ${item.tag.name}`,
+    renderItem: (item) => `${item.alg.sequence} -> ${item.usertag.name}`,
   },
   headers: [
     {
-      field: 'tag.name',
+      field: 'usertag.name',
       sortable: false,
     },
     {
       field: 'alg.sequence',
+      sortable: false,
+    },
+    {
+      field: 'created_by.name',
+      width: '150px',
       sortable: false,
     },
     {

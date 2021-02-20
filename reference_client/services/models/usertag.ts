@@ -1,37 +1,20 @@
+import algUsertagLinkRecordInfo from './algUsertagLink'
 import type { RecordInfo } from '~/types'
-import algRecordInfo from '~/services/models/alg'
-import { getPuzzles } from '~/services/dropdown'
 import { generateTimeAgoString } from '~/services/common'
 
-export default <RecordInfo<'algcase'>>{
-  type: 'algcase',
-  name: 'Algcase',
+export default <RecordInfo<'usertag'>>{
+  type: 'usertag',
+  name: 'User Tag',
+  icon: 'mdi-tag',
   options: {
     sortBy: ['created_at'],
     sortDesc: [true],
   },
   hasSearch: true,
-  filters: [
-    {
-      field: 'puzzle.id',
-      operator: 'eq',
-    },
-    {
-      field: 'algset.id',
-      operator: 'eq',
-    },
-  ],
+  filters: [],
   fields: {
     name: {
       text: 'Name',
-    },
-    'algset.id': {
-      text: 'Algset',
-      parseValue: (val) => Number(val),
-      optionsInfo: {
-        optionsType: 'algset',
-        inputType: 'server-autocomplete',
-      },
     },
     created_at: {
       text: 'Created At',
@@ -41,24 +24,15 @@ export default <RecordInfo<'algcase'>>{
       text: 'Updated At',
       renderFn: (val) => generateTimeAgoString(val),
     },
-    'puzzle.id': {
-      text: 'Puzzle',
-      parseValue: (val) => Number(val),
-      optionsInfo: {
-        getOptions: getPuzzles,
-        optionsType: 'puzzle',
-        inputType: 'autocomplete',
-      },
-    },
   },
   addOptions: {
-    fields: ['name', 'algset.id'],
+    fields: ['name'],
   },
   editOptions: {
     fields: ['name'],
   },
   viewOptions: {
-    fields: ['name', 'algset.id'],
+    fields: ['name'],
   },
   deleteOptions: {
     renderItem: (item) => item.name,
@@ -66,7 +40,7 @@ export default <RecordInfo<'algcase'>>{
   headers: [
     {
       field: 'name',
-      sortable: false,
+      sortable: true,
     },
     {
       field: 'created_at',
@@ -81,7 +55,8 @@ export default <RecordInfo<'algcase'>>{
   ],
   expandTypes: [
     {
-      recordInfo: algRecordInfo,
+      recordInfo: algUsertagLinkRecordInfo,
+      excludeHeaders: ['usertag.name'],
     },
   ],
 }

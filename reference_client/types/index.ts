@@ -27,8 +27,16 @@ export type RecordInfo<T extends keyof MainTypes> = {
     [K in keyof MainTypes[T]['Type']]?: {
       text: string
       icon?: string
-      getOptions?: Function
-      default?: Function
+      optionsInfo?: {
+        getOptions?: (that) => Promise<any[]>
+        optionsType?: string
+        inputType:
+          | 'combobox' // combobox allows the user to add new inputs on the fly (will change to autocomplete in filter interfaces)
+          | 'autocomplete' // same as combobox but cannot add new inputs
+          | 'server-autocomplete' // if there's lots of entries, may not want to fetch all of the entries at once. getOptions will be optional
+          | 'select' // standard select
+      }
+      default?: (that) => unknown
       serialize?: (val: unknown) => unknown // fetching from API
       parseValue?: (val: unknown) => unknown // submitting to API
       renderFn?: (val) => any // how it is displayed in the table
@@ -73,6 +81,13 @@ export type RecordInfo<T extends keyof MainTypes> = {
     // operationName?: string
   }
 
+  shareOptions?: {
+    // custom component
+    component?: any
+    // how the item should display on the share dialog
+    renderItem?: (item: any) => string
+  }
+
   // the headers of the table
   headers: {
     field: keyof MainTypes[T]['Type']
@@ -88,9 +103,19 @@ export type RecordInfo<T extends keyof MainTypes> = {
   interfaceComponent?: any
   expandTypes?: {
     recordInfo: RecordInfo<any>
+    // name for the expandType, otherwise recordInfo.name will be used
+    name?: string
+    // function that will replace the lockedSubFilters() computed property in crud.js if provided
+    lockedFilters?: (that, item) => FilterObject[]
     // headers fields that should not be shown
     excludeHeaders?: string[]
   }[]
+}
+
+type FilterObject = {
+  field: string
+  operator: string
+  value: any
 }
 
 export type RecordFilter<T> = {

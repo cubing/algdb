@@ -27,7 +27,10 @@ export default <RecordInfo<'puzzle'>>{
     },
     is_public: {
       text: 'Public',
-      getOptions: getBooleanOptions,
+      optionsInfo: {
+        getOptions: getBooleanOptions,
+        inputType: 'select',
+      },
       parseValue: (val) => (typeof val === 'boolean' ? val : val === 'true'),
     },
     created_at: {

@@ -8,9 +8,11 @@ import { AlgsetService } from "./models/algset/service";
 import { AlgcaseService } from "./models/algcase/service";
 import { AlgService } from "./models/alg/service";
 import { TagService } from "./models/tag/service";
+import { UsertagService } from "./models/usertag/service";
 
 import { AlgAlgcaseLinkService } from "./links/algAlgcaseLink/service";
 import { AlgTagLinkService } from "./links/algTagLink/service";
+import { AlgUsertagLinkService } from "./links/algUsertagLink/service";
 import { UserAlgVoteLinkService } from "./links/userAlgVoteLink/service";
 
 export const User = new UserService();
@@ -20,9 +22,11 @@ export const Algcase = new AlgcaseService();
 export const Alg = new AlgService();
 export const Auth = new AuthService();
 export const Tag = new TagService();
+export const Usertag = new UsertagService();
 
 export const AlgAlgcaseLink = new AlgAlgcaseLinkService([Alg, Algcase]);
 export const AlgTagLink = new AlgTagLinkService([Alg, Tag]);
+export const AlgUsertagLink = new AlgUsertagLinkService([Alg, Usertag]);
 
 // don't autogenerate the typeDef on this one. will specify manually
 export const UserAlgVoteLink = new UserAlgVoteLinkService([User, Alg], false);

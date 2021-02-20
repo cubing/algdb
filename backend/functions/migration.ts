@@ -20,6 +20,15 @@ export async function up(knex: Knex): Promise<void[]> {
       table.integer("created_by").notNullable();
       table.unique(["alg", "tag"]);
     }),
+    knex.schema.createTable("algUsertagLink", function (table) {
+      table.increments();
+      table.integer("alg").notNullable();
+      table.integer("usertag").notNullable();
+      table.dateTime("created_at").notNullable().defaultTo(knex.fn.now());
+      table.dateTime("updated_at").nullable();
+      table.integer("created_by").notNullable();
+      table.unique(["alg", "usertag"]);
+    }),
     knex.schema.createTable("user", function (table) {
       table.increments();
       table.string("provider").notNullable();
@@ -85,6 +94,13 @@ export async function up(knex: Knex): Promise<void[]> {
       table.dateTime("updated_at").nullable();
       table.integer("created_by").notNullable();
     }),
+    knex.schema.createTable("usertag", function (table) {
+      table.increments();
+      table.string("name").notNullable().unique();
+      table.dateTime("created_at").notNullable().defaultTo(knex.fn.now());
+      table.dateTime("updated_at").nullable();
+      table.integer("created_by").notNullable();
+    }),
     knex.schema.createTable("userAlgVoteLink", function (table) {
       table.increments();
       table.integer("user").notNullable();
@@ -102,12 +118,14 @@ export async function down(knex: Knex): Promise<void[]> {
   return Promise.all([
     knex.schema.dropTable("algAlgcaseLink"),
     knex.schema.dropTable("algTagLink"),
+    knex.schema.dropTable("algUsertagLink"),
     knex.schema.dropTable("user"),
     knex.schema.dropTable("puzzle"),
     knex.schema.dropTable("algset"),
     knex.schema.dropTable("algcase"),
     knex.schema.dropTable("alg"),
     knex.schema.dropTable("tag"),
+    knex.schema.dropTable("usertag"),
     knex.schema.dropTable("userAlgVoteLink"),
   ]);
 }

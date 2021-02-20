@@ -16,6 +16,15 @@ export const mutations = {
     state.user = user || null
   },
 
+  partialUpdateUser(state, updateFields) {
+    if (!state.user) return
+    for (const field in updateFields) {
+      if (field in state.user) {
+        state.user[field] = updateFields[field]
+      }
+    }
+  },
+
   unsetUser(state) {
     state.user = null
     Cookie.remove('auth-token')

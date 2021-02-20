@@ -16,7 +16,6 @@
     "core-js": "^3.6.5",
     "js-cookie": "^2.2.1",
     "nuxt": "^2.14.6",
-    "nuxt-clipboard2": "^0.2.1",
     "pusher-js": "^7.0.1",
     "timeago.js": "^4.0.2"
   },

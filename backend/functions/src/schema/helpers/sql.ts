@@ -485,7 +485,9 @@ function processWhereObject(
             if (fieldObject.value instanceof RegExp) {
               // for regex, also need to cast the field as TEXT
               whereSubstatement = "CAST(" + whereSubstatement + " AS TEXT)";
-              whereSubstatement += " ~ :" + placeholder;
+              whereSubstatement += ` ~${
+                fieldObject.value.ignoreCase ? "*" : ""
+              } :${[placeholder]}`;
               params[placeholder] = fieldObject.value
                 .toString()
                 .replace(/(^\/)|(\/[^\/]*$)/g, "");

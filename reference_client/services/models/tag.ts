@@ -1,4 +1,3 @@
-import { getTags } from '../dropdown'
 import algTagLinkRecordInfo from './algTagLink'
 import type { RecordInfo } from '~/types'
 import { generateTimeAgoString } from '~/services/common'
@@ -16,10 +15,6 @@ export default <RecordInfo<'tag'>>{
   fields: {
     name: {
       text: 'Name',
-    },
-    'tag.id': {
-      text: 'Tag',
-      getOptions: getTags,
     },
     created_at: {
       text: 'Created At',

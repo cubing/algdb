@@ -186,6 +186,7 @@ import { mapGetters } from 'vuex'
 import Snackbar from '~/components/snackbar/snackbar'
 import authService from '~/services/auth'
 import sharedService from '~/services/shared'
+import { copyToClipboard } from '~/services/common'
 
 export default {
   components: {
@@ -246,6 +247,12 @@ export default {
               roles: ['NORMAL', 'ADMIN'],
               permissions: [],
             },
+            {
+              title: 'User Tags',
+              to: 'usertags',
+              roles: ['NORMAL', 'ADMIN'],
+              permissions: [],
+            },
           ],
           title: 'Features',
         },
@@ -290,7 +297,7 @@ export default {
     },
     copyIdTokenToClipboard() {
       if (this.$store.getters['auth/token']) {
-        sharedService.copyToClipboard(this, this.$store.getters['auth/token'])
+        copyToClipboard(this, this.$store.getters['auth/token'])
       }
     },
 

@@ -20,20 +20,27 @@
     >
       <template v-slot:top>
         <v-toolbar flat color="accent">
-          <v-btn v-if="parentPath.length > 0" icon @click="goToParent()">
+          <v-btn
+            v-if="parentPath.length > 0"
+            icon
+            :disabled="loading.loadData"
+            @click="goToParent()"
+          >
             <v-icon>mdi-arrow-left</v-icon></v-btn
           >
           <v-icon left>{{ recordInfo.icon || 'mdi-domain' }}</v-icon>
           <v-toolbar-title
             >{{ title || `${recordInfo.name}s` }}
-            <span v-for="(item, i) in visibleRawFiltersArray" :key="i"
-              >[{{ item.field }}-{{ item.operator }}-{{ item.value }}]</span
-            >
             <span v-if="parentPath.length"
               >[{{ parentPath.map((ele) => ele.name).join(' / ') }}]</span
             >
           </v-toolbar-title>
-          <v-divider class="mx-4" inset vertical></v-divider>
+          <v-divider
+            v-if="recordInfo.addOptions"
+            class="mx-4"
+            inset
+            vertical
+          ></v-divider>
           <v-btn
             v-if="recordInfo.addOptions"
             color="primary"
@@ -44,15 +51,34 @@
             <v-icon left>mdi-plus</v-icon>
             New {{ recordInfo.name }}
           </v-btn>
+          <v-divider
+            v-if="recordInfo.filters.length > 0"
+            class="mx-4"
+            inset
+            vertical
+          ></v-divider>
+          <v-btn
+            v-if="recordInfo.filters.length > 0"
+            icon
+            @click="showFilterInterface = !showFilterInterface"
+          >
+            <v-badge
+              :value="visibleFiltersCount"
+              :content="visibleFiltersCount"
+              color="secondary"
+            >
+              <v-icon>mdi-filter-menu</v-icon>
+            </v-badge>
+          </v-btn>
           <v-spacer></v-spacer>
           <v-btn icon :loading="loading.exportData" @click="exportData()">
             <v-icon>mdi-download</v-icon>
           </v-btn>
-          <v-btn icon @click="reset()">
+          <v-btn icon @click="syncFilters() || reset()">
             <v-icon>mdi-refresh</v-icon>
           </v-btn>
         </v-toolbar>
-        <v-container class="pb-0">
+        <v-container v-if="showFilterInterface" class="pb-0">
           <v-row>
             <v-col v-if="recordInfo.hasSearch" :key="-1" cols="3" class="py-0">
               <v-text-field
@@ -70,8 +96,55 @@
               cols="3"
               class="py-0"
             >
+              <v-text-field
+                v-if="!item.fieldInfo.optionsInfo"
+                v-model="item.value"
+                :label="item.fieldInfo.text"
+                :prepend-icon="item.fieldInfo.icon"
+                filled
+                clearable
+                @change="filterChanged = true"
+              ></v-text-field>
+              <v-autocomplete
+                v-else-if="
+                  item.fieldInfo.optionsInfo.inputType === 'autocomplete' ||
+                  item.fieldInfo.optionsInfo.inputType === 'combobox'
+                "
+                v-model="item.value"
+                :items="item.options"
+                item-text="name"
+                item-value="id"
+                :label="item.fieldInfo.text"
+                :prepend-icon="item.fieldInfo.icon"
+                clearable
+                filled
+                class="py-0"
+                @change="filterChanged = true"
+              ></v-autocomplete>
+              <v-autocomplete
+                v-else-if="
+                  item.fieldInfo.optionsInfo.inputType === 'server-autocomplete'
+                "
+                v-model="item.value"
+                :loading="item.loading"
+                :search-input.sync="item.search"
+                :items="item.options"
+                item-text="name"
+                item-value="id"
+                :label="item.fieldInfo.text"
+                :prepend-icon="item.fieldInfo.icon"
+                clearable
+                filled
+                hide-no-data
+                cache-items
+                class="py-0"
+                @update:search-input="handleSearchUpdate(item)"
+                @blur="item.focused = false"
+                @focus="item.focused = true"
+                @change="filterChanged = true"
+              ></v-autocomplete>
               <v-select
-                v-if="item.fieldInfo.getOptions"
+                v-else-if="item.fieldInfo.optionsInfo.inputType === 'select'"
                 v-model="item.value"
                 :items="item.options"
                 filled
@@ -80,27 +153,19 @@
                 clearable
                 item-text="name"
                 item-value="id"
+                class="py-0"
                 @change="filterChanged = true"
               ></v-select>
-              <v-text-field
-                v-else
-                v-model="item.value"
-                :label="item.fieldInfo.text"
-                placeholder="Type to search"
-                outlined
-                :prepend-icon="item.fieldInfo.icon"
-                @change="filterChanged = true"
-              ></v-text-field>
             </v-col>
           </v-row>
+          <v-toolbar v-if="filterChanged" dense flat color="transparent">
+            <v-spacer></v-spacer>
+            <v-btn color="primary" dark class="mb-2" @click="updateFilters()">
+              <v-icon left>mdi-filter</v-icon>
+              Update Filters
+            </v-btn>
+          </v-toolbar>
         </v-container>
-        <v-toolbar v-if="filterChanged" dense flat color="transparent">
-          <v-spacer></v-spacer>
-          <v-btn color="primary" dark class="mb-2" @click="updateFilters()">
-            <v-icon left>mdi-plus</v-icon>
-            Update Filters
-          </v-btn>
-        </v-toolbar>
       </template>
       <template v-slot:item="props">
         <tr
@@ -114,6 +179,7 @@
             <v-btn
               v-if="recordInfo.expandTypes.length === 1"
               icon
+              small
               @click.stop="
                 toggleItemExpanded(
                   props,
@@ -128,7 +194,7 @@
 
             <v-menu v-else-if="!props.isExpanded" bottom left offset-x>
               <template v-slot:activator="{ on, attrs }">
-                <v-btn icon v-bind="attrs" v-on="on">
+                <v-btn icon small v-bind="attrs" v-on="on">
                   <v-icon>mdi-chevron-down</v-icon>
                 </v-btn>
               </template>
@@ -150,7 +216,12 @@
               </v-list>
             </v-menu>
 
-            <v-btn v-else icon @click.stop="toggleItemExpanded(props, null)">
+            <v-btn
+              v-else
+              icon
+              small
+              @click.stop="toggleItemExpanded(props, null)"
+            >
               <v-icon>mdi-chevron-up</v-icon>
             </v-btn>
           </td>
@@ -158,6 +229,12 @@
             <div v-if="headerItem.value === null">
               <v-icon small @click.stop="goToChild(props.item.id)"
                 >mdi-arrow-right-circle</v-icon
+              >
+              <v-icon
+                v-if="recordInfo.shareOptions"
+                small
+                @click.stop="openDialog('shareRecord', props.item)"
+                >mdi-share-variant</v-icon
               >
               <v-icon
                 v-if="recordInfo.viewOptions"
@@ -281,15 +358,18 @@ export default {
 
     goToChild(item) {
       this.parentPath.push(item)
-      // clear the searchInput
-      this.searchInput = ''
-      this.reset()
+      this.reset({
+        resetSubscription: true,
+        resetFilters: true,
+      })
     },
 
     goToParent() {
       this.parentPath.pop()
-      this.searchInput = ''
-      this.reset()
+      this.reset({
+        resetSubscription: true,
+        resetFilters: true,
+      })
     },
 
     // override

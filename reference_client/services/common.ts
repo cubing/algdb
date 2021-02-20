@@ -8,6 +8,18 @@ export function generateTimeAgoString(unixTimestamp: number | null) {
   return format(unixTimestamp * 1000)
 }
 
+export function capitalizeString(str) {
+  return str ? str.charAt(0).toUpperCase() + str.slice(1) : ''
+}
+
+export async function copyToClipboard(that, content) {
+  await navigator.clipboard.writeText(content)
+  that.$notifier.showSnackbar({
+    message: 'Copied to Clipboard',
+    variant: 'success',
+  })
+}
+
 export function getNestedProperty(obj: StringKeyObject, path: string) {
   const pathArray = path.split(/\./)
   let currentValue = obj

@@ -19,6 +19,9 @@ export class AlgService extends PaginatedService {
     "algcase.id": {
       field: "algAlgcaseLink/algcase.id",
     },
+    "algset.id": {
+      field: "algAlgcaseLink/algcase.algset.id",
+    },
     "puzzle.id": {
       field: "algAlgcaseLink/algcase.algset.puzzle.id",
     },
@@ -27,6 +30,10 @@ export class AlgService extends PaginatedService {
     },
     "tag.name": {
       field: "algTagLink/tag.name",
+    },
+    "created_by.id": {},
+    "usertag.id": {
+      field: "algUsertagLink/usertag.id",
     },
   };
 

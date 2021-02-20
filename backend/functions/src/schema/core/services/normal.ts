@@ -350,8 +350,8 @@ export class NormalService extends BaseService {
       for (const prop in this.searchFieldsMap) {
         whereSubObject.fields.push({
           field: this.searchFieldsMap[prop].field ?? prop,
-          value: "%" + validatedArgs.search + "%",
-          operator: "like",
+          value: new RegExp(validatedArgs.search, "i"),
+          operator: "regex",
         });
       }
 
@@ -425,8 +425,8 @@ export class NormalService extends BaseService {
       for (const prop in this.searchFieldsMap) {
         whereSubObject.fields.push({
           field: this.searchFieldsMap[prop].field ?? prop,
-          value: "%" + validatedArgs.search + "%",
-          operator: "like",
+          value: new RegExp(validatedArgs.search, "i"),
+          operator: "regex",
         });
       }
 

@@ -2,6 +2,7 @@ import { getPuzzles, getTags } from '../dropdown'
 import algTagLinkRecordInfo from './algTagLink'
 import algAlgcaseLinkRecordInfo from './algAlgcaseLink'
 import userAlgVoteLinkRecordInfo from './userAlgVoteLink'
+import algUsertagLinkRecordInfo from './algUsertagLink'
 import type { RecordInfo } from '~/types'
 import { generateTimeAgoString } from '~/services/common'
 
@@ -23,8 +24,27 @@ export default <RecordInfo<'alg'>>{
       field: 'tag.id',
       operator: 'eq',
     },
+    {
+      field: 'usertag.id',
+      operator: 'eq',
+    },
+    {
+      field: 'algcase.id',
+      operator: 'eq',
+    },
+    {
+      field: 'algset.id',
+      operator: 'eq',
+    },
+    {
+      field: 'id',
+      operator: 'eq',
+    },
   ],
   fields: {
+    id: {
+      text: 'ID',
+    },
     sequence: {
       text: 'Sequence',
     },
@@ -43,17 +63,46 @@ export default <RecordInfo<'alg'>>{
       text: 'My Vote',
     },
     'algcase.id': {
-      text: 'Algcase ID',
+      text: 'Algcase',
+      parseValue: (val) => Number(val),
+      optionsInfo: {
+        optionsType: 'algcase',
+        inputType: 'server-autocomplete',
+      },
+    },
+    'algset.id': {
+      text: 'Algset',
+      parseValue: (val) => Number(val),
+      optionsInfo: {
+        optionsType: 'algset',
+        inputType: 'server-autocomplete',
+      },
     },
     'tag.id': {
       text: 'Tag',
       parseValue: (val) => Number(val),
-      getOptions: getTags,
+      optionsInfo: {
+        getOptions: getTags,
+        optionsType: 'tag',
+        inputType: 'combobox',
+      },
+    },
+    'usertag.id': {
+      text: 'User Tag',
+      parseValue: (val) => Number(val),
+      optionsInfo: {
+        optionsType: 'usertag',
+        inputType: 'server-autocomplete',
+      },
     },
     'puzzle.id': {
-      text: 'Puzzle ID',
+      text: 'Puzzle',
       parseValue: (val) => Number(val),
-      getOptions: getPuzzles,
+      optionsInfo: {
+        getOptions: getPuzzles,
+        optionsType: 'puzzle',
+        inputType: 'autocomplete',
+      },
     },
   },
   addOptions: {
@@ -67,6 +116,9 @@ export default <RecordInfo<'alg'>>{
     fields: ['sequence'],
   },
   deleteOptions: {
+    renderItem: (item) => item.sequence,
+  },
+  shareOptions: {
     renderItem: (item) => item.sequence,
   },
   headers: [
@@ -106,6 +158,29 @@ export default <RecordInfo<'alg'>>{
     },
     {
       recordInfo: userAlgVoteLinkRecordInfo,
+      excludeHeaders: ['alg.sequence'],
+    },
+    {
+      recordInfo: algUsertagLinkRecordInfo,
+      excludeHeaders: ['alg.sequence'],
+    },
+    {
+      recordInfo: algUsertagLinkRecordInfo,
+      name: 'My User Tags',
+      lockedFilters: (that, item) => {
+        return [
+          {
+            field: 'alg.id',
+            operator: 'eq',
+            value: item.id,
+          },
+          {
+            field: 'created_by.id',
+            operator: 'eq',
+            value: that.$store.getters['auth/user']?.id,
+          },
+        ]
+      },
       excludeHeaders: ['alg.sequence'],
     },
   ],

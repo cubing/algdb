@@ -1,4 +1,6 @@
 import userAlgVoteLinkRecordInfo from './userAlgVoteLink'
+import algRecordInfo from './alg'
+import algUsertagLinkRecordInfo from './algUsertagLink'
 import type { RecordInfo } from '~/types'
 import { generateTimeAgoString } from '~/services/common'
 import { getUserRoles } from '~/services/dropdown'
@@ -27,7 +29,10 @@ export default <RecordInfo<'user'>>{
     },
     role: {
       text: 'User Role',
-      getOptions: getUserRoles,
+      optionsInfo: {
+        getOptions: getUserRoles,
+        inputType: 'select',
+      },
     },
     created_at: {
       text: 'Created At',
@@ -77,7 +82,35 @@ export default <RecordInfo<'user'>>{
   expandTypes: [
     {
       recordInfo: userAlgVoteLinkRecordInfo,
+      name: 'Voted Algs',
       excludeHeaders: ['user.name'],
+    },
+    {
+      recordInfo: algRecordInfo,
+      name: 'Created Algs',
+      lockedFilters: (_that, item) => {
+        return [
+          {
+            field: 'created_by.id',
+            operator: 'eq',
+            value: item.id,
+          },
+        ]
+      },
+    },
+    {
+      recordInfo: algUsertagLinkRecordInfo,
+      name: "User's Tags",
+      lockedFilters: (_that, item) => {
+        return [
+          {
+            field: 'created_by.id',
+            operator: 'eq',
+            value: item.id,
+          },
+        ]
+      },
+      excludeHeaders: ['created_by.name'],
     },
   ],
 }

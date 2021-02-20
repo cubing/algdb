@@ -3,11 +3,14 @@ import { executeJomql, executeJomqlSubscription } from '~/services/jomql'
 import { unsubscribeChannels } from '~/services/pusher'
 import EditRecordDialog from '~/components/dialog/editRecordDialog.vue'
 import DeleteRecordDialog from '~/components/dialog/deleteRecordDialog.vue'
+import ShareRecordDialog from '~/components/dialog/shareRecordDialog.vue'
 import CrudRecordInterface from '~/components/interface/crud/crudRecordInterface.vue'
 import {
   collapseObject,
   getNestedProperty,
   generateTimeAgoString,
+  copyToClipboard,
+  capitalizeString,
 } from '~/services/common'
 
 export default {
@@ -80,6 +83,7 @@ export default {
     return {
       filterInputs: {},
       filterInputsArray: [],
+      showFilterInterface: false,
       searchInput: '',
       filterChanged: false,
       filterOptions: {},
@@ -89,6 +93,7 @@ export default {
         addRecord: false,
         editRecord: false,
         deleteRecord: false,
+        shareRecord: false,
 
         selectedItem: null,
       },
@@ -160,12 +165,15 @@ export default {
     currentViewRecordComponent() {
       return this.recordInfo.viewOptions?.component ?? EditRecordDialog
     },
+    currentShareRecordComponent() {
+      return this.recordInfo.shareOptions?.component ?? ShareRecordDialog
+    },
     capitalizedType() {
-      return sharedService.capitalizeString(this.recordInfo.type)
+      return capitalizeString(this.recordInfo.type)
     },
     visibleFiltersArray() {
       return this.filterInputsArray.filter(
-        (ele) => !this.hiddenFilters.includes(ele.fieldInfo.field)
+        (ele) => !this.hiddenFilters.includes(ele.field)
       )
     },
     visibleRawFiltersArray() {
@@ -199,7 +207,7 @@ export default {
           text: 'Action',
           sortable: false,
           value: null,
-          width: '90px',
+          width: '110px',
           ...this.recordInfo.headerActionOptions,
         })
     },
@@ -212,39 +220,54 @@ export default {
 
     // expanded
     lockedSubFilters() {
-      return this.expandedItems.length
-        ? [
-            {
-              field: this.recordInfo.type.toLowerCase() + '.id',
-              operator: 'eq',
-              value: this.expandedItems[0].id,
-            },
-          ]
-        : []
+      if (!this.expandedItems.length) return []
+
+      // is there a lockedFilters generator on the expandTypeObject? if so, use that
+      if (this.expandTypeObject.lockedFilters) {
+        return this.expandTypeObject.lockedFilters(this, this.expandedItems[0])
+      }
+
+      return [
+        {
+          field: this.recordInfo.type.toLowerCase() + '.id',
+          operator: 'eq',
+          value: this.expandedItems[0].id,
+        },
+      ]
     },
 
     hiddenSubFilters() {
-      return [this.recordInfo.type.toLowerCase()]
+      return [this.recordInfo.type.toLowerCase() + '.id']
+    },
+
+    visibleFiltersCount() {
+      return this.visibleRawFiltersArray.length + (this.search ? 1 : 0)
     },
   },
 
   watch: {
     // this triggers when filters get updated on parent element
     filters() {
-      // doing something between a soft and hard reset
       this.syncFilters()
-      this.loadData()
+      this.reset()
       // also going to un-expand any expanded items
       this.expandedItems.pop()
     },
     // this triggers when parent element switches to a different item
     lockedFilters() {
-      this.reset(true)
+      this.reset({
+        resetSubscription: true,
+        resetFilters: true,
+      })
     },
   },
 
   created() {
-    this.reset(true)
+    this.reset({
+      resetSubscription: true,
+      initFilters: true,
+      resetSort: true,
+    })
   },
 
   destroyed() {
@@ -254,6 +277,45 @@ export default {
 
   methods: {
     generateTimeAgoString,
+
+    handleSearchUpdate(inputObject) {
+      if (!inputObject.search || !inputObject.focused) return
+
+      // cancel pending call, if any
+      clearTimeout(this._timerId)
+
+      // delay new call 500ms
+      this._timerId = setTimeout(() => {
+        this.loadSearchResults(inputObject)
+      }, 500)
+    },
+
+    async loadSearchResults(inputObject) {
+      inputObject.loading = true
+      try {
+        const results = await executeJomql(this, {
+          [`get${capitalizeString(
+            inputObject.fieldInfo.optionsInfo.optionsType
+          )}Paginator`]: {
+            edges: {
+              node: {
+                id: true,
+                name: true,
+              },
+            },
+            __args: {
+              first: 20,
+              search: inputObject.search,
+            },
+          },
+        })
+
+        inputObject.options = results.edges.map((edge) => edge.node)
+      } catch (err) {
+        sharedService.handleError(err, this.$root)
+      }
+      inputObject.loading = false
+    },
 
     // expanded
     handleSubFiltersUpdated(searchInput, filterInputsArray) {
@@ -287,7 +349,7 @@ export default {
     },
 
     copyToClipboard(content) {
-      sharedService.copyToClipboard(this, content)
+      copyToClipboard(this, content)
     },
 
     getTableRowData(headerItem, item) {
@@ -476,7 +538,8 @@ export default {
       this.subscriptionChannels.push(channelName)
     },
 
-    syncFilters() {
+    // syncs the filter values with this.filters
+    syncFilters(init = false) {
       const inputFieldsSet = new Set(this.filterInputsArray)
 
       // parses filter into filterInputArray
@@ -489,6 +552,32 @@ export default {
 
         if (matchingInputObject) {
           matchingInputObject.value = ele.value
+
+          if (init) {
+            // if optionsInfo.inputType === 'server-autocomplete', only populate the options with the specific entry, if any
+            if (matchingInputObject.fieldInfo.optionsInfo) {
+              if (
+                matchingInputObject.fieldInfo.optionsInfo.inputType ===
+                'server-autocomplete'
+              ) {
+                executeJomql(this, {
+                  [`get${capitalizeString(
+                    matchingInputObject.fieldInfo.optionsInfo.optionsType
+                  )}`]: {
+                    id: true,
+                    name: true,
+                    __args: {
+                      id: matchingInputObject.value,
+                    },
+                  },
+                })
+                  .then((res) => {
+                    matchingInputObject.options = [res]
+                  })
+                  .catch((e) => e)
+              }
+            }
+          }
 
           // remove from set
           inputFieldsSet.delete(matchingInputObject)
@@ -506,15 +595,19 @@ export default {
       if (!this.useSubscription) this.reset()
     },
 
-    reset(hardReset = false) {
+    reset({
+      resetSubscription = false,
+      initFilters = false,
+      resetFilters = false,
+      resetSort = false,
+    } = {}) {
       this.records = []
 
-      if (hardReset) {
+      if (resetSubscription) {
         if (this.useSubscription) this.subscribeEvents()
+      }
 
-        this.options.initialLoad = true
-
-        // populate filters
+      if (initFilters) {
         this.filterInputsArray = this.recordInfo.filters.map((ele) => {
           const fieldInfo = this.recordInfo.fields[ele.field]
 
@@ -527,22 +620,49 @@ export default {
             operator: ele.operator,
             options: [],
             value: null,
+            loading: false,
+            search: null,
+            focused: false,
           }
-          fieldInfo.getOptions &&
-            fieldInfo
-              .getOptions(this)
-              .then((res) => (filterObject.options = res))
+
+          if (fieldInfo.optionsInfo) {
+            if (fieldInfo.optionsInfo.inputType === 'server-autocomplete') {
+            } else {
+              fieldInfo.optionsInfo
+                .getOptions(this)
+                .then((res) => (filterObject.options = res))
+            }
+          }
           return filterObject
         })
 
-        // sync filters with initial filters
-        this.syncFilters()
+        // clears the searchInput
+        this.searchInput = ''
 
+        // syncs the filterInputsArray with this.filters
+        this.syncFilters(true)
+      }
+
+      if (resetSort) {
+        this.options.initialLoad = true
         // populate sort/page options
         if (this.recordInfo.options?.sortBy) {
           this.options.sortBy = this.recordInfo.options.sortBy
           this.options.sortDesc = this.recordInfo.options.sortDesc
         }
+      }
+
+      // sets all of the filter values to null, searchInput to '' and also emits changes to parent
+      if (resetFilters) {
+        this.filterInputsArray.forEach((ele) => {
+          ele.value = null
+        })
+        // clears the searchInput
+        this.searchInput = ''
+        this.updateFilters()
+
+        // returning early because updateFilters will trigger reset
+        return
       }
 
       this.loadData()

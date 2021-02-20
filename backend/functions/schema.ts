@@ -1,7 +1,7 @@
 // Query builder (Typescript version >= 4.1.3 required)
-/* const queryResult = executeJomql({
+const queryResult = executeJomql({
   // Start typing here to get hints
-}); */
+});
 
 export function executeJomql<Key extends keyof Root>(
   query: GetQuery<Key>
@@ -107,10 +107,14 @@ export type FilterByField<T> = {
   algGroupByKey: "id" | "current_vote_value";
   tagSortByKey: "id" | "created_at";
   tagGroupByKey: "id";
+  usertagSortByKey: "id" | "created_at";
+  usertagGroupByKey: "id";
   algAlgcaseLinkSortByKey: "created_at";
   algAlgcaseLinkGroupByKey: undefined;
   algTagLinkSortByKey: "created_at";
   algTagLinkGroupByKey: undefined;
+  algUsertagLinkSortByKey: "created_at";
+  algUsertagLinkGroupByKey: undefined;
   userAlgVoteLinkSortByKey: "created_at";
   userAlgVoteLinkGroupByKey: undefined;
 };
@@ -355,6 +359,27 @@ export type FilterByField<T> = {
     search?: Scalars["string"];
   };
   createTag: { name: Scalars["string"] };
+  getUsertag: { id?: Scalars["id"] };
+  "usertagFilterByField/id": FilterByField<Scalars["id"]>;
+  "usertagFilterByField/name": FilterByField<Scalars["string"]>;
+  "usertagFilterByField/created_by.id": FilterByField<Scalars["id"]>;
+  usertagFilterByObject: {
+    id?: InputTypes["usertagFilterByField/id"];
+    name?: InputTypes["usertagFilterByField/name"];
+    "created_by.id"?: InputTypes["usertagFilterByField/created_by.id"];
+  };
+  getUsertagPaginator: {
+    first?: Scalars["number"];
+    last?: Scalars["number"];
+    after?: Scalars["string"];
+    before?: Scalars["string"];
+    sortBy?: Scalars["usertagSortByKey"][];
+    sortDesc?: Scalars["boolean"][];
+    filterBy?: InputTypes["usertagFilterByObject"][];
+    groupBy?: Scalars["usertagGroupByKey"][];
+    search?: Scalars["string"];
+  };
+  createUsertag: { name: Scalars["string"] };
   "algAlgcaseLinkFilterByField/id": FilterByField<Scalars["id"]>;
   "algAlgcaseLinkFilterByField/algcase.id": FilterByField<Scalars["id"]>;
   "algAlgcaseLinkFilterByField/alg.id": FilterByField<Scalars["id"]>;
@@ -396,6 +421,27 @@ export type FilterByField<T> = {
   };
   getAlgTagLink: { id?: Scalars["id"] };
   createAlgTagLink: { alg: InputTypes["getAlg"]; tag: InputTypes["getTag"] };
+  "algUsertagLinkFilterByField/alg.id": FilterByField<Scalars["id"]>;
+  "algUsertagLinkFilterByField/usertag.id": FilterByField<Scalars["id"]>;
+  algUsertagLinkFilterByObject: {
+    "alg.id"?: InputTypes["algUsertagLinkFilterByField/alg.id"];
+    "usertag.id"?: InputTypes["algUsertagLinkFilterByField/usertag.id"];
+  };
+  getAlgUsertagLinkPaginator: {
+    first?: Scalars["number"];
+    last?: Scalars["number"];
+    after?: Scalars["string"];
+    before?: Scalars["string"];
+    sortBy?: Scalars["algUsertagLinkSortByKey"][];
+    sortDesc?: Scalars["boolean"][];
+    filterBy?: InputTypes["algUsertagLinkFilterByObject"][];
+    groupBy?: Scalars["algUsertagLinkGroupByKey"][];
+  };
+  getAlgUsertagLink: { id?: Scalars["id"] };
+  createAlgUsertagLink: {
+    alg: InputTypes["getAlg"];
+    usertag: InputTypes["getUsertag"];
+  };
   "userAlgVoteLinkFilterByField/user.id": FilterByField<Scalars["id"]>;
   "userAlgVoteLinkFilterByField/alg.id": FilterByField<Scalars["id"]>;
   userAlgVoteLinkFilterByObject: {
@@ -442,6 +488,11 @@ export type FilterByField<T> = {
   algPaginator: { Typename: "algPaginator"; Type: GetType<AlgPaginator> };
   tagEdge: { Typename: "tagEdge"; Type: GetType<TagEdge> };
   tagPaginator: { Typename: "tagPaginator"; Type: GetType<TagPaginator> };
+  usertagEdge: { Typename: "usertagEdge"; Type: GetType<UsertagEdge> };
+  usertagPaginator: {
+    Typename: "usertagPaginator";
+    Type: GetType<UsertagPaginator>;
+  };
   algAlgcaseLinkEdge: {
     Typename: "algAlgcaseLinkEdge";
     Type: GetType<AlgAlgcaseLinkEdge>;
@@ -457,6 +508,15 @@ export type FilterByField<T> = {
     Type: GetType<AlgTagLinkPaginator>;
   };
   algTagLink: { Typename: "algTagLink"; Type: GetType<AlgTagLink> };
+  algUsertagLinkEdge: {
+    Typename: "algUsertagLinkEdge";
+    Type: GetType<AlgUsertagLinkEdge>;
+  };
+  algUsertagLinkPaginator: {
+    Typename: "algUsertagLinkPaginator";
+    Type: GetType<AlgUsertagLinkPaginator>;
+  };
+  algUsertagLink: { Typename: "algUsertagLink"; Type: GetType<AlgUsertagLink> };
   userAlgVoteLinkEdge: {
     Typename: "userAlgVoteLinkEdge";
     Type: GetType<UserAlgVoteLinkEdge>;
@@ -480,6 +540,7 @@ export type FilterByField<T> = {
   algcase: { Typename: "algcase"; Type: GetType<Algcase> };
   alg: { Typename: "alg"; Type: GetType<Alg> };
   tag: { Typename: "tag"; Type: GetType<Tag> };
+  usertag: { Typename: "usertag"; Type: GetType<Usertag> };
   userAlgVoteLink: {
     Typename: "userAlgVoteLink";
     Type: GetType<UserAlgVoteLink>;
@@ -549,6 +610,15 @@ export type TagEdge = Edge<Tag>;
   paginatorInfo: { Type: PaginatorInfo; Args: undefined };
   edges: { Type: TagEdge[]; Args: undefined };
 };
+export type UsertagEdge = Edge<Usertag>;
+/**Paginator*/ export type UsertagPaginator = {
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  paginatorInfo: { Type: PaginatorInfo; Args: undefined };
+  edges: { Type: UsertagEdge[]; Args: undefined };
+};
 export type AlgAlgcaseLinkEdge = Edge<AlgAlgcaseLink>;
 /**Paginator*/ export type AlgAlgcaseLinkPaginator = {
   /**The typename of the record*/ __typename: {
@@ -593,6 +663,33 @@ export type AlgTagLinkEdge = Edge<AlgTagLink>;
   };
   alg: { Type: Alg; Args: undefined };
   tag: { Type: Tag; Args: undefined };
+  /**When the record was created*/ created_at: {
+    Type: Scalars["unixTimestamp"];
+    Args: undefined;
+  };
+  /**When the record was last updated*/ updated_at: {
+    Type: Scalars["unixTimestamp"] | null;
+    Args: undefined;
+  };
+  created_by: { Type: User; Args: undefined };
+};
+export type AlgUsertagLinkEdge = Edge<AlgUsertagLink>;
+/**Paginator*/ export type AlgUsertagLinkPaginator = {
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  paginatorInfo: { Type: PaginatorInfo; Args: undefined };
+  edges: { Type: AlgUsertagLinkEdge[]; Args: undefined };
+};
+/**Link type*/ export type AlgUsertagLink = {
+  /**The unique ID of the field*/ id: { Type: Scalars["id"]; Args: undefined };
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  alg: { Type: Alg; Args: undefined };
+  usertag: { Type: Usertag; Args: undefined };
   /**When the record was created*/ created_at: {
     Type: Scalars["unixTimestamp"];
     Args: undefined;
@@ -758,6 +855,23 @@ export type UserAlgVoteLinkEdge = Edge<UserAlgVoteLink>;
   };
   created_by: { Type: User; Args: undefined };
 };
+/**Usertag type*/ export type Usertag = {
+  /**The unique ID of the field*/ id: { Type: Scalars["id"]; Args: undefined };
+  /**The typename of the record*/ __typename: {
+    Type: Scalars["string"];
+    Args: [Scalars["number"]];
+  };
+  name: { Type: Scalars["string"]; Args: undefined };
+  /**When the record was created*/ created_at: {
+    Type: Scalars["unixTimestamp"];
+    Args: undefined;
+  };
+  /**When the record was last updated*/ updated_at: {
+    Type: Scalars["unixTimestamp"] | null;
+    Args: undefined;
+  };
+  created_by: { Type: User; Args: undefined };
+};
 /**Link type*/ export type UserAlgVoteLink = {
   /**The unique ID of the field*/ id: { Type: Scalars["id"]; Args: undefined };
   /**The typename of the record*/ __typename: {
@@ -827,6 +941,13 @@ export type UserAlgVoteLinkEdge = Edge<UserAlgVoteLink>;
   getTagPaginator: { Type: TagPaginator; Args: InputTypes["getTagPaginator"] };
   deleteTag: { Type: Tag; Args: InputTypes["getTag"] };
   createTag: { Type: Tag; Args: InputTypes["createTag"] };
+  getUsertag: { Type: Usertag; Args: InputTypes["getUsertag"] };
+  getUsertagPaginator: {
+    Type: UsertagPaginator;
+    Args: InputTypes["getUsertagPaginator"];
+  };
+  deleteUsertag: { Type: Usertag; Args: InputTypes["getUsertag"] };
+  createUsertag: { Type: Usertag; Args: InputTypes["createUsertag"] };
   getAlgAlgcaseLinkPaginator: {
     Type: AlgAlgcaseLinkPaginator;
     Args: InputTypes["getAlgAlgcaseLinkPaginator"];
@@ -845,6 +966,18 @@ export type UserAlgVoteLinkEdge = Edge<UserAlgVoteLink>;
   };
   deleteAlgTagLink: { Type: AlgTagLink; Args: InputTypes["getAlgTagLink"] };
   createAlgTagLink: { Type: AlgTagLink; Args: InputTypes["createAlgTagLink"] };
+  getAlgUsertagLinkPaginator: {
+    Type: AlgUsertagLinkPaginator;
+    Args: InputTypes["getAlgUsertagLinkPaginator"];
+  };
+  deleteAlgUsertagLink: {
+    Type: AlgUsertagLink;
+    Args: InputTypes["getAlgUsertagLink"];
+  };
+  createAlgUsertagLink: {
+    Type: AlgUsertagLink;
+    Args: InputTypes["createAlgUsertagLink"];
+  };
   getUserAlgVoteLinkPaginator: {
     Type: UserAlgVoteLinkPaginator;
     Args: InputTypes["getUserAlgVoteLinkPaginator"];
