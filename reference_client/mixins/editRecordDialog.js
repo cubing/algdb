@@ -85,8 +85,25 @@ export default {
       this.$emit('close')
     },
 
+    setInputValue(key, value) {
+      const inputObject = this.inputsArray.find((ele) => ele.field === key)
+      if (!inputObject) throw new Error(`Input key not found: '${key}'`)
+
+      inputObject.value = value
+    },
+
+    getInputValue(key) {
+      const inputObject = this.inputsArray.find((ele) => ele.field === key)
+      if (!inputObject) throw new Error(`Input key not found: '${key}'`)
+      return inputObject.value
+    },
+
     handleSearchUpdate(inputObject) {
       if (!inputObject.search || !inputObject.focused) return
+
+      /*       // if inputObject.search === inputObject.value.name, also skip
+      if (inputObject.value && inputObject.search === inputObject.value.name)
+        return */
 
       // cancel pending call, if any
       clearTimeout(this._timerId)
@@ -139,22 +156,24 @@ export default {
       this.loading.editRecord = true
       try {
         const inputs = {}
-
         for (const inputObject of this.inputsArray) {
           let value
           // if the fieldInfo.optionsInfo.inputType === 'combobox', it came from a combo box. need to handle accordingly
-          if (inputObject.fieldInfo.optionsInfo?.inputType === 'combobox') {
-            // must have an optionsType
-            if (!inputObject.fieldInfo.optionsInfo.optionsType) {
-              throw new Error(`Invalid input for ${inputObject.fieldInfo.text}`)
-            }
-
+          if (
+            inputObject.fieldInfo.optionsInfo?.inputType === 'combobox' &&
+            inputObject.fieldInfo.optionsInfo.optionsType
+          ) {
+            // must have non-null value
             if (!inputObject.value) {
-              throw new Error(`Invalid input for ${inputObject.fieldInfo.text}`)
+              throw new Error(
+                `Invalid input for ${
+                  inputObject.fieldInfo.text ?? inputObject.field
+                }`
+              )
             }
 
-            // expecting either string or obj
             if (typeof inputObject.value === 'string') {
+              // expecting either string or obj
               // create the item, get its id.
               const results = await executeJomql(this, {
                 ['create' +
@@ -181,6 +200,9 @@ export default {
           } else {
             value = inputObject.value
           }
+
+          // convert '__null' to null
+          if (value === '__null') value = null
 
           inputs[inputObject.field] = inputObject.fieldInfo.parseValue
             ? inputObject.fieldInfo.parseValue(value)
@@ -240,6 +262,12 @@ export default {
           ['get' + this.capitalizedType]: {
             ...collapseObject(
               fields.reduce((total, fieldKey) => {
+                const fieldInfo = this.recordInfo.fields[fieldKey]
+                // field unknown, abort
+                if (!fieldInfo) throw new Error('Unknown field: ' + fieldKey)
+
+                // if field is hidden, exclude
+                if (fieldInfo.hidden) return total
                 total[fieldKey] = true
                 return total
               }, {})
@@ -258,7 +286,9 @@ export default {
           // field unknown, abort
           if (!fieldInfo) throw new Error('Unknown field: ' + fieldKey)
 
-          const fieldValue = getNestedProperty(data, fieldKey)
+          const fieldValue = fieldInfo.hidden
+            ? null
+            : getNestedProperty(data, fieldKey)
           const inputObject = {
             field: fieldKey,
             fieldInfo,
@@ -316,6 +346,11 @@ export default {
 
       // load dropdowns in this.inputOptions
       this.loadDropdowns()
+
+      // set all loading to false (could have been stuck from previous operations)
+      for (const prop in this.loading) {
+        this.loading[prop] = false
+      }
 
       // initialize inputs
       if (this.mode === 'add') {

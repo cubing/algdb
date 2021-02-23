@@ -1,11 +1,12 @@
 import { getTags } from '../dropdown'
 import type { RecordInfo } from '~/types'
-import { generateTimeAgoString } from '~/services/common'
+import TimeagoColumn from '~/components/table/common/timeagoColumn.vue'
 
 export default <RecordInfo<'algTagLink'>>{
   type: 'algTagLink',
   name: 'Alg-Tag-Link',
   icon: 'mdi-link',
+  renderItem: (item) => `${item.alg.sequence} -> ${item.tag.name}`,
   options: {
     sortBy: ['created_at'],
     sortDesc: [true],
@@ -32,11 +33,11 @@ export default <RecordInfo<'algTagLink'>>{
     },
     created_at: {
       text: 'Created At',
-      renderFn: (val) => generateTimeAgoString(val),
+      component: TimeagoColumn,
     },
     updated_at: {
       text: 'Updated At',
-      renderFn: (val) => generateTimeAgoString(val),
+      component: TimeagoColumn,
     },
   },
   addOptions: {
@@ -44,9 +45,8 @@ export default <RecordInfo<'algTagLink'>>{
   },
   editOptions: undefined,
   viewOptions: undefined,
-  deleteOptions: {
-    renderItem: (item) => `${item.alg.sequence} -> ${item.tag.name}`,
-  },
+  deleteOptions: {},
+  shareOptions: undefined,
   headers: [
     {
       field: 'tag.name',

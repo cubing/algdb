@@ -1,10 +1,11 @@
 import type { RecordInfo } from '~/types'
-import { generateTimeAgoString } from '~/services/common'
+import TimeagoColumn from '~/components/table/common/timeagoColumn.vue'
 
 export default <RecordInfo<'userAlgVoteLink'>>{
   type: 'userAlgVoteLink',
   name: 'User-Alg-Vote-Link',
   icon: 'mdi-link',
+  renderItem: (item) => `${item.alg.sequence} -> ${item.user.name}`,
   options: {
     sortBy: ['created_at'],
     sortDesc: [true],
@@ -30,11 +31,11 @@ export default <RecordInfo<'userAlgVoteLink'>>{
     },
     created_at: {
       text: 'Created At',
-      renderFn: (val) => generateTimeAgoString(val),
+      component: TimeagoColumn,
     },
     updated_at: {
       text: 'Updated At',
-      renderFn: (val) => generateTimeAgoString(val),
+      component: TimeagoColumn,
     },
   },
   addOptions: {
@@ -42,9 +43,8 @@ export default <RecordInfo<'userAlgVoteLink'>>{
   },
   editOptions: undefined,
   viewOptions: undefined,
-  deleteOptions: {
-    renderItem: (item) => `${item.alg.sequence} -> ${item.user.name}`,
-  },
+  deleteOptions: {},
+  shareOptions: undefined,
   headers: [
     {
       field: 'user.name',

@@ -3,20 +3,27 @@ import {
   getPuzzles,
   getBooleanOptions,
   getCaseVisualizations,
+  getNullOptions,
 } from '~/services/dropdown'
 import algcaseRecordInfo from '~/services/models/algcase'
 import CrudAlgsetInterface from '~/components/interface/crud/crudAlgsetInterface.vue'
-import { generateTimeAgoString } from '~/services/common'
+import TimeagoColumn from '~/components/table/common/timeagoColumn.vue'
 
 export default <RecordInfo<'algset'>>{
   type: 'algset',
   name: 'Algset',
+  icon: undefined,
+  renderItem: (item) => item.name,
   options: {
     sortBy: ['created_at'],
     sortDesc: [true],
   },
   hasSearch: true,
   filters: [
+    {
+      field: 'parent.id',
+      operator: 'eq',
+    },
     {
       field: 'puzzle.id',
       operator: 'eq',
@@ -25,8 +32,15 @@ export default <RecordInfo<'algset'>>{
       field: 'is_public',
       operator: 'eq',
     },
+    {
+      field: 'id',
+      operator: 'eq',
+    },
   ],
   fields: {
+    id: {
+      text: 'ID',
+    },
     name: {
       text: 'Name',
     },
@@ -64,15 +78,19 @@ export default <RecordInfo<'algset'>>{
       },
     },
     'parent.id': {
-      text: 'Parent Algset ID',
+      text: 'Parent Algset',
+      optionsInfo: {
+        getOptions: getNullOptions,
+        inputType: 'select',
+      },
     },
     created_at: {
       text: 'Created At',
-      renderFn: (val) => generateTimeAgoString(val),
+      component: TimeagoColumn,
     },
     updated_at: {
       text: 'Updated At',
-      renderFn: (val) => generateTimeAgoString(val),
+      component: TimeagoColumn,
     },
   },
   addOptions: {
@@ -100,8 +118,9 @@ export default <RecordInfo<'algset'>>{
       'parent.id',
     ],
   },
-  deleteOptions: {
-    renderItem: (item) => item.name,
+  deleteOptions: {},
+  shareOptions: {
+    route: '/algsets',
   },
   headers: [
     {
@@ -130,7 +149,7 @@ export default <RecordInfo<'algset'>>{
     },
   ],
   headerActionOptions: {
-    width: '110px',
+    width: '130px',
   },
   expandTypes: [
     {

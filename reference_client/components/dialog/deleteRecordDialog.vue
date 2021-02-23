@@ -57,8 +57,8 @@ export default {
     },
     itemIdentifier() {
       if (!this.status) return
-      return this.recordInfo.deleteOptions.renderItem
-        ? this.recordInfo.deleteOptions.renderItem(this.selectedItem)
+      return this.recordInfo.renderItem
+        ? this.recordInfo.renderItem(this.selectedItem)
         : this.selectedItem
     },
   },

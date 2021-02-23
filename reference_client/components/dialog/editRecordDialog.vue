@@ -17,7 +17,7 @@
         </v-btn>
       </v-toolbar>
 
-      <v-card-text style="max-height: 600px">
+      <v-card-text style="max-height: 600px" class="pt-3">
         <v-container
           v-if="loading.loadRecord || loading.loadDropdowns"
           class="text-center"
@@ -39,7 +39,7 @@
               <v-text-field
                 v-if="!item.fieldInfo.optionsInfo"
                 v-model="item.value"
-                :label="item.fieldInfo.text"
+                :label="item.fieldInfo.text || item.field"
                 :readonly="item.readonly || mode === 'view'"
                 filled
                 dense
@@ -52,7 +52,7 @@
                 :items="item.options"
                 item-text="name"
                 item-value="id"
-                :label="item.fieldInfo.text"
+                :label="item.fieldInfo.text || item.field"
                 :readonly="item.readonly || mode === 'view'"
                 :clearable="!item.readonly && mode !== 'view'"
                 filled
@@ -66,7 +66,7 @@
                 :items="item.options"
                 item-text="name"
                 item-value="id"
-                :label="item.fieldInfo.text"
+                :label="item.fieldInfo.text || item.field"
                 :readonly="item.readonly || mode === 'view'"
                 :clearable="!item.readonly && mode !== 'view'"
                 filled
@@ -82,7 +82,7 @@
                 :items="item.options"
                 item-text="name"
                 item-value="id"
-                :label="item.fieldInfo.text"
+                :label="item.fieldInfo.text || item.field"
                 :readonly="item.readonly || mode === 'view'"
                 :clearable="!item.readonly && mode !== 'view'"
                 filled
@@ -98,7 +98,7 @@
                 v-model="item.value"
                 :items="item.options"
                 filled
-                :label="item.fieldInfo.text"
+                :label="item.fieldInfo.text || item.field"
                 :readonly="item.readonly || mode === 'view'"
                 :clearable="!item.readonly && mode !== 'view'"
                 item-text="name"

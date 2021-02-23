@@ -66,15 +66,15 @@ export default {
     shareUrl() {
       return this.selectedItem
         ? window.location.origin +
-            window.location.pathname +
+            this.recordInfo.shareOptions.route +
             '?filters=id-eq-' +
             this.selectedItem.id
         : ''
     },
     itemIdentifier() {
       if (!this.status) return
-      return this.recordInfo.shareOptions.renderItem
-        ? this.recordInfo.shareOptions.renderItem(this.selectedItem)
+      return this.recordInfo.renderItem
+        ? this.recordInfo.renderItem(this.selectedItem)
         : this.selectedItem
     },
   },

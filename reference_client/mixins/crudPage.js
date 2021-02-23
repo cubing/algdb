@@ -28,6 +28,7 @@ export default {
             // field unknown, abort
             if (!fieldInfo) throw new Error('Unknown field: ' + filter.field)
 
+            // if value === '_null' it is understood to be null.
             const value = fieldInfo.parseValue
               ? fieldInfo.parseValue(filterParts[2])
               : filterParts[2]
@@ -46,6 +47,9 @@ export default {
   methods: {
     handleFiltersUpdated(searchInput, filterInputsArray) {
       // build filter string
+
+      // if ele.value is null, it is excluded
+      // if ele.value is "__null", it is understood to be null
       const filterString = filterInputsArray
         .filter((ele) => ele.value !== undefined && ele.value !== null)
         .map((ele) => `${ele.field}-${ele.operator}-${ele.value}`)

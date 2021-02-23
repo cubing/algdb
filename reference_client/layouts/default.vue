@@ -225,7 +225,7 @@ export default {
             },
             {
               title: 'Algsets',
-              to: 'algsets',
+              to: 'algsets?filters=parent.id-eq-__null',
               roles: ['NORMAL', 'ADMIN'],
               permissions: [],
             },

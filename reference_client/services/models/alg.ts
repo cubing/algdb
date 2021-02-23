@@ -4,12 +4,15 @@ import algAlgcaseLinkRecordInfo from './algAlgcaseLink'
 import userAlgVoteLinkRecordInfo from './userAlgVoteLink'
 import algUsertagLinkRecordInfo from './algUsertagLink'
 import type { RecordInfo } from '~/types'
-import { generateTimeAgoString } from '~/services/common'
+import CurrentUserVoteColumn from '~/components/table/alg/currentUserVoteColumn.vue'
+import CopyableColumn from '~/components/table/common/copyableColumn.vue'
+import TimeagoColumn from '~/components/table/common/timeagoColumn.vue'
 
 export default <RecordInfo<'alg'>>{
   type: 'alg',
   name: 'Alg',
   icon: 'mdi-view-grid',
+  renderItem: (item) => item.sequence,
   options: {
     sortBy: ['created_at'],
     sortDesc: [true],
@@ -47,20 +50,22 @@ export default <RecordInfo<'alg'>>{
     },
     sequence: {
       text: 'Sequence',
+      component: CopyableColumn,
     },
     created_at: {
       text: 'Created At',
-      renderFn: (val) => generateTimeAgoString(val),
+      component: TimeagoColumn,
     },
     updated_at: {
       text: 'Updated At',
-      renderFn: (val) => generateTimeAgoString(val),
+      component: TimeagoColumn,
     },
     score: {
       text: 'Score',
     },
     current_user_vote: {
       text: 'My Vote',
+      component: CurrentUserVoteColumn,
     },
     'algcase.id': {
       text: 'Algcase',
@@ -115,11 +120,9 @@ export default <RecordInfo<'alg'>>{
   viewOptions: {
     fields: ['sequence'],
   },
-  deleteOptions: {
-    renderItem: (item) => item.sequence,
-  },
+  deleteOptions: {},
   shareOptions: {
-    renderItem: (item) => item.sequence,
+    route: '/algs',
   },
   headers: [
     {
@@ -181,7 +184,7 @@ export default <RecordInfo<'alg'>>{
           },
         ]
       },
-      excludeHeaders: ['alg.sequence'],
+      excludeHeaders: ['alg.sequence', 'created_by.name'],
     },
   ],
 }

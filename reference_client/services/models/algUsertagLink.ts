@@ -1,11 +1,12 @@
 import { getUsertags } from '../dropdown'
 import type { RecordInfo } from '~/types'
-import { generateTimeAgoString } from '~/services/common'
+import TimeagoColumn from '~/components/table/common/timeagoColumn.vue'
 
 export default <RecordInfo<'algUsertagLink'>>{
   type: 'algUsertagLink',
   name: 'Alg-Usertag-Link',
   icon: 'mdi-link',
+  renderItem: (item) => `${item.alg.sequence} -> ${item.usertag.name}`,
   options: {
     sortBy: ['created_at'],
     sortDesc: [true],
@@ -35,11 +36,11 @@ export default <RecordInfo<'algUsertagLink'>>{
     },
     created_at: {
       text: 'Created At',
-      renderFn: (val) => generateTimeAgoString(val),
+      component: TimeagoColumn,
     },
     updated_at: {
       text: 'Updated At',
-      renderFn: (val) => generateTimeAgoString(val),
+      component: TimeagoColumn,
     },
   },
   addOptions: {
@@ -47,9 +48,7 @@ export default <RecordInfo<'algUsertagLink'>>{
   },
   editOptions: undefined,
   viewOptions: undefined,
-  deleteOptions: {
-    renderItem: (item) => `${item.alg.sequence} -> ${item.usertag.name}`,
-  },
+  deleteOptions: {},
   headers: [
     {
       field: 'usertag.name',
@@ -61,7 +60,7 @@ export default <RecordInfo<'algUsertagLink'>>{
     },
     {
       field: 'created_by.name',
-      width: '150px',
+      width: '200px',
       sortable: false,
     },
     {

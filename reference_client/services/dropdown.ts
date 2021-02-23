@@ -110,7 +110,7 @@ export const getBooleanOptions = memoize(function (
 
 export const getNullOptions = memoize(function (_that, _forceReload = false) {
   return Promise.resolve([
-    { value: 'null', text: 'None' },
-    { value: null, text: 'Any' },
+    { id: '__null', name: 'None' },
+    { id: null, name: 'Any' },
   ])
 })

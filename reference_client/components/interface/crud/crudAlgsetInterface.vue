@@ -51,14 +51,9 @@
             <v-icon left>mdi-plus</v-icon>
             New {{ recordInfo.name }}
           </v-btn>
-          <v-divider
-            v-if="recordInfo.filters.length > 0"
-            class="mx-4"
-            inset
-            vertical
-          ></v-divider>
+          <v-divider v-if="hasFilters" class="mx-4" inset vertical></v-divider>
           <v-btn
-            v-if="recordInfo.filters.length > 0"
+            v-if="hasFilters"
             icon
             @click="showFilterInterface = !showFilterInterface"
           >
@@ -78,7 +73,7 @@
             <v-icon>mdi-refresh</v-icon>
           </v-btn>
         </v-toolbar>
-        <v-container v-if="showFilterInterface" class="pb-0">
+        <v-container v-if="showFilterInterface" class="pb-0 mt-3">
           <v-row>
             <v-col v-if="recordInfo.hasSearch" :key="-1" cols="3" class="py-0">
               <v-text-field
@@ -99,7 +94,7 @@
               <v-text-field
                 v-if="!item.fieldInfo.optionsInfo"
                 v-model="item.value"
-                :label="item.fieldInfo.text"
+                :label="item.fieldInfo.text || item.field"
                 :prepend-icon="item.fieldInfo.icon"
                 filled
                 clearable
@@ -114,7 +109,7 @@
                 :items="item.options"
                 item-text="name"
                 item-value="id"
-                :label="item.fieldInfo.text"
+                :label="item.fieldInfo.text || item.field"
                 :prepend-icon="item.fieldInfo.icon"
                 clearable
                 filled
@@ -131,7 +126,7 @@
                 :items="item.options"
                 item-text="name"
                 item-value="id"
-                :label="item.fieldInfo.text"
+                :label="item.fieldInfo.text || item.field"
                 :prepend-icon="item.fieldInfo.icon"
                 clearable
                 filled
@@ -148,7 +143,7 @@
                 v-model="item.value"
                 :items="item.options"
                 filled
-                :label="item.fieldInfo.text"
+                :label="item.fieldInfo.text || item.field"
                 :prepend-icon="item.fieldInfo.icon"
                 clearable
                 item-text="name"
@@ -256,15 +251,15 @@
               >
             </div>
             <span v-else>
-              {{ renderTableRowData(headerItem, props.item) }}
-              <v-icon
-                v-if="headerItem.copyable"
-                small
-                @click.stop="
-                  copyToClipboard(getTableRowData(headerItem, props.item))
-                "
-                >mdi-content-copy</v-icon
-              >
+              <component
+                :is="headerItem.fieldInfo.component"
+                v-if="headerItem.fieldInfo.component"
+                :item="props.item"
+                :fieldpath="headerItem.value"
+              ></component>
+              <span v-else>
+                {{ getTableRowData(headerItem, props.item) }}
+              </span>
             </span>
           </td>
         </tr>
@@ -275,6 +270,7 @@
             :is="childInterfaceComponent"
             class="mb-2"
             :record-info="expandTypeObject.recordInfo"
+            :title="expandTypeObject.name"
             :hidden-headers="expandTypeObject.excludeHeaders"
             :locked-filters="lockedSubFilters"
             :filters="additionalSubFilters"
@@ -322,13 +318,18 @@
       mode="view"
       @close="dialogs.viewRecord = false"
     ></component>
+    <component
+      :is="currentShareRecordComponent"
+      :status="dialogs.shareRecord"
+      :record-info="recordInfo"
+      :selected-item="dialogs.selectedItem"
+      @close="dialogs.shareRecord = false"
+    ></component>
   </div>
 </template>
 
 <script>
 import crudMixin from '~/mixins/crud'
-import { executeJomql } from '~/services/jomql'
-import { collapseObject } from '~/services/common'
 
 export default {
   mixins: [crudMixin],
@@ -337,17 +338,6 @@ export default {
     return {
       parentPath: [],
     }
-  },
-  computed: {
-    additionalLockedFilters() {
-      return {
-        field: 'parent.id',
-        operator: 'eq',
-        value: this.parentPath.length
-          ? this.parentPath[this.parentPath.length - 1].id
-          : null,
-      }
-    },
   },
 
   methods: {
@@ -358,96 +348,70 @@ export default {
 
     goToChild(item) {
       this.parentPath.push(item)
+
       this.reset({
         resetSubscription: true,
-        resetFilters: true,
+        reloadData: false,
       })
+
+      // reset all filters and search
+      this.filterInputsArray.forEach((ele) => {
+        ele.value = null
+      })
+
+      this.searchInput = ''
+
+      // find inputObject for parent.id, set value to item.id
+      this.filterInputsArray.find(
+        (input) => input.field === 'parent.id'
+      ).value = item.id
+
+      // force update
+      this.updateFilters()
     },
 
     goToParent() {
       this.parentPath.pop()
+
+      const parentId = this.parentPath.length
+        ? this.parentPath[this.parentPath.length - 1].id
+        : '__null'
+
       this.reset({
         resetSubscription: true,
-        resetFilters: true,
+        reloadData: false,
       })
+
+      // reset all filters and search
+      this.filterInputsArray.forEach((ele) => {
+        ele.value = null
+      })
+
+      this.searchInput = ''
+
+      // find inputObject for parent.id, set value to parentId.id
+      this.filterInputsArray.find(
+        (input) => input.field === 'parent.id'
+      ).value = parentId
+
+      // force update
+      this.updateFilters()
     },
 
     // override
     openAddRecordDialog() {
       const initializedRecord = {}
 
-      this.lockedFilters
-        .concat(this.additionalLockedFilters)
-        .forEach((addFilter) => {
-          initializedRecord[addFilter.field] = addFilter.value
-        })
-
-      this.openDialog('addRecord', initializedRecord)
-    },
-
-    // override
-    async getRecords(paginated = true) {
-      const paginationArgs = paginated
-        ? {
-            [this.positivePageDelta ? 'first' : 'last']: this.options
-              .itemsPerPage,
-            ...(this.options.page > 1 &&
-              this.positivePageDelta && {
-                after: this.currentPaginatorInfo.endCursor,
-              }),
-            ...(!this.positivePageDelta && {
-              before: this.currentPaginatorInfo.startCursor,
-            }),
-          }
-        : {
-            first: 100, // first 100 rows only
-          }
-      const data = await executeJomql(this, {
-        ['get' + this.capitalizedType + 'Paginator']: {
-          paginatorInfo: {
-            total: true,
-            startCursor: true,
-            endCursor: true,
-          },
-          edges: {
-            node: collapseObject(
-              this.recordInfo.headers.reduce(
-                (total, headerObject) => {
-                  const fieldInfo = this.recordInfo.fields[headerObject.field]
-
-                  // field unknown, abort
-                  if (!fieldInfo)
-                    throw new Error('Unknown field: ' + headerObject.field)
-
-                  total[headerObject.field] = true
-                  return total
-                },
-                { id: true } // always add id
-              )
-            ),
-          },
-          __args: {
-            ...paginationArgs,
-            sortBy: this.options.sortBy,
-            sortDesc: this.options.sortDesc,
-            filterBy: [
-              this.filters
-                .concat(this.lockedFilters)
-                .concat(this.additionalLockedFilters)
-                .reduce((total, ele) => {
-                  if (!total[ele.field]) total[ele.field] = {}
-                  // assuming this value has been parsed already
-                  total[ele.field][ele.operator] = ele.value
-                  return total
-                }, {}),
-            ],
-            ...(this.search && { search: this.search }),
-            ...(this.groupBy && { groupBy: this.groupBy }),
-          },
-        },
+      this.lockedFilters.forEach((addFilter) => {
+        initializedRecord[addFilter.field] = addFilter.value
       })
 
-      return data
+      // also add the parent.id, which should exist
+      initializedRecord['parent.id'] = this.filterInputsArray.find(
+        (input) => input.field === 'parent.id'
+      ).value
+
+      this.openDialog('addRecord', initializedRecord)
     },
   },
 }

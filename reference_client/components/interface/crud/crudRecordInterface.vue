@@ -40,15 +40,10 @@
             <v-icon left>mdi-plus</v-icon>
             New {{ recordInfo.name }}
           </v-btn>
-          <v-divider
-            v-if="recordInfo.filters.length > 0"
-            class="mx-4"
-            inset
-            vertical
-          ></v-divider>
+          <v-divider v-if="hasFilters" class="mx-4" inset vertical></v-divider>
 
           <v-btn
-            v-if="recordInfo.filters.length > 0"
+            v-if="hasFilters"
             icon
             @click="showFilterInterface = !showFilterInterface"
           >
@@ -68,7 +63,7 @@
             <v-icon>mdi-refresh</v-icon>
           </v-btn>
         </v-toolbar>
-        <v-container v-if="showFilterInterface" class="pb-0">
+        <v-container v-if="showFilterInterface" class="pb-0 mt-3">
           <v-row>
             <v-col v-if="recordInfo.hasSearch" :key="-1" cols="3" class="py-0">
               <v-text-field
@@ -90,7 +85,7 @@
               <v-text-field
                 v-if="!item.fieldInfo.optionsInfo"
                 v-model="item.value"
-                :label="item.fieldInfo.text"
+                :label="item.fieldInfo.text || item.field"
                 :prepend-icon="item.fieldInfo.icon"
                 filled
                 clearable
@@ -105,7 +100,7 @@
                 :items="item.options"
                 item-text="name"
                 item-value="id"
-                :label="item.fieldInfo.text"
+                :label="item.fieldInfo.text || item.field"
                 :prepend-icon="item.fieldInfo.icon"
                 clearable
                 filled
@@ -122,7 +117,7 @@
                 :items="item.options"
                 item-text="name"
                 item-value="id"
-                :label="item.fieldInfo.text"
+                :label="item.fieldInfo.text || item.field"
                 :prepend-icon="item.fieldInfo.icon"
                 clearable
                 filled
@@ -139,7 +134,7 @@
                 v-model="item.value"
                 :items="item.options"
                 filled
-                :label="item.fieldInfo.text"
+                :label="item.fieldInfo.text || item.field"
                 :prepend-icon="item.fieldInfo.icon"
                 clearable
                 item-text="name"
@@ -244,15 +239,15 @@
               >
             </div>
             <span v-else>
-              {{ renderTableRowData(headerItem, props.item) }}
-              <v-icon
-                v-if="headerItem.copyable"
-                small
-                @click.stop="
-                  copyToClipboard(getTableRowData(headerItem, props.item))
-                "
-                >mdi-content-copy</v-icon
-              >
+              <component
+                :is="headerItem.fieldInfo.component"
+                v-if="headerItem.fieldInfo.component"
+                :item="props.item"
+                :fieldpath="headerItem.value"
+              ></component>
+              <span v-else>
+                {{ getTableRowData(headerItem, props.item) }}
+              </span>
             </span>
           </td>
         </tr>
@@ -263,6 +258,7 @@
             :is="childInterfaceComponent"
             class="mb-2"
             :record-info="expandTypeObject.recordInfo"
+            :title="expandTypeObject.name"
             :hidden-headers="expandTypeObject.excludeHeaders"
             :locked-filters="lockedSubFilters"
             :filters="additionalSubFilters"

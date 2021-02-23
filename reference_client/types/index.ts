@@ -5,6 +5,8 @@ export type RecordInfo<T extends keyof MainTypes> = {
   type: T
   name: string
   icon?: string
+  // how to render the item as a string
+  renderItem?: (item) => string
   options: {
     // default sortBy/Desc for the interface
     sortBy: `get${Capitalize<T>}Paginator` extends keyof InputTypes
@@ -25,7 +27,7 @@ export type RecordInfo<T extends keyof MainTypes> = {
   // all of the "known" fields of the type. could be nested types (not included in type hints)
   fields?: {
     [K in keyof MainTypes[T]['Type']]?: {
-      text: string
+      text?: string
       icon?: string
       optionsInfo?: {
         getOptions?: (that) => Promise<any[]>
@@ -36,10 +38,12 @@ export type RecordInfo<T extends keyof MainTypes> = {
           | 'server-autocomplete' // if there's lots of entries, may not want to fetch all of the entries at once. getOptions will be optional
           | 'select' // standard select
       }
+      // is the field hidden? if yes, won't fetch it for edit fields
+      hidden?: boolean
       default?: (that) => unknown
       serialize?: (val: unknown) => unknown // fetching from API
       parseValue?: (val: unknown) => unknown // submitting to API
-      renderFn?: (val) => any // how it is displayed in the table
+      component?: any // component for rendering the field in table, if not using renderFn
     }
   }
 
@@ -67,8 +71,6 @@ export type RecordInfo<T extends keyof MainTypes> = {
     component?: any
     // if not createX, the custom create operation name
     operationName?: string
-    // how the item should display on the delete dialog
-    renderItem?: (item: any) => string
   }
 
   viewOptions?: {
@@ -84,8 +86,8 @@ export type RecordInfo<T extends keyof MainTypes> = {
   shareOptions?: {
     // custom component
     component?: any
-    // how the item should display on the share dialog
-    renderItem?: (item: any) => string
+    // the route used to share the item, must start with /
+    route: string
   }
 
   // the headers of the table
@@ -109,6 +111,10 @@ export type RecordInfo<T extends keyof MainTypes> = {
     lockedFilters?: (that, item) => FilterObject[]
     // headers fields that should not be shown
     excludeHeaders?: string[]
+    // filter fields that should not be shown (however, they can still be manipulated in a custom component file)
+    excludeFilters?: string[]
+    // initial filters that should be loaded into the nested component
+    initialFilters?: FilterObject[]
   }[]
 }
 

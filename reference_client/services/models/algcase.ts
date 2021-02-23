@@ -1,11 +1,13 @@
 import type { RecordInfo } from '~/types'
 import algRecordInfo from '~/services/models/alg'
 import { getPuzzles } from '~/services/dropdown'
-import { generateTimeAgoString } from '~/services/common'
+import TimeagoColumn from '~/components/table/common/timeagoColumn.vue'
 
 export default <RecordInfo<'algcase'>>{
   type: 'algcase',
   name: 'Algcase',
+  icon: undefined,
+  renderItem: (item) => item.name,
   options: {
     sortBy: ['created_at'],
     sortDesc: [true],
@@ -20,8 +22,15 @@ export default <RecordInfo<'algcase'>>{
       field: 'algset.id',
       operator: 'eq',
     },
+    {
+      field: 'id',
+      operator: 'eq',
+    },
   ],
   fields: {
+    id: {
+      text: 'ID',
+    },
     name: {
       text: 'Name',
     },
@@ -35,11 +44,11 @@ export default <RecordInfo<'algcase'>>{
     },
     created_at: {
       text: 'Created At',
-      renderFn: (val) => generateTimeAgoString(val),
+      component: TimeagoColumn,
     },
     updated_at: {
       text: 'Updated At',
-      renderFn: (val) => generateTimeAgoString(val),
+      component: TimeagoColumn,
     },
     'puzzle.id': {
       text: 'Puzzle',
@@ -60,8 +69,9 @@ export default <RecordInfo<'algcase'>>{
   viewOptions: {
     fields: ['name', 'algset.id'],
   },
-  deleteOptions: {
-    renderItem: (item) => item.name,
+  deleteOptions: {},
+  shareOptions: {
+    route: '/algcases',
   },
   headers: [
     {

@@ -9,7 +9,6 @@ import {
   collapseObject,
   getNestedProperty,
   generateTimeAgoString,
-  copyToClipboard,
   capitalizeString,
 } from '~/services/common'
 
@@ -195,12 +194,12 @@ export default {
             throw new Error('Unknown field: ' + headerObject.field)
 
           return {
-            text: fieldInfo.text,
+            text: fieldInfo.text ?? headerObject.field,
             align: headerObject.align ?? 'left',
             sortable: headerObject.sortable,
             value: headerObject.field,
             width: headerObject.width ?? null,
-            renderFn: fieldInfo.renderFn,
+            fieldInfo,
           }
         })
         .concat({
@@ -237,11 +236,20 @@ export default {
     },
 
     hiddenSubFilters() {
-      return [this.recordInfo.type.toLowerCase() + '.id']
+      if (!this.expandedItems.length) return []
+
+      // is there an excludeFilters array on the expandTypeObject? if so, use that
+      return [this.recordInfo.type.toLowerCase() + '.id'].concat(
+        this.expandTypeObject.excludeFilters ?? []
+      )
     },
 
     visibleFiltersCount() {
       return this.visibleRawFiltersArray.length + (this.search ? 1 : 0)
+    },
+
+    hasFilters() {
+      return this.recordInfo.filters.length > 0 || this.recordInfo.hasSearch
     },
   },
 
@@ -340,7 +348,8 @@ export default {
         props.expand(!props.isExpanded)
 
       // when item expanded, reset the filters
-      // this.additionalSubFilters = []
+      if (expandTypeObject)
+        this.additionalSubFilters = expandTypeObject.initialFilters ?? []
     },
 
     handleRowClick(item) {
@@ -348,19 +357,9 @@ export default {
         this.recordInfo.handleRowClick(this, item)
     },
 
-    copyToClipboard(content) {
-      copyToClipboard(this, content)
-    },
-
     getTableRowData(headerItem, item) {
       // need to go deeper if nested
       return getNestedProperty(item, headerItem.value)
-    },
-
-    renderTableRowData(headerItem, item) {
-      // need to go deeper if nested
-      const value = getNestedProperty(item, headerItem.value)
-      return headerItem.renderFn ? headerItem.renderFn(value) : value
     },
 
     async exportData() {
@@ -493,7 +492,9 @@ export default {
               this.filters.concat(this.lockedFilters).reduce((total, ele) => {
                 if (!total[ele.field]) total[ele.field] = {}
                 // assuming this value has been parsed already
-                total[ele.field][ele.operator] = ele.value
+                // however, still need to parse '__null' to null
+                total[ele.field][ele.operator] =
+                  ele.value === '__null' ? null : ele.value
                 return total
               }, {}),
             ],
@@ -600,8 +601,9 @@ export default {
       initFilters = false,
       resetFilters = false,
       resetSort = false,
+      reloadData = true,
     } = {}) {
-      this.records = []
+      if (reloadData) this.records = []
 
       if (resetSubscription) {
         if (this.useSubscription) this.subscribeEvents()
@@ -665,7 +667,9 @@ export default {
         return
       }
 
-      this.loadData()
+      if (reloadData) {
+        this.loadData()
+      }
     },
   },
 }

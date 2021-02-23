@@ -2,13 +2,14 @@ import userAlgVoteLinkRecordInfo from './userAlgVoteLink'
 import algRecordInfo from './alg'
 import algUsertagLinkRecordInfo from './algUsertagLink'
 import type { RecordInfo } from '~/types'
-import { generateTimeAgoString } from '~/services/common'
+import TimeagoColumn from '~/components/table/common/timeagoColumn.vue'
 import { getUserRoles } from '~/services/dropdown'
 
 export default <RecordInfo<'user'>>{
   type: 'user',
   name: 'User',
   icon: 'mdi-account',
+  renderItem: (item) => item.email,
   options: {
     sortBy: ['created_at'],
     sortDesc: [true],
@@ -19,8 +20,15 @@ export default <RecordInfo<'user'>>{
       field: 'role',
       operator: 'eq',
     },
+    {
+      field: 'id',
+      operator: 'eq',
+    },
   ],
   fields: {
+    id: {
+      text: 'ID',
+    },
     name: {
       text: 'Name',
     },
@@ -36,11 +44,11 @@ export default <RecordInfo<'user'>>{
     },
     created_at: {
       text: 'Created At',
-      renderFn: (val) => generateTimeAgoString(val),
+      component: TimeagoColumn,
     },
     updated_at: {
       text: 'Updated At',
-      renderFn: (val) => generateTimeAgoString(val),
+      component: TimeagoColumn,
     },
   },
   addOptions: undefined,
@@ -50,8 +58,9 @@ export default <RecordInfo<'user'>>{
   viewOptions: {
     fields: ['name', 'email', 'role'],
   },
-  deleteOptions: {
-    renderItem: (item) => item.email,
+  deleteOptions: {},
+  shareOptions: {
+    route: '/users',
   },
   headers: [
     {

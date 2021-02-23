@@ -1,12 +1,13 @@
 import type { RecordInfo } from '~/types'
 import algsetRecordInfo from '~/services/models/algset'
 import { getBooleanOptions } from '~/services/dropdown'
-import { generateTimeAgoString } from '~/services/common'
+import TimeagoColumn from '~/components/table/common/timeagoColumn.vue'
 
 export default <RecordInfo<'puzzle'>>{
   type: 'puzzle',
   name: 'Puzzle',
   icon: 'mdi-view-grid',
+  renderItem: (item) => item.name,
   options: {
     sortBy: ['created_at'],
     sortDesc: [true],
@@ -17,8 +18,15 @@ export default <RecordInfo<'puzzle'>>{
       field: 'is_public',
       operator: 'eq',
     },
+    {
+      field: 'id',
+      operator: 'eq',
+    },
   ],
   fields: {
+    id: {
+      text: 'ID',
+    },
     name: {
       text: 'Name',
     },
@@ -35,11 +43,11 @@ export default <RecordInfo<'puzzle'>>{
     },
     created_at: {
       text: 'Created At',
-      renderFn: (val) => generateTimeAgoString(val),
+      component: TimeagoColumn,
     },
     updated_at: {
       text: 'Updated At',
-      renderFn: (val) => generateTimeAgoString(val),
+      component: TimeagoColumn,
     },
   },
   addOptions: {
@@ -51,8 +59,9 @@ export default <RecordInfo<'puzzle'>>{
   viewOptions: {
     fields: ['name', 'code', 'is_public'],
   },
-  deleteOptions: {
-    renderItem: (item) => item.name,
+  deleteOptions: {},
+  shareOptions: {
+    route: '/puzzles',
   },
   headers: [
     {
@@ -78,6 +87,15 @@ export default <RecordInfo<'puzzle'>>{
   expandTypes: [
     {
       recordInfo: algsetRecordInfo,
+      // this will be manipulated when navigating to parent/child nodes, and should not be visible to the user as a nested interface
+      excludeFilters: ['parent.id'],
+      initialFilters: [
+        {
+          field: 'parent.id',
+          operator: 'eq',
+          value: '__null',
+        },
+      ],
     },
   ],
 }

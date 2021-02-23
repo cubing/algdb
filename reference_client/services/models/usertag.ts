@@ -1,28 +1,37 @@
 import algUsertagLinkRecordInfo from './algUsertagLink'
 import type { RecordInfo } from '~/types'
-import { generateTimeAgoString } from '~/services/common'
+import TimeagoColumn from '~/components/table/common/timeagoColumn.vue'
 
 export default <RecordInfo<'usertag'>>{
   type: 'usertag',
   name: 'User Tag',
   icon: 'mdi-tag',
+  renderItem: (item) => item.name,
   options: {
     sortBy: ['created_at'],
     sortDesc: [true],
   },
   hasSearch: true,
-  filters: [],
+  filters: [
+    {
+      field: 'id',
+      operator: 'eq',
+    },
+  ],
   fields: {
+    id: {
+      text: 'ID',
+    },
     name: {
       text: 'Name',
     },
     created_at: {
       text: 'Created At',
-      renderFn: (val) => generateTimeAgoString(val),
+      component: TimeagoColumn,
     },
     updated_at: {
       text: 'Updated At',
-      renderFn: (val) => generateTimeAgoString(val),
+      component: TimeagoColumn,
     },
   },
   addOptions: {
@@ -34,9 +43,8 @@ export default <RecordInfo<'usertag'>>{
   viewOptions: {
     fields: ['name'],
   },
-  deleteOptions: {
-    renderItem: (item) => item.name,
-  },
+  deleteOptions: {},
+  shareOptions: undefined,
   headers: [
     {
       field: 'name',
