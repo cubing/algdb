@@ -64,5 +64,3 @@ node_modules/
 # dotenv environment variables file
 .deploy_info
 env.json
-
-utils/*

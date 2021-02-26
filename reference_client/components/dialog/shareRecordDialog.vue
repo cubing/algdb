@@ -64,7 +64,7 @@ export default {
       return sharedService.capitalizeString(this.recordInfo.type)
     },
     shareUrl() {
-      return this.selectedItem
+      return this.selectedItem && this.recordInfo.shareOptions
         ? window.location.origin +
             this.recordInfo.shareOptions.route +
             '?filters=id-eq-' +

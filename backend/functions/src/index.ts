@@ -1,9 +1,5 @@
 import * as functions from "firebase-functions";
 import * as express from "express";
-import * as admin from "firebase-admin";
-admin.initializeApp({
-  serviceAccountId: "cubicle-admin@appspot.gserviceaccount.com",
-});
 
 import { initializeJomql } from "jomql";
 import "./schema";
@@ -24,7 +20,7 @@ const allowedOrigins = [
 ];
 
 // extract the user ID from all requests.
-app.use(async function (req: any, res, next) {
+app.use(async function (req, res, next) {
   try {
     if (req.headers.authorization) {
       req.user = await validateToken(req.headers.authorization);
